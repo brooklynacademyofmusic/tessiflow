@@ -1,0 +1,20 @@
+Package: tessitask
+Title: Task Runner for Tessiract
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Sky",
+           family = "Syzygy",
+           role = c("aut", "cre"),
+           email = "sky@skysyzygy.xyz",
+           comment = c(ORCID = "JANE'S-ORCID-ID"))
+Description: tessitask handles running R scripts at given times or based on a dependency tree, and manages server load.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.0
+Suggests: 
+    covr,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
