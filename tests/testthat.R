@@ -1,4 +1,4 @@
 library(testthat)
-library(tessitask)
+library(tessiflow)
 
-test_check("tessitask")
+test_check("tessiflow")

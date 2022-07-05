@@ -1,20 +1,14 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
-
-# tessitask
+# tessiflow
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/skysyzygy/tessitask/workflows/R-CMD-check/badge.svg)](https://github.com/skysyzygy/tessitask/actions)
+[![R-CMD-check](https://github.com/skysyzygy/tessiflow/workflows/R-CMD-check/badge.svg)](https://github.com/skysyzygy/tessiflow/actions)
 [![Codecov test
-coverage](https://codecov.io/gh/skysyzygy/tessitask/branch/master/graph/badge.svg)](https://codecov.io/gh/skysyzygy/tessitask?branch=master)
+coverage](https://codecov.io/gh/skysyzygy/tessiflow/branch/master/graph/badge.svg)](https://codecov.io/gh/skysyzygy/tessiflow?branch=master)
 
 <!-- badges: end -->
 
-tessitask is a task runner that handles scheduling R scripts and other
+tessiflow is a task runner that handles scheduling R scripts and other
 commands on a given schedule, and with conditional and dependency
 checks. The syntax is based on a simplified version of Github actions
 yml files.
@@ -25,17 +19,17 @@ Install the latest version of this package by entering the following in
 R:
 
     install.packages("remotes")
-    remotes::install_github("skysyzygy/tessitask")
+    remotes::install_github("skysyzygy/tessiflow")
 
 Create a yml file in your R_USER directory called `config.yml` and add
 the following keys to it, filling in information for your particular
 machine configuration:
 
     default:
-    # tessitask settings
-      tessitask.d: path_to_directory_of_yml_files
+    # tessiflow settings
+      tessiflow.d: path_to_directory_of_yml_files
 
-In the tessitask.d directory, create yml files with the following keys:
+In the tessiflow.d directory, create yml files with the following keys:
 
 -   `name` The name of your task
 
@@ -124,7 +118,7 @@ In the tessitask.d directory, create yml files with the following keys:
                 command.
 
             -   `shell` You can set the shell value to a template string
-                using `command [options] {0} [more_options]`. Tessitask
+                using `command [options] {0} [more_options]`. tessiflow
                 interprets the first whitespace-delimited word of the
                 string as the command, and inserts the file name for the
                 temporary script at `{0}`.
@@ -134,7 +128,7 @@ In the tessitask.d directory, create yml files with the following keys:
 This is a basic example which shows you how to solve a common problem:
 
 ``` r
-library(tessitask)
+library(tessiflow)
 
 taskrunner_start()
 # ... runs a bunch of tasks

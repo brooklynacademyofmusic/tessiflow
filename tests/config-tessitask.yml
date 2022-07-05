@@ -1,3 +1,0 @@
-default:
-# tessitask settings
-  tessitask.d: !expr file.path(testthat::test_path(),"tessitask.d")

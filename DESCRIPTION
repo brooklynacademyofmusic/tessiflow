@@ -1,5 +1,5 @@
-Package: tessitask
-Title: Task Runner for Tessiract
+Package: tessiflow
+Title: Workflow runner for Tessiract
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Sky",
@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "sky@skysyzygy.xyz",
            comment = c(ORCID = "JANE'S-ORCID-ID"))
-Description: tessitask handles running R scripts at given times or based on a dependency tree, and manages server load.
+Description: tessiflow handles running R scripts at given times or based on a dependency tree, and manages server load.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
