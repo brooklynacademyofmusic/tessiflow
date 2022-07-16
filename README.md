@@ -12,7 +12,7 @@ tessiflow is a workflow runner that handles scheduling R scripts and other
 commands on a given schedule, and with conditional and dependency
 checks. The syntax is based on a simplified version of Github actions
 yml files. Each workflow is run in a separate callr subprocess so that all 
-jobs/steps have access to the previous results. The motivation is to allow  
+jobs/steps have access to the previous results. The motivation is to allow 
 complex workflow dependencies while maintaining transparency and to encourage 
 modular, testable code, because steps are by default, just R function calls.
 
