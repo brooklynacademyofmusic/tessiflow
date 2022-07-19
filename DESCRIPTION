@@ -27,4 +27,8 @@ Imports:
     purrr,
     checkmate,
     lubridate,
-    rlang
+    rlang,
+    DBI,
+    RSQLite,
+    dplyr,
+    dbplyr

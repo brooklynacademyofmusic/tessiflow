@@ -5,9 +5,13 @@ test_that("flows_parse returns a data.table of workflows",{
   expect_data_table(flows_parse())
   expect_equal(nrow(flows_parse()),6)
 })
+test_that("flows_parse errors when there aren't yml files in the directory or the directory doesn't exist", {
+  expect_error(flows_parse("directorydoesntexist"),"yml files")
+  expect_error(flows_parse(tempdir()),"yml files")
+})
 
 test_that("flows_parse reads name",{
-  expect_equal(flows_parse()$name,rep(c("Dummy workflow","Dummy workflow 2"),each = 3))
+  expect_equal(flows_parse()$flow_name,rep(c("Dummy workflow","Dummy workflow 2"),each = 3))
 })
 
 test_that("flows_parse reads env",{
@@ -73,7 +77,7 @@ test_that("flows_parse warns if there are no jobs",{
   flows <- readRDS(test_path("flows.Rds")) 
   flows[[1]]$jobs = NULL
   read_yaml = mock(flows[[1]],flows[[2]])
-  stub(flows_parse,"yaml::read_yaml",read_yaml)  
+  stub(flows_parse,"yaml::read_yaml",read_yaml) 
   expect_warning(flows_parse(),"No jobs")
 })
 

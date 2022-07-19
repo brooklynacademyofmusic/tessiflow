@@ -10,21 +10,32 @@
 #' @importFrom config get
 
 flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
-  if (is.null(flows_directory)) {
+  on.schedule <- NULL
+  
+  if (is.null(flows_directory))
     stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")
-  }
 
-  files <- dir(flows_directory, full.names = TRUE, recursive = TRUE)
+  files <- dir(flows_directory, pattern="*.yml", full.names = TRUE, recursive = TRUE)
+  if(length(files)==0)
+    stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")  
+  
   flows <- lapply(files, yaml::read_yaml)
   
-  #saveRDS(flows,"tests/testthat/flows.Rds")
-
   flow_names <- map_chr(flows, "name")
   if (!test_character(flow_names, any.missing = FALSE, len = length(files), unique = TRUE)) {
     stop("Workflows must have a unique name, which will be used for referring to the workflow.")
   }
 
-  rbindlist(lapply(flows, flow_to_data_table), fill = TRUE)
+  flows <- rbindlist(lapply(flows, flow_to_data_table), fill = TRUE)
+  
+  flows[, `:=`(
+    status = "Waiting",
+    retval = NA_integer_,
+    scheduled_runs = lapply(on.schedule, lapply, parse_cron),
+    start_time = as.POSIXct(NA),
+    end_time = as.POSIXct(NA)
+  )]
+  
 }
 
 #' flow_to_data_table
@@ -87,9 +98,10 @@ flow_to_data_table <- function(flow) {
   }
 
   data.table(
-    name = flow_name,
+    flow_name = flow_name,
     env = list(flow$env),
     on.schedule = list(unlist(flow$on$schedule,recursive=FALSE)),
+    job_name = unlist(purrr::map(flow$jobs,"name")),
     jobs = flow$jobs
   )
 }

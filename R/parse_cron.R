@@ -68,21 +68,30 @@ parse_cron <- function(cron_string) {
     c(0, 7)
   ), parse_cron_part)
   
+  # looks across three years... this could be more efficient but 
+  # "premature optimization is the root of all evil (or at least most of it) in programming"
+  # - Donald Knuth
   cron$year <- seq(year(now()) - 1, year(now()) + 1)
   
   cron_data_table <- data.table()
+  # if weekday is restricted
   if (cron_parts["wday"] != "*") {
     cron_wday <- copy(cron)
+  # ... unrestrict day
     cron_wday$day <- seq(1, 31)
     cron_data_table <- expand.grid(cron_wday) %>%
       setDT() %>%
-      .[, datetime := make_date(year, month, day) + hours(hour) + minutes(min)] %>%
+  # use make_date instead of make_datetime because make_datetime rolls over to the next day/month for invalid dates
+      .[, datetime := make_date(year, month, day) + hours(hour) + minutes(min)] %>% 
+  # ... and restrict wday
       .[wday(datetime) == wday] %>%
       rbind(cron_data_table, fill = TRUE)
   }
   
+  # if day is restricted (or weekday is not)
   if (cron_parts["day"] != "*" || cron_parts["wday"] == "*") {
     cron_day <- copy(cron)
+  # ... unrestrict wday
     cron_day$wday <- NULL
     cron_data_table <- expand.grid(cron_day) %>%
       setDT() %>%
