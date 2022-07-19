@@ -32,5 +32,7 @@ Imports:
     DBI,
     RSQLite,
     dplyr,
-    dbplyr
+    dbplyr,
+    callr,
+    glue
 Language: en-US
