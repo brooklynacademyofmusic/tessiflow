@@ -16,6 +16,7 @@ RoxygenNote: 7.2.0
 Suggests: 
     covr,
     mockery,
+    spelling,
     testthat (>= 3.0.0),
     withr
 Config/testthat/edition: 3
@@ -32,3 +33,4 @@ Imports:
     RSQLite,
     dplyr,
     dbplyr
+Language: en-US
