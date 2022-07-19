@@ -50,16 +50,16 @@
 #'
 parse_cron <- function(cron_string) {
   . <- datetime <- day <- NULL
-  
+
   # split string into components
   cron_parts <- strsplit(cron_string, "\\s+", perl = TRUE)[[1]]
-  
+
   if (!test_character(cron_parts, any.missing = FALSE, all.missing = FALSE, len = 5)) {
     stop(paste("Cron string", cron_string, "does not have five parts."))
   }
-  
+
   names(cron_parts) <- c("min", "hour", "day", "month", "wday")
-  
+
   cron <- map2(cron_parts, list(
     c(0, 59),
     c(0, 23),
@@ -67,31 +67,31 @@ parse_cron <- function(cron_string) {
     c(1, 12),
     c(0, 7)
   ), parse_cron_part)
-  
-  # looks across three years... this could be more efficient but 
+
+  # looks across three years... this could be more efficient but
   # "premature optimization is the root of all evil (or at least most of it) in programming"
   # - Donald Knuth
   cron$year <- seq(year(now()) - 1, year(now()) + 1)
-  
+
   cron_data_table <- data.table()
   # if weekday is restricted
   if (cron_parts["wday"] != "*") {
     cron_wday <- copy(cron)
-  # ... unrestrict day
+    # ... unrestrict day
     cron_wday$day <- seq(1, 31)
     cron_data_table <- expand.grid(cron_wday) %>%
       setDT() %>%
-  # use make_date instead of make_datetime because make_datetime rolls over to the next day/month for invalid dates
-      .[, datetime := make_date(year, month, day) + hours(hour) + minutes(min)] %>% 
-  # ... and restrict wday
+      # use make_date instead of make_datetime because make_datetime rolls over to the next day/month for invalid dates
+      .[, datetime := make_date(year, month, day) + hours(hour) + minutes(min)] %>%
+      # ... and restrict wday
       .[wday(datetime) == wday] %>%
       rbind(cron_data_table, fill = TRUE)
   }
-  
+
   # if day is restricted (or weekday is not)
   if (cron_parts["day"] != "*" || cron_parts["wday"] == "*") {
     cron_day <- copy(cron)
-  # ... unrestrict wday
+    # ... unrestrict wday
     cron_day$wday <- NULL
     cron_data_table <- expand.grid(cron_day) %>%
       setDT() %>%
@@ -99,9 +99,9 @@ parse_cron <- function(cron_string) {
       .[!is.na(datetime)] %>%
       rbind(cron_data_table, fill = TRUE)
   }
-  
+
   setkey(cron_data_table, datetime)
-  
+
   force_tz(cron_data_table$datetime, Sys.timezone())
 }
 
@@ -123,9 +123,9 @@ parse_cron_part <- function(cron_part, range = c(0, 59)) {
   if (grepl("*", cron_part, fixed = TRUE) && grepl("-", cron_part)) {
     stop(paste0(cron_part, ": Invalid cron string, don't know how to handle '*' and '-' in the same part."))
   }
-  
+
   step <- 1
-  
+
   if (grepl(",", cron_part)) {
     values <- strsplit(cron_part, ",", fixed = TRUE)[[1]]
     return(unique(unlist(lapply(values, parse_cron_range))))
@@ -159,10 +159,10 @@ parse_cron_range <- function(cron_range) {
   if (grepl("-", cron_range)) {
     cron_range <- strsplit(cron_range, "-")[[1]]
   }
-  
+
   cron_range <- sapply(cron_range, parse_cron_value)
-  
-  seq(cron_range[1],ifelse(is.na(cron_range[2]), cron_range[1], cron_range[2]))
+
+  seq(cron_range[1], ifelse(is.na(cron_range[2]), cron_range[1], cron_range[2]))
 }
 
 parse_cron_value <- function(cron_value) {
@@ -170,15 +170,15 @@ parse_cron_value <- function(cron_value) {
   if (tolower(cron_value) %in% tolower(month.abb)) {
     return(which(tolower(cron_value) == tolower(month.abb)))
   }
-  
+
   if (tolower(cron_value) %in% tolower(wday.abb)) {
     return(which(tolower(cron_value) == tolower(wday.abb)))
   }
-  
+
   ret <- suppressWarnings(as.integer(cron_value))
   if (!checkmate::test_count(ret, positive = TRUE)) {
     stop(paste("Can't parse the cron value", cron_value))
   }
-  
+
   ret
 }
