@@ -11,23 +11,25 @@
 
 flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
   on.schedule <- NULL
-  
-  if (is.null(flows_directory))
-    stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")
 
-  files <- dir(flows_directory, pattern="*.yml", full.names = TRUE, recursive = TRUE)
-  if(length(files)==0)
-    stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")  
-  
+  if (is.null(flows_directory)) {
+    stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")
+  }
+
+  files <- dir(flows_directory, pattern = "*.yml", full.names = TRUE, recursive = TRUE)
+  if (length(files) == 0) {
+    stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")
+  }
+
   flows <- lapply(files, yaml::read_yaml)
-  
+
   flow_names <- map_chr(flows, "name")
   if (!test_character(flow_names, any.missing = FALSE, len = length(files), unique = TRUE)) {
     stop("Workflows must have a unique name, which will be used for referring to the workflow.")
   }
 
   flows <- rbindlist(lapply(flows, flow_to_data_table), fill = TRUE)
-  
+
   flows[, `:=`(
     status = "Waiting",
     retval = NA_integer_,
@@ -35,7 +37,6 @@ flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
     start_time = as.POSIXct(NA),
     end_time = as.POSIXct(NA)
   )]
-  
 }
 
 #' flow_to_data_table
@@ -66,7 +67,7 @@ flow_to_data_table <- function(flow) {
 
   keys <- names(unlist(flow))
   flow_name <- flow$name
-  if (anyDuplicated(purrr::discard(keys, ~ grepl("steps|cron", .,perl = TRUE)))) {
+  if (anyDuplicated(purrr::discard(keys, ~ grepl("steps|cron", ., perl = TRUE)))) {
     stop(paste0(flow_name, ": Duplicated keys found - ", paste(keys[duplicated(keys)], collapse = ", ")))
   }
 
@@ -97,11 +98,17 @@ flow_to_data_table <- function(flow) {
     warning(paste0(flow_name, ": No schedule found, nothing to do!"))
   }
 
-  data.table(
+  flow_data_table <- data.table(
     flow_name = flow_name,
     env = list(flow$env),
-    on.schedule = list(unlist(flow$on$schedule,recursive=FALSE)),
-    job_name = unlist(purrr::map(flow$jobs,"name")),
-    jobs = flow$jobs
+    on.schedule = list(unlist(flow$on$schedule, recursive = FALSE)),
+    job_name = rep(NA, max(length(flow$jobs), 1))
   )
+  # unnest wider
+  if (length(flow$jobs) > 0) {
+    flow_data_table[, job_name := purrr::map_chr(flow$jobs, "name")]
+    job_keys <- unique(purrr::flatten_chr(purrr::map(flow$jobs, names)))
+    flow_data_table[, (job_keys) := lapply(job_keys, purrr::map, .x = flow$jobs)]
+    flow_data_table[, `:=`(name = NULL)]
+  }
 }
