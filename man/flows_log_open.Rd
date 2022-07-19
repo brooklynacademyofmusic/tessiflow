@@ -3,11 +3,14 @@
 \name{flows_log_open}
 \alias{flows_log_open}
 \alias{flows_log_close}
+\alias{flows_log_create}
 \title{flows_log_open}
 \usage{
 flows_log_open(flows_log_dir = config::get("tessiflow.log"))
 
 flows_log_close()
+
+flows_log_create()
 }
 \arguments{
 \item{flows_log_dir}{directory where the SQLite database is stored}
@@ -21,5 +24,7 @@ flows_log_open
 \section{Functions}{
 \itemize{
 \item \code{flows_log_close}: Tear down the SQL connection
+
+\item \code{flows_log_create}: Create the SQLite log table
 }}
 
