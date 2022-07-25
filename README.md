@@ -31,8 +31,34 @@ machine configuration:
     default:
     # tessiflow settings
       tessiflow.d: path_to_directory_of_yml_files
+      tessiflow.log: path_to_directory_for_log_files
 
-In the tessiflow.d directory, create yml files with the following keys:
+In the tessiflow.d directory, create yml files (see format info below)
+
+## Usage
+
+``` r
+library(tessiflow)
+
+flows_parse() 
+# returns a data.table of jobs parsed from the tessiflow.d yml files
+
+job_start(flow_name,job_name)
+# starts the job with the given flow and job name 
+
+tessiflow_start()
+# ... runs a bunch of tasks
+tessiflow_stop()
+
+tessiflow_enable()
+# enables a scheduled task for the tessiflow scheduler using schtasks.exe on Windows or cron on *nix/Mac
+
+tessiflow_disable()
+# removes the scheduled task for the tessiflow scheduler
+
+```
+
+## tessiflow YML format
 
 -   `name` The name of your task
 
@@ -126,14 +152,4 @@ In the tessiflow.d directory, create yml files with the following keys:
                 string as the command, and inserts the file name for the
                 temporary script at `{0}`.
 
-## Example
 
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-library(tessiflow)
-
-taskrunner_start()
-# ... runs a bunch of tasks
-taskrunner_stop()
-```
