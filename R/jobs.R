@@ -62,6 +62,7 @@ job_maybe_start <- function(flow_name, job_name) {
 #' @param job_name string job name
 #'
 #' @importFrom callr r_session r_session_options
+#' @importFrom lubridate now
 #'
 #' @return invisibly
 #'

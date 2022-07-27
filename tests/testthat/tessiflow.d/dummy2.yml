@@ -22,7 +22,8 @@ jobs:
           start()
           after()
       - name: Step 2
-        run: echo "Here"
+        run: |
+          echo "Here"
         shell: bash {0}
     
   job2:

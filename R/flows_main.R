@@ -1,9 +1,8 @@
 #' flows_main
+#' 
 #' main flows loop
 #'
 #' @return NULL, never!
-#'
-
 flows_main <- function() {
   status <- on.schedule <- NULL
   

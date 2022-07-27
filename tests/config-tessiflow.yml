@@ -2,3 +2,7 @@ default:
 # tessiflow settings
   tessiflow.d: !expr file.path(testthat::test_path(),"tessiflow.d")
   tessiflow.log: !expr file.path(tempdir(),"logs")
+  tessiflow.email: test@test.com
+  tessiflow.smtp:
+    - host.name: test.com
+    - port: 25
