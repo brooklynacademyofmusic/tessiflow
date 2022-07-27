@@ -30,8 +30,12 @@ flows_main <- function() {
         )
       ]
     }
-
-    stdin <- readLines()
+    
+    if(!test_parse(stdin <- readLines())) {
+      message(paste0("Can't parse '",stdin,"' from input stream."))
+    } else if (length(stdin)>0){
+      eval(rlang::parse_expr(stdin))
+    }
 
     Sys.sleep(1)
   }

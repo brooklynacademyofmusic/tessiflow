@@ -143,9 +143,9 @@ flow_to_data_table <- function(flow) {
 #' @importFrom checkmate assert_character
 #' @importFrom rlang parse_expr
 test_parse <- function(expr_string) {
-  assert_character(expr_string, len = 1, null.ok = TRUE)
+  assert_character(expr_string, max.len = 1, null.ok = TRUE)
 
-  if (is.null(expr_string)) {
+  if (length(expr_string) == 0) {
     return(TRUE)
   }
 
