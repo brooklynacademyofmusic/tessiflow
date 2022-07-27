@@ -279,9 +279,9 @@ test_that("job_poll reads from stdout and writes to the log",{
   r_session$.call(print,list('hello world'))
   Sys.sleep(1)
   job_poll(flow_name,job_name)
-  expect_length(mock_args(job_log_write),1)
-  expect_match(mock_args(job_log_write)[[1]][[3]],"OUTPUT.+hello world",all = FALSE)
-  expect_match(mock_args(job_log_write)[[1]][[3]],"PROCESS.+result.+hello world",all = FALSE)
+  output = unlist(purrr::map(mock_args(job_log_write),3))
+  expect_match(output,"OUTPUT.+hello world",all = FALSE)
+  expect_match(output,"PROCESS.+result.+hello world",all = FALSE)
 })
 
 test_that("job_poll reads from stderr and writes to the log",{
@@ -290,9 +290,9 @@ test_that("job_poll reads from stderr and writes to the log",{
   r_session$.call(message,list('hello world'))
   Sys.sleep(1)
   job_poll(flow_name,job_name)
-  expect_length(mock_args(job_log_write),2)
-  expect_match(mock_args(job_log_write)[[1]][[3]],"ERROR.+hello world")
-  expect_match(mock_args(job_log_write)[[2]][[3]],"PROCESS.+result : $", all = FALSE)
+  output = unlist(purrr::map(mock_args(job_log_write),3))
+  expect_match(output,"ERROR.+hello world",all = FALSE)
+  expect_match(output,"PROCESS.+result : $", all = FALSE)
 })
 
 test_that("job_poll calls job_on_error on error",{
