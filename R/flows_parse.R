@@ -104,14 +104,20 @@ flow_to_data_table <- function(flow) {
   if_keys <- grep("\\bif\\b", keys, value = TRUE, perl = TRUE)
   if_parseable <- purrr::map_lgl(unlist(flow)[if_keys],test_parse)
   if(!all(if_parseable))
-    stop(paste("If statement(s)",paste(names(if_parseable[!if_parseable]),collapse = ", "),
-               "in",flow_name,"not parseable."))
+    stop(paste(c("If statement(s)",paste0(names(if_parseable[!if_parseable]),
+                                       " : ",
+                                       if_parseable[!if_parseable],
+                                       ", "),
+               "in",flow_name,"not parseable."),collapse = " "))
   
   run_keys <- grep("\\brun\\b", keys, value = TRUE, perl = TRUE)
   run_parseable <- map(flow$jobs,~list(steps=purrr::map(.$steps,test_parse_run))) %>% unlist
   if(!all(run_parseable))
-    stop(paste("Run statement(s)",paste(names(run_parseable[!run_parseable]),collapse = ", "),
-               "in",flow_name,"not parseable."))
+    stop(paste(c("Run statement(s)",paste0(names(run_parseable[!run_parseable]),
+                                         " : ",
+                                         run_parseable[!run_parseable],
+                                         ", "),
+               "in",flow_name,"not parseable."),collapse = " "))
   
   flow_data_table <- data.table(
     flow_name = flow_name,
