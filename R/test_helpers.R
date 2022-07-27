@@ -1,6 +1,6 @@
 make_fixtures <- function() {
   flow_name <- job_name <- NULL
-  
+
   files <- dir(testthat::test_path("tessiflow.d"), pattern = "*.yml", full.names = TRUE, recursive = TRUE)
   flows <- lapply(files, yaml::read_yaml)
   saveRDS(flows, testthat::test_path("flows.Rds"))

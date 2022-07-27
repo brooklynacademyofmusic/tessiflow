@@ -8,66 +8,78 @@ local_flows_data_table()
 # flows_main --------------------------------------------------------------
 
 flows <- tessiflow$flows
-test_that("flows_main does nothing when all tasks are finished",{
-  flows[,status:="Finished"]
-  stub(flows_main,"flows_parse",flows)
-  m = mock()
-  stub(flows_main,"job_maybe_start_resilient",m)
-  stub(flows_main,"job_poll_resilient",m)
+test_that("flows_main does nothing when all tasks are finished", {
+  flows[, status := "Finished"]
+  stub(flows_main, "flows_parse", flows)
+  m <- mock()
+  stub(flows_main, "job_maybe_start_resilient", m)
+  stub(flows_main, "job_poll_resilient", m)
   flows_main()
-  expect_equal(length(mock_args(m)),0)
+  expect_equal(length(mock_args(m)), 0)
 })
 
-test_that("flows_main calls job_maybe_start_resilient when tasks are waiting",{
-  flows[,status:="Waiting"]
-  stub(flows_main,"flows_parse",flows)
-  m = mock()
-  stub(flows_main,"job_maybe_start_resilient",m)
-  stub(flows_main,"readLines",function() {stop("first loop")})
-  expect_error(flows_main(),"first loop")
-  expect_equal(length(mock_args(m)),nrow(flows))
+test_that("flows_main calls job_maybe_start_resilient when tasks are waiting", {
+  flows[, status := "Waiting"]
+  stub(flows_main, "flows_parse", flows)
+  m <- mock()
+  stub(flows_main, "job_maybe_start_resilient", m)
+  stub(flows_main, "readLines", function() {
+    stop("first loop")
+  })
+  expect_error(flows_main(), "first loop")
+  expect_equal(length(mock_args(m)), nrow(flows))
 })
 
-test_that("flows_main calls job_poll_resilient when tasks are running",{
-  flows[,status:="Running"]
-  stub(flows_main,"flows_parse",flows)
-  m = mock()
-  stub(flows_main,"job_poll_resilient",m)
-  stub(flows_main,"readLines",function() {stop("first loop")})
-  expect_error(flows_main(),"first loop")
-  expect_equal(length(mock_args(m)),nrow(flows))
+test_that("flows_main calls job_poll_resilient when tasks are running", {
+  flows[, status := "Running"]
+  stub(flows_main, "flows_parse", flows)
+  m <- mock()
+  stub(flows_main, "job_poll_resilient", m)
+  stub(flows_main, "readLines", function() {
+    stop("first loop")
+  })
+  expect_error(flows_main(), "first loop")
+  expect_equal(length(mock_args(m)), nrow(flows))
 })
 
-test_that("flows_main resets tasks to waiting when they are done",{
-  flows[,status:="Waiting"]
-  stub(flows_main,"flows_parse",flows)
-  m = mock()
-  stub(flows_main,"job_maybe_start_resilient",m)
-  stub(flows_main,"job_poll_resilient",function(){tessiflow$flows[,status:="Finished"]})
-  stub(flows_main,"readLines",function() {stop("first loop")})
-  expect_error(flows_main(),"first loop")
-  expect_equal(flows,tessiflow$flows)
+test_that("flows_main resets tasks to waiting when they are done", {
+  flows[, status := "Waiting"]
+  stub(flows_main, "flows_parse", flows)
+  m <- mock()
+  stub(flows_main, "job_maybe_start_resilient", m)
+  stub(flows_main, "job_poll_resilient", function() {
+    tessiflow$flows[, status := "Finished"]
+  })
+  stub(flows_main, "readLines", function() {
+    stop("first loop")
+  })
+  expect_error(flows_main(), "first loop")
+  expect_equal(flows, tessiflow$flows)
 })
 
-test_that("flows_main reads from stdin if there is something to read and executes the command",{
-  file <- file(tempfile(),"w+")
-  stub(flows_main,"readLines",function(){readLines(file)})
-  stub(flows_main,"Sys.sleep",function(t) {stop("first loop")})
-  m = mock()
-  job_start = mock()
-  stub(flows_main,"job_maybe_start_resilient",m)
-  stub(flows_main,"job_poll_resilient",m)
-  stub(flows_main,"job_start",job_start)
-  expect_error(flows_main(),"first loop")
-  
-  cat("do something",file=file,sep="\n")
-  expect_error(expect_message(flows_main(),"do something"),"first loop")
-  
-  cat(deparse(quote(job_start("flow_name","job_name"))),file=file,sep="\n")
-  expect_error(flows_main(),"first loop")
-  
-  expect_length(mock_args(job_start),1)
-  
+test_that("flows_main reads from stdin if there is something to read and executes the command", {
+  file <- file(tempfile(), "w+")
+  stub(flows_main, "readLines", function() {
+    readLines(file)
+  })
+  stub(flows_main, "Sys.sleep", function(t) {
+    stop("first loop")
+  })
+  m <- mock()
+  job_start <- mock()
+  stub(flows_main, "job_maybe_start_resilient", m)
+  stub(flows_main, "job_poll_resilient", m)
+  stub(flows_main, "job_start", job_start)
+  expect_error(flows_main(), "first loop")
+
+  cat("do something", file = file, sep = "\n")
+  expect_error(expect_message(flows_main(), "do something"), "first loop")
+
+  cat(deparse(quote(job_start("flow_name", "job_name"))), file = file, sep = "\n")
+  expect_error(flows_main(), "first loop")
+
+  expect_length(mock_args(job_start), 1)
+
   close(file)
 })
 

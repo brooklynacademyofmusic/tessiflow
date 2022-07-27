@@ -101,7 +101,7 @@ flow_to_data_table <- function(flow) {
   if_parseable <- purrr::map_lgl(unlist(flow)[if_keys], test_parse)
   run_parseable <- list(jobs = map(flow$jobs, ~ list(steps = purrr::map(.$steps, test_parse_run)))) %>% unlist()
   parseable <- c(if_parseable, run_parseable)
-  exprs <- c(unlist(flow)[if_keys],unlist(map(flow$jobs,"steps"),recursive = FALSE))
+  exprs <- c(unlist(flow)[if_keys], unlist(map(flow$jobs, "steps"), recursive = FALSE))
 
   if (!all(parseable)) {
     stop(paste(c(
