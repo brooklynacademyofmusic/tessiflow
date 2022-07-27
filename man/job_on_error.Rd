@@ -4,12 +4,7 @@
 \alias{job_on_error}
 \title{job_on_error}
 \usage{
-job_on_error(
-  flow_name,
-  job_name,
-  error,
-  error_handler = tessiflow::error_handler
-)
+job_on_error(flow_name, job_name, error)
 }
 \arguments{
 \item{flow_name}{string workflow name}
@@ -17,8 +12,6 @@ job_on_error(
 \item{job_name}{string job name}
 
 \item{error}{error condition object}
-
-\item{error_handler}{function, the error handler to call}
 }
 \value{
 invisibly

@@ -8,6 +8,7 @@
 #' @param console boolean whether to echo to the console, default is FALSE
 #' @importFrom checkmate assert_character
 #' @importFrom lubridate today
+#' @importFrom utils zip
 #'
 job_log_write <- function(flow_name, job_name, lines, console = FALSE) {
   assert_character(flow_name, len = 1)

@@ -139,8 +139,8 @@ job_step <- function(flow_name, job_name) {
 #' wrapped in a `system()` command to execute the shell.
 #'
 #' @param env_vars named list of environment variables
-#' @param if_expr deparsed if expresion
-#' @param run_expr deprased run expression
+#' @param if_expr deparsed if expression
+#' @param run_expr deparsed run expression
 #' @param shell string setting the shell, default is `callr` 
 #'
 #' @return R expression
@@ -178,18 +178,16 @@ job_make_remote_expr <- function(env_vars=NULL,if_expr=NULL,run_expr=NULL,shell=
 #' @param flow_name string workflow name
 #' @param job_name string job name
 #' @param error error condition object
-#' @param error_handler function, the error handler to call
 #' 
 #' @importFrom checkmate assert_class assert_character
 #' @importFrom cli ansi_strip
 #'
 #' @return invisibly
-job_on_error <- function(flow_name, job_name, error, error_handler=tessiflow::error_handler) {
+job_on_error <- function(flow_name, job_name, error) {
   assert_class(error,"error")
   assert_character(flow_name,len=1)
   assert_character(job_name,len=1)
-  assert_class(error_handler,"function")
-  
+
   flows_update_job(flow_name,job_name,list(retval=1))
   job_log_write(flow_name,job_name,error$message,console = TRUE)
   job_log_write(flow_name,job_name,cli::ansi_strip(format(error$trace)))

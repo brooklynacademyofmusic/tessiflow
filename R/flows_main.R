@@ -5,6 +5,8 @@
 #'
 
 flows_main <- function() {
+  status <- on.schedule <- NULL
+  
   tessiflow$flows <- flows_parse()
 
   while (!all(tessiflow$flows$status == "Finished")) {
@@ -23,7 +25,6 @@ flows_main <- function() {
       tessiflow$flows[status == "Finished" & sapply(on.schedule,length)>0,
                       `:=`(status = "Waiting",
                            scheduled_runs = lapply(on.schedule, lapply, parse_cron))]
-    print(tessiflow$flows)
 
     Sys.sleep(1)
   }
@@ -43,6 +44,8 @@ flows_main <- function() {
 #' @return list, one row of the flows table
 #'
 flows_get_job <- function(.flow_name, .job_name) {
+  flow_name <- job_name <- NULL
+  
   assert_character(.flow_name, len = 1)
   assert_character(.job_name, len = 1)
   job <- tessiflow$flows[flow_name == .flow_name &
@@ -62,6 +65,8 @@ flows_get_job <- function(.flow_name, .job_name) {
 #' @importFrom checkmate assert_list
 #' @return invisibly
 flows_update_job <- function(.flow_name, .job_name, data) {
+  flow_name <- job_name <- NULL
+  
   assert_character(.flow_name, len = 1)
   assert_character(.job_name, len = 1)
   assert_list(data)

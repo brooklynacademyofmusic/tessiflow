@@ -7,10 +7,10 @@
 test_parse_run(step)
 }
 \arguments{
-\item{expr_string}{expression as a deparsed string}
+\item{step}{list of the step object, with keys \code{if}, \code{env}, \code{run}, and \code{shell}}
 }
 \value{
-TRUE if string is parseable
+TRUE if step is parseable
 }
 \description{
 tests if it's possible to parse the step run statement, throws an error if it's not

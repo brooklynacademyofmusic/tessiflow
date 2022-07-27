@@ -16,7 +16,7 @@ flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
     stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")
   }
 
-  files <- dir(flows_directory, pattern = "*.yml", full.names = TRUE, recursive = TRUE)
+  files <- dir(flows_directory, pattern = "*.yml", full.names = TRUE)
   if (length(files) == 0) {
     stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")
   }
@@ -51,6 +51,8 @@ flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
 #' @importFrom purrr map_chr
 
 flow_to_data_table <- function(flow) {
+  job_name <- NULL
+  
   allowed_flow_keys <- c("name", "on.schedule.cron", "env\\.[\\w]+")
   allowed_job_keys <- c("name", "needs\\d?", "if", "runs-on")
   allowed_step_keys <- c("name", "env\\.[\\w]+", "if", "run", "shell")

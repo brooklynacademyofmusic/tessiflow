@@ -10,7 +10,7 @@ test_parse(expr_string)
 \item{expr_string}{expression as a deparsed string}
 }
 \value{
-TRUE if string is parseable
+TRUE if expr_string is parseable
 }
 \description{
 tests if it's possible to parse the expression string, throws an error if it's not

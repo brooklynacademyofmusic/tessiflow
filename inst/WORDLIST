@@ -2,11 +2,17 @@ CMD
 Codecov
 Github
 Tessiract
+YML
 callr
 cron
+expr
 ie
+logfile
 magrittr
+parseable
 retval
+smtp
 subprocess
 th
+upsert
 yml

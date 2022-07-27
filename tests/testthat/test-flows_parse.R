@@ -1,6 +1,25 @@
 withr::local_package("checkmate")
 withr::local_package("mockery")
 
+# test_parse --------------------------------------------------------------
+
+test_that("test_parse returns false on non parseable strings",{
+  expect_true(test_parse("TRUE"))
+  expect_true(test_parse("if(this) {that}"))
+  expect_false(test_parse("this is not a valid string"))
+})
+
+test_that("test_parse_run returns false on non parseable steps",{
+  expect_true(test_parse_run(list(`if`="TRUE",run_expr="print()",env=list(),shell="callr")))
+  expect_true(test_parse_run(list(`if`=NULL,run_expr=NULL,env=NULL,shell=NULL)))
+  expect_false(test_parse_run(list(`if`="TRUE TRUE",run_expr="print()",env=list(),shell="callr")))
+  expect_false(test_parse_run(list(`if`="TRUE",run_expr="print()",env="not an env",shell="callr")))
+  expect_false(test_parse_run(list(`if`="TRUE",run_expr="echo something",env=list(),shell="callr")))
+  expect_true(test_parse_run(list(`if`="TRUE",run_expr="echo something",env=list(),shell="bash")))
+})
+
+# flows_parse -------------------------------------------------------------
+
 test_that("flows_parse returns a data.table of workflows", {
   expect_data_table(flows_parse())
   expect_equal(nrow(flows_parse()), 6)
@@ -92,3 +111,5 @@ test_that("flows_parse warns if there is no schedule", {
   stub(flows_parse, "yaml::read_yaml", read_yaml)
   expect_warning(flows_parse(), "No schedule")
 })
+
+

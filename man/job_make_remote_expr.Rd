@@ -14,9 +14,9 @@ job_make_remote_expr(
 \arguments{
 \item{env_vars}{named list of environment variables}
 
-\item{if_expr}{deparsed if expresion}
+\item{if_expr}{deparsed if expression}
 
-\item{run_expr}{deprased run expression}
+\item{run_expr}{deparsed run expression}
 
 \item{shell}{string setting the shell, default is \code{callr}}
 }
