@@ -128,8 +128,8 @@ test_that("job_make_remote_expr runs code",{
 })
 
 test_that("job_make_remote_expr only runs if `if` true",{
-  expect_error(eval(job_make_remote_expr(NULL,"TRUE","stop(\"Hello world\")","Hello world")))
-  expect_message(eval(job_make_remote_expr(NULL,"FALSE","stop(\"Hello world\")","skipping")))
+  expect_error(eval(job_make_remote_expr(NULL,"TRUE","stop(\"Hello world\")")),"Hello world")
+  expect_message(eval(job_make_remote_expr(NULL,"FALSE","stop(\"Hello world\")")),"skipping")
 })
 
 test_that("job_make_remote_expr has local environment variables",{
@@ -142,6 +142,7 @@ test_that("job_make_remote_expr works with other shells",{
   expect_equal(eval(job_make_remote_expr(list(environment="variable"),NULL,
                                          "echo $environment",
                                          shell="bash -c")),"variable")
+  if(.Platform$OS.type == "windows")
   expect_equal(eval(job_make_remote_expr(list(environment="variable"),NULL,
                                           "echo %environment%",
                                           shell="cmd /c {0}")),"variable")

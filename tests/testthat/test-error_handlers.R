@@ -13,6 +13,7 @@ test_that("error_handler sends email when not interactive and configured", {
   error_email = mock()
   stub(error_handler,"interactive",FALSE)
   stub(error_handler,"error_email",error_email)
+  stub(error_handler,"config::get",NULL)
   error = quote(rlang::abort("I am an error"))
   
   expect_output(
@@ -38,6 +39,7 @@ test_that("error_handler prints to console when not interactive", {
 
 test_that("error_handler_factory wraps functions with some rlang traceback sugar",{
  error_function = function() stop("Bad fun")
+ stub(error_handler_factory,"error_handler",error_print)
  wrapped_function = error_handler_factory(error_function)
  expect_error(error_function())
  error_str <- "Error.+wrapped_function\\(\\)"

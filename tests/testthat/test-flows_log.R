@@ -37,7 +37,7 @@ test_that("flows_log_open opens a database connection", {
 test_that("flows_log_upsert complains if the table isn't in the database or doesn't have the join columns", {
   expect_error(flows_log_upsert("notatable", c(x = 1)), "notatable")
   expect_error(flows_log_upsert("jobs", c(notafield = 1)), "notafield")
-  expect_error(flows_log_upsert("jobs", data.frame(start_time = lubridate::now())), "job_name,flow_name")
+  expect_error(flows_log_upsert("jobs", data.frame(start_time = lubridate::now())), "job_name.+flow_name")
 })
 
 test_that("flows_log_upsert writes a new row to the table", {
