@@ -22,16 +22,21 @@ Install the latest version of this package by entering the following in
 R:
 
     install.packages("remotes")
-    remotes::install_github("skysyzygy/tessiflow")
+    remotes::install github("skysyzygy/tessiflow")
 
-Create a yml file in your R_USER directory called `config.yml` and add
+Create a yml file in your R USER directory called `config.yml` and add
 the following keys to it, filling in information for your particular
 machine configuration:
 
     default:
     # tessiflow settings
-      tessiflow.d: path_to_directory_of_yml_files
-      tessiflow.log: path_to_directory_for_log_files
+      tessiflow.d: path to directory of yml files
+      tessiflow.log: path to directory for log files
+      tessiflow.email: email address where errors will be sent 
+                       (first email address will also be the sender)
+      tessiflow.smtp: 
+        - host.name: smtp host name
+        - port: optional port
 
 In the tessiflow.d directory, create yml files (see format info below)
 
@@ -40,20 +45,20 @@ In the tessiflow.d directory, create yml files (see format info below)
 ``` r
 library(tessiflow)
 
-flows_parse() 
+flows parse() 
 # returns a data.table of jobs parsed from the tessiflow.d yml files
 
-job_start(flow_name,job_name)
+job start(flow name,job name)
 # starts the job with the given flow and job name 
 
-tessiflow_start()
+tessiflow start()
 # ... runs a bunch of tasks
-tessiflow_stop()
+tessiflow stop()
 
-tessiflow_enable()
+tessiflow enable()
 # enables a scheduled task for the tessiflow scheduler using schtasks.exe on Windows or cron on *nix/Mac
 
-tessiflow_disable()
+tessiflow disable()
 # removes the scheduled task for the tessiflow scheduler
 
 ```
@@ -81,10 +86,10 @@ tessiflow_disable()
 
 -   `jobs`: A workflow run is made up of one or more jobs, which run in
     parallel by default. To run jobs sequentially, you can define
-    dependencies on other jobs using the `jobs.<job_id>.needs` keyword.
+    dependencies on other jobs using the `jobs.<job id>.needs` keyword.
 
-    -   `<job_id>`: Use `<job_id>` to give your job a unique identifier.
-        The key `job_id` is a string and its value is a map of the job's
+    -   `<job id>`: Use `<job id>` to give your job a unique identifier.
+        The key `job id` is a string and its value is a map of the job's
         configuration data.
 
         -   `name`: Use `name` to set a name for the job
@@ -147,7 +152,7 @@ tessiflow_disable()
                 command.
 
             -   `shell` You can set the shell value to a template string
-                using `command [options] {0} [more_options]`. tessiflow
+                using `command [options] {0} [more options]`. tessiflow
                 interprets the first whitespace-delimited word of the
                 string as the command, and inserts the file name for the
                 temporary script at `{0}`.

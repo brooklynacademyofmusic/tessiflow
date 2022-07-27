@@ -7,15 +7,15 @@ local_flows_data_table()
 
 # flows_main --------------------------------------------------------------
 
-test_that("flows_main does nothing when all tasks are finished")
-
-test_that("flows_main calls job_maybe_start_resilient when tasks are waiting")
-
-test_that("flows_main calls job_poll_resilient when tasks are running")
-
-test_that("flows_main resets tasks to waiting when they are done")
-
-test_that("flows_main reads from stdin and executes the command")
+# test_that("flows_main does nothing when all tasks are finished")
+# 
+# test_that("flows_main calls job_maybe_start_resilient when tasks are waiting")
+# 
+# test_that("flows_main calls job_poll_resilient when tasks are running")
+# 
+# test_that("flows_main resets tasks to waiting when they are done")
+# 
+# test_that("flows_main reads from stdin and executes the command")
 
 
 # flows_get_job -----------------------------------------------------------
