@@ -159,7 +159,7 @@ job_make_remote_expr <- function(env_vars=NULL,if_expr=NULL,run_expr=NULL,shell=
   
   if(length(shell) != 0 && shell != "callr") {
     if(!grepl("{0}",shell,fixed=TRUE)) shell <- paste(shell,"{0}")
-    run_expr = paste0("system(",gsub("{0}",shQuote(run_expr),shell,fixed=TRUE),", intern = TRUE)")
+    run_expr = deparse(rlang::expr(system(!!gsub("{0}",shQuote(run_expr),shell,fixed=TRUE), intern = TRUE)))
   }
     
   rlang::expr(withr::with_envvar(!!env_vars, {
