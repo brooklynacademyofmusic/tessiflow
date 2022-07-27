@@ -42,7 +42,8 @@ flows_log_create <- function() {
     status = "character",
     start_time = "double",
     end_time = "double",
-    retval = "integer"
+    retval = "integer",
+    step = "integer"
   ))
 
   DBI::dbExecute(tessiflow$db, "CREATE UNIQUE INDEX jobs_index ON jobs(flow_name,job_name,start_time)")
@@ -53,7 +54,7 @@ flows_log_create <- function() {
 #' @param table string, right now only `jobs` is valid
 #' @param data data.frame of data to update, rows will be matched on flow_name, job_name, and start_time
 #' @importFrom dplyr copy_to
-#' @importFrom checkmate assert_names assert_data_frame
+#' @importFrom checkmate assert_names assert_data_frame assert_choice
 #' @return invisibly
 flows_log_upsert <- function(table = "jobs", data) {
   assert_choice(table, "jobs")

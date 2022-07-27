@@ -34,5 +34,6 @@ Imports:
     dplyr,
     dbplyr,
     callr,
-    glue
+    glue,
+    mailR
 Language: en-US

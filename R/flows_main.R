@@ -1,29 +1,36 @@
 #' flows_main
 #' main flows loop
 #'
-#' @return NULL, never
+#' @return NULL, never!
 #'
 
 flows_main <- function() {
   tessiflow$flows <- flows_parse()
 
-  tryCatch(
-    {
-      while (!all(tessiflow$flows$status == "Finished")) {
-        tessiflow$flows[status == "Waiting", apply(.SD, 1, function(.) {
-          job_maybe_start(.$flow_name, .$job_name)
-        })]
+  while (!all(tessiflow$flows$status == "Finished")) {
+    
+    if("Waiting" %in% tessiflow$flows$status)
+      tessiflow$flows[status == "Waiting", apply(.SD, 1, function(.) {
+        job_maybe_start_resilient(.$flow_name, .$job_name)
+      })]
 
-        tessiflow$flows[status == "Running", apply(.SD, 1, function(.) {
-          job_poll(.$flow_name, .$job_name)
-        })]
+    if("Running" %in% tessiflow$flows$status)
+      tessiflow$flows[status == "Running", apply(.SD, 1, function(.) {
+        job_poll_resilient(.$flow_name, .$job_name)
+      })]
+    
+    if("Finished" %in% tessiflow$flows$status)
+      tessiflow$flows[status == "Finished" & sapply(on.schedule,length)>0,
+                      `:=`(status = "Waiting",
+                           scheduled_runs = lapply(on.schedule, lapply, parse_cron))]
+    print(tessiflow$flows)
 
-        Sys.sleep(1)
-      }
-    },
-    error = error_email
-  )
+    Sys.sleep(1)
+  }
+  
 }
+
+
 
 #' flows_get_job
 #'
@@ -38,9 +45,13 @@ flows_main <- function() {
 flows_get_job <- function(.flow_name, .job_name) {
   assert_character(.flow_name, len = 1)
   assert_character(.job_name, len = 1)
-  as.list(tessiflow$flows[flow_name == .flow_name &
-    job_name == .job_name, ]) %>%
-    map(unlist, recursive = FALSE)
+  job <- tessiflow$flows[flow_name == .flow_name &
+    job_name == .job_name, ]
+  
+  if(nrow(job)==0)
+    stop(paste("No matching job found for",.flow_name,"/",.job_name))
+  
+  job %>% map(unlist, recursive = FALSE)
 }
 
 #' flows_update_job

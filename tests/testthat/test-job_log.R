@@ -42,3 +42,8 @@ test_that("job_log_write rotates a log file when it's over 1M", {
   expect_length(readLines(filename), 3)
   expect_true(file.exists(zip_filename))
 })
+
+test_that("job_log_write prints to console when console = TRUE", {
+  expect_message(job_log_write("this is a flow", "this is a job", "this is a message",console = TRUE),
+                 "this is a message")
+})

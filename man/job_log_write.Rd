@@ -4,7 +4,7 @@
 \alias{job_log_write}
 \title{job_log_write}
 \usage{
-job_log_write(flow_name, job_name, lines)
+job_log_write(flow_name, job_name, lines, console = FALSE)
 }
 \arguments{
 \item{flow_name}{character workflow name}
@@ -12,6 +12,8 @@ job_log_write(flow_name, job_name, lines)
 \item{job_name}{character job name}
 
 \item{lines}{character vector of lines to write to the file}
+
+\item{console}{boolean whether to echo to the console, default is FALSE}
 }
 \description{
 Simple logfile writer, with filename determined by the workflow. Timestamp and job name are prepended to each line before writing.

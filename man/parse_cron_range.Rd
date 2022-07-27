@@ -10,6 +10,9 @@ parse_cron_range(cron_range)
 \arguments{
 \item{cron_range}{string range part of a cron string}
 }
+\value{
+sequence of values determined by the cron range
+}
 \description{
 cron_range
 parse the range part of a cron string

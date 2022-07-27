@@ -3,7 +3,7 @@
 #' Loads yml workflow files from `flows_directory` and returns a list of data.tables with the workflow data
 #'
 #' @param flows_directory the directory containing the yml files to load
-#'
+#' @export
 #' @return named list of workflows as data.tables
 #' @importFrom purrr map_chr map2
 #' @importFrom checkmate test_character
@@ -21,11 +21,11 @@ flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
     stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")
   }
 
-  flows <- lapply(files, yaml::read_yaml)
+  flows <- lapply(files, yaml::read_yaml) %>% purrr::discard(~length(.)==0)
 
   flow_names <- map_chr(flows, "name")
-  if (!test_character(flow_names, any.missing = FALSE, len = length(files), unique = TRUE)) {
-    stop("Workflows must have a unique name, which will be used for referring to the workflow.")
+  if (!test_character(flow_names, any.missing = FALSE, unique = TRUE)) {
+    stop("Workflows must have a unique name.")
   }
 
   flows <- rbindlist(lapply(flows, flow_to_data_table), fill = TRUE)
@@ -36,7 +36,9 @@ flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
     scheduled_runs = lapply(on.schedule, lapply, parse_cron),
     start_time = as.POSIXct(NA),
     end_time = as.POSIXct(NA)
-  )]
+  )] 
+  
+  flows
 }
 
 #' flow_to_data_table
@@ -80,8 +82,7 @@ flow_to_data_table <- function(flow) {
     }
   }
 
-  invalid_keys <- grep(paste(allowed_keys, collapse = "|"),
-    names(unlist(flow)),
+  invalid_keys <- grep(paste(allowed_keys, collapse = "|"), keys,
     value = TRUE, invert = TRUE, perl = TRUE
   )
 
@@ -98,6 +99,18 @@ flow_to_data_table <- function(flow) {
     warning(paste0(flow_name, ": No schedule found, nothing to do!"))
   }
 
+  if_keys <- grep("\\bif\\b", keys, value = TRUE, perl = TRUE)
+  if_parseable <- purrr::map_lgl(unlist(flow)[if_keys],test_parse)
+  if(!all(if_parseable))
+    stop(paste("If statement(s)",paste(names(if_parseable[!if_parseable]),collapse = ", "),
+               "in",flow_name,"not parseable."))
+  
+  run_keys <- grep("\\brun\\b", keys, value = TRUE, perl = TRUE)
+  run_parseable <- map(flow$jobs,~list(steps=purrr::map(.$steps,test_parse_run))) %>% unlist
+  if(!all(run_parseable))
+    stop(paste("Run statement(s)",paste(names(run_parseable[!run_parseable]),collapse = ", "),
+               "in",flow_name,"not parseable."))
+  
   flow_data_table <- data.table(
     flow_name = flow_name,
     env = list(flow$env),
@@ -111,4 +124,52 @@ flow_to_data_table <- function(flow) {
     flow_data_table[, (job_keys) := lapply(job_keys, purrr::map, .x = flow$jobs)]
     flow_data_table[, `:=`(name = NULL)]
   }
+  
+  flow_data_table
+}
+
+
+#' test_parse
+#' 
+#' tests if it's possible to parse the expression string, throws an error if it's not
+#'
+#' @param expr_string expression as a deparsed string
+#'
+#' @return TRUE if expr_string is parseable
+#' @importFrom checkmate assert_character
+#' @importFrom rlang parse_expr
+test_parse <- function(expr_string) {
+  assert_character(expr_string,len=1,null.ok = TRUE)
+  
+  if(is.null(expr_string))  
+    return(TRUE)
+  
+  ret = tryCatch(parse_expr(as.character(expr_string)),
+           error=function(e){return(e)})
+  
+  !"error" %in% class(ret) 
+}
+
+#' test_parse_run
+#' 
+#' tests if it's possible to parse the step run statement, throws an error if it's not
+#'
+#' @param step list of the step object, with keys `if`, `env`, `run`, and `shell`
+#'
+#' @return TRUE if step is parseable
+#' @importFrom checkmate assert_character
+#' @importFrom rlang parse_expr
+test_parse_run <- function(step) {
+  assert_list(step)
+  
+  if(length(step)==0)  
+    return(TRUE)
+
+  ret = tryCatch(job_make_remote_expr(run_expr=as.character(step$run),
+                                      env_vars=step$env,
+                                      if_expr=as.character(step$`if`),
+                                      shell=as.character(step$shell)),
+                 error=function(e){return(e)})
+  
+  !"error" %in% class(ret) 
 }

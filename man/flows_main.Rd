@@ -8,7 +8,7 @@ main flows loop}
 flows_main()
 }
 \value{
-NULL, never
+NULL, never!
 }
 \description{
 flows_main

@@ -70,24 +70,24 @@ job_start <- function(flow_name, job_name) {
   job <- flows_get_job(flow_name, job_name)
 
   if (is.null(job$r_session) || job$r_session[[1]]$get_state() == "finished") {
+    
     r_session <- r_session$new(options = r_session_options(
       stdout = "|",
       stderr = "|",
-      env = unlist(job$env)
+      env = unlist(job$env) %||% callr::rcmd_safe_env()
     ), wait = TRUE)
-    tessiflow$flows[
-      flow_name == job$flow_name & job_name == job$job_name,
-      `:=`(
+    
+    flows_update_job(flow_name,job_name,
+      list(
         r_session = list(r_session),
         pid = r_session$get_pid(),
         step = 0,
         start_time = now(),
         status = "Running"
       )
-    ]
+    )
 
-    job_log_write(flow_name, job_name, paste("Starting job, pid:", r_session$get_pid()))
-    job_step(flow_name, job_name)
+    job_log_write(flow_name, job_name, paste("Starting job, pid:", r_session$get_pid()), console = TRUE)
   } else {
     warning(paste("Job", job$flow_name, "/", job$job_name, "has already been started!"))
   }
@@ -106,41 +106,104 @@ job_start <- function(flow_name, job_name) {
 #'
 job_step <- function(flow_name, job_name) {
   job <- flows_get_job(flow_name, job_name)
-
-  if (is.null(job$r_session) || job$r_session[[1]]$get_state() == "finished") {
-    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
-    return(invisible())
-  }
-
+  
   if (job$step == length(job$steps)) {
     return(job_finalize(flow_name, job_name))
   }
-
+  
+  step <- job$step + 1
   current_step <- job$steps[[job$step + 1]]
-  tessiflow$flows[
-    flow_name == job$flow_name & job_name == job$job_name,
-    `:=`(step = job$step + 1)
-  ]
-
-  job_log_write(flow_name, job_name, paste("Beginning step", job$step, ":", current_step$name))
-
-  rlang::expr(withr::with_envvar(!!current_step$env, {
-    Sys.getenv()
-    if (! !!rlang::parse_expr(as.character(current_step$`if`))) {
-      message("'if' is not true, skipping")
-      invisible(NULL)
-    } else {
-      !!as.call(c(`{`, rlang::parse_exprs(as.character(current_step$run))))
-    }
-  })) -> remote_expr
-
-  job$r_session[[1]]$call(eval, list(remote_expr))
-
+  flows_update_job(flow_name,job_name,
+                   list(step = step))
+  
+  if (is.null(job$r_session) || job$r_session[[1]]$get_state() == "finished") {
+    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
+    job_log_write(flow_name, job_name, paste("No running R session, skipping", step, ":", current_step$name), console = TRUE)
+  } else {
+    job_log_write(flow_name, job_name, paste("Beginning step", step, ":", current_step$name), console = TRUE)
+    
+    
+    job$r_session[[1]]$call(eval, list(job_make_remote_expr(c(current_step$env,job$env),
+                                                              as.character(current_step$`if`),
+                                                              as.character(current_step$run),
+                                                              shell = current_step$shell %||% "callr")))
+  }
+  
   return(invisible())
+}
+
+#' job_make_remote_expr
+#' 
+#' Creates an expression object that has local environment variables `env`, does nothing if `if_expr` evaluates
+#' to false and otherwise evaluates `run_expr` transparently. If shell is not `callr` then the `run_expr` gets 
+#' wrapped in a `system()` command to execute the shell.
+#'
+#' @param env_vars named list of environment variables
+#' @param if_expr deparsed if expresion
+#' @param run_expr deprased run expression
+#' @param shell string setting the shell, default is `callr` 
+#'
+#' @return R expression
+job_make_remote_expr <- function(env_vars=NULL,if_expr=NULL,run_expr=NULL,shell="callr") {
+  assert_character(if_expr,max.len=1,null.ok = TRUE)
+  assert_character(run_expr,max.len=1,null.ok = TRUE)
+  assert_character(shell,max.len=1,null.ok = TRUE)
+  assert_list(env_vars,names="named",types="character",null.ok = TRUE)
+  
+  if(length(run_expr)==0)
+    return()
+  
+  if(length(if_expr)==0)
+    if_expr <- "TRUE"
+  
+  if(length(shell) != 0 && shell != "callr") {
+    if(!grepl("{0}",shell,fixed=TRUE)) shell <- paste(shell,"{0}")
+    run_expr = paste0("system('",gsub("{0}",shQuote(run_expr),shell,fixed=TRUE),"', intern = TRUE)")
+  }
+    
+  rlang::expr(withr::with_envvar(!!env_vars, {
+    if (!(!!rlang::parse_expr(if_expr))) {
+      message("'if' expression is not true, skipping")
+      return(invisible(NULL))
+    } else {
+      !!as.call(c(`{`, rlang::parse_exprs(run_expr)))
+    }
+  })) 
+}
+
+#' job_on_error
+#'
+#' updates flows table and database, writes to log, and finalizes running session on error
+#'
+#' @param flow_name string workflow name
+#' @param job_name string job name
+#' @param error error condition object
+#' @param error_handler function, the error handler to call
+#' 
+#' @importFrom checkmate assert_class assert_character
+#' @importFrom cli ansi_strip
+#'
+#' @return invisibly
+job_on_error <- function(flow_name, job_name, error, error_handler=tessiflow::error_handler) {
+  assert_class(error,"error")
+  assert_character(flow_name,len=1)
+  assert_character(job_name,len=1)
+  assert_class(error_handler,"function")
+  
+  flows_update_job(flow_name,job_name,list(retval=1))
+  job_log_write(flow_name,job_name,error$message,console = TRUE)
+  job_log_write(flow_name,job_name,cli::ansi_strip(format(error$trace)))
+  job_finalize(flow_name,job_name)
+  
+  error$flow_name = flow_name
+  error$job_name = job_name
+  error_handler(error)
+  invisible()
 }
 
 
 job_poll <- function(flow_name, job_name) {
+  
   job <- flows_get_job(flow_name, job_name)
 
   if (is.null(job$r_session) || job$r_session[[1]]$get_state() == "finished") {
@@ -156,36 +219,20 @@ job_poll <- function(flow_name, job_name) {
       break
     }
     io_names <- names(which(io_state == "ready"))
-    if ("error" %in% io_names) {
-      errored <- TRUE
-    }
     io_funs <- rlang::parse_exprs(
       gsub("_process_lines", "", paste("read", io_names, "lines()", sep = "_"))
     )
     names(io_funs) <- io_names
-    output <- purrr::discard(sapply(io_funs, eval, envir = job$r_session[[1]]), ~ length(.) == 0)
+    output <- purrr::discard(lapply(io_funs, eval, envir = job$r_session[[1]]), ~ length(.) == 0)
     if (length(output)) {
-      output <- purrr::map2(
-        output, names(output),
-        ~ paste(
-          "[", toupper(.y), "]",
-          if (!is.character(.x)) {
-            capture.output(dput(.x))
-          } else {
-            .x
-          }
-        )
-      )
-      job_log_write(flow_name, job_name, purrr::flatten_chr(output))
+      output_str <- purrr::imap(output, ~ paste("[", toupper(.y), "]", 
+                    purrr::imap(.x, ~paste(.y,":",.x)))) %>% do.call(what=c)
+      job_log_write(flow_name, job_name, output_str)
     }
-  }
-
-  if (errored) {
-    tessiflow$flows[
-      flow_name == job$flow_name & job_name == job$job_name,
-      retval := 1
-    ]
-    job_finalize(flow_name, job_name)
+    if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {
+      errored <- TRUE
+      job_on_error(flow_name, job_name, output[["process"]]$error$parent)
+    }
   }
 
   if (job$r_session[[1]]$get_state() == "idle") {
@@ -195,26 +242,35 @@ job_poll <- function(flow_name, job_name) {
 
 job_finalize <- function(flow_name, job_name) {
   job <- flows_get_job(flow_name, job_name)
-
-  if (is.null(job$r_session) || job$r_session[[1]]$get_state() == "finished") {
-    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
-    return(invisible())
-  }
-
-  if (!is.na(job$retval)) {
-    warning("Errored")
+  
+  r_session <- job$r_session
+  
+  if (!is.na(job$retval) && job$retval!=0) {
+    warning(paste(flow_name,"/",job_name,"Errored, returned value:",job$retval))
   } else {
-    tessiflow$flows[
-      flow_name == job$flow_name & job_name == job$job_name,
-      `:=`(
-        r_session = list(),
-        pid = NA_integer_,
-        retval = 0,
-        end_time = now(),
-        status = "Finished"
-      )
-    ]
+    job$retval = 0
   }
 
-  job$r_session[[1]]$close()
+  flows_update_job(flow_name,job_name,
+                   list(
+                     r_session = list(NULL),
+                     pid = NA_integer_,
+                     step = NA_integer_,
+                     retval = job$retval,
+                     end_time = now(),
+                     status = "Finished"
+                   )
+  )
+  
+  job_log_write(flow_name,job_name,paste("Finalizing job, pid:",job$pid),console = TRUE)
+  
+  if (is.null(r_session) || r_session[[1]]$get_state() == "finished") {
+    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
+  } else {
+    job$r_session[[1]]$close()
+  }
 }
+
+job_maybe_start_resilient <- error_handler_factory(job_maybe_start)
+job_poll_resilient <- error_handler_factory(job_poll)
+

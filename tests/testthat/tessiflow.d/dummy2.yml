@@ -15,7 +15,7 @@ jobs:
     runs-on: machine-id
     steps: 
       - name: Step 1
-        if: ${{ FALSE }}
+        if: FALSE
         env: 
           env_variable_step: value
         run: |
@@ -31,6 +31,6 @@ jobs:
     
   
   job3:
-    if: ${{ TRUE }}
+    if: TRUE
     name: Job 3
     needs: [job1, job2]

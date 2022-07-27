@@ -152,7 +152,7 @@ parse_cron_part <- function(cron_part, range = c(0, 59)) {
 #'
 #' @param cron_range string range part of a cron string
 #'
-#' @return
+#' @return sequence of values determined by the cron range
 #' @importFrom rlang %||%
 #'
 parse_cron_range <- function(cron_range) {
