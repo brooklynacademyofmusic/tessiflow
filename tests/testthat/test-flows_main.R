@@ -7,15 +7,49 @@ local_flows_data_table()
 
 # flows_main --------------------------------------------------------------
 
-# test_that("flows_main does nothing when all tasks are finished")
-# 
-# test_that("flows_main calls job_maybe_start_resilient when tasks are waiting")
-# 
-# test_that("flows_main calls job_poll_resilient when tasks are running")
-# 
-# test_that("flows_main resets tasks to waiting when they are done")
-# 
-# test_that("flows_main reads from stdin and executes the command")
+flows <- tessiflow$flows
+test_that("flows_main does nothing when all tasks are finished",{
+  flows[,status:="Finished"]
+  stub(flows_main,"flows_parse",flows)
+  m = mock()
+  stub(flows_main,"job_maybe_start_resilient",m)
+  stub(flows_main,"job_poll_resilient",m)
+  flows_main()
+  expect_equal(length(mock_args(m)),0)
+})
+
+test_that("flows_main calls job_maybe_start_resilient when tasks are waiting",{
+  flows[,status:="Waiting"]
+  stub(flows_main,"flows_parse",flows)
+  m = mock()
+  stub(flows_main,"job_maybe_start_resilient",m)
+  stub(flows_main,"readLines",function() {stop("first loop")})
+  expect_error(flows_main(),"first loop")
+  expect_equal(length(mock_args(m)),nrow(flows))
+})
+
+test_that("flows_main calls job_poll_resilient when tasks are running",{
+  flows[,status:="Running"]
+  stub(flows_main,"flows_parse",flows)
+  m = mock()
+  stub(flows_main,"job_poll_resilient",m)
+  stub(flows_main,"readLines",function() {stop("first loop")})
+  expect_error(flows_main(),"first loop")
+  expect_equal(length(mock_args(m)),nrow(flows))
+})
+
+test_that("flows_main resets tasks to waiting when they are done",{
+  flows[,status:="Waiting"]
+  stub(flows_main,"flows_parse",flows)
+  m = mock()
+  stub(flows_main,"job_maybe_start_resilient",m)
+  stub(flows_main,"job_poll_resilient",function(){tessiflow$flows[,status:="Finished"]})
+  stub(flows_main,"readLines",function() {stop("first loop")})
+  expect_error(flows_main(),"first loop")
+  expect_equal(flows,tessiflow$flows)
+})
+
+test_that("flows_main reads from stdin and executes the command",{})
 
 
 # flows_get_job -----------------------------------------------------------
