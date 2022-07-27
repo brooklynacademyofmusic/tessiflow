@@ -24,7 +24,7 @@ R:
     install.packages("remotes")
     remotes::install github("skysyzygy/tessiflow")
 
-Create a yml file in your R USER directory called `config.yml` and add
+Create a yml file in your R_USER directory called `config.yml` and add
 the following keys to it, filling in information for your particular
 machine configuration:
 
@@ -45,20 +45,20 @@ In the tessiflow.d directory, create yml files (see format info below)
 ``` r
 library(tessiflow)
 
-flows parse() 
+flows_parse() 
 # returns a data.table of jobs parsed from the tessiflow.d yml files
 
-job start(flow name,job name)
+job_start(flow name,job name)
 # starts the job with the given flow and job name 
 
-tessiflow start()
+tessiflow_start()
 # ... runs a bunch of tasks
-tessiflow stop()
+tessiflow_stop()
 
-tessiflow enable()
+tessiflow_enable()
 # enables a scheduled task for the tessiflow scheduler using schtasks.exe on Windows or cron on *nix/Mac
 
-tessiflow disable()
+tessiflow_disable()
 # removes the scheduled task for the tessiflow scheduler
 
 ```
@@ -86,9 +86,9 @@ tessiflow disable()
 
 -   `jobs`: A workflow run is made up of one or more jobs, which run in
     parallel by default. To run jobs sequentially, you can define
-    dependencies on other jobs using the `jobs.<job id>.needs` keyword.
+    dependencies on other jobs using the `jobs.<job_id>.needs` keyword.
 
-    -   `<job id>`: Use `<job id>` to give your job a unique identifier.
+    -   `<job_id>`: Use `<job_id>` to give your job a unique identifier.
         The key `job id` is a string and its value is a map of the job's
         configuration data.
 
@@ -122,7 +122,7 @@ tessiflow disable()
               job2: 
                 needs: job1 
               job3: 
-                if: ${{ TRUE }} 
+                if: TRUE
                 needs: [job1, job2] 
             ```
 
