@@ -2,8 +2,7 @@
 % Please edit documentation in R/flows_main.R
 \name{flows_main}
 \alias{flows_main}
-\title{flows_main
-main flows loop}
+\title{flows_main}
 \usage{
 flows_main()
 }
@@ -11,6 +10,5 @@ flows_main()
 NULL, never!
 }
 \description{
-flows_main
 main flows loop
 }

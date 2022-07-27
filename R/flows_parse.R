@@ -12,12 +12,8 @@
 flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
   on.schedule <- NULL
 
-  if (is.null(flows_directory)) {
-    stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")
-  }
-
-  files <- dir(flows_directory, pattern = "*.yml", full.names = TRUE)
-  if (length(files) == 0) {
+  if (is.null(flows_directory) ||
+    length(files <- dir(flows_directory, pattern = "*.yml", full.names = TRUE)) == 0) {
     stop("Please set the tessiflow.d config option to the directory containing the workflow yml files")
   }
 
@@ -103,25 +99,16 @@ flow_to_data_table <- function(flow) {
 
   if_keys <- grep("\\bif\\b", keys, value = TRUE, perl = TRUE)
   if_parseable <- purrr::map_lgl(unlist(flow)[if_keys], test_parse)
-  if (!all(if_parseable)) {
-    stop(paste(c(
-      "If statement(s)", paste0(
-        names(if_parseable[!if_parseable]),
-        " : ",
-        if_parseable[!if_parseable],
-        ", "
-      ),
-      "in", flow_name, "not parseable."
-    ), collapse = " "))
-  }
+  run_parseable <- list(jobs = map(flow$jobs, ~ list(steps = purrr::map(.$steps, test_parse_run)))) %>% unlist()
+  parseable <- c(if_parseable, run_parseable)
+  exprs <- c(unlist(flow)[if_keys],unlist(map(flow$jobs,"steps"),recursive = FALSE))
 
-  run_parseable <- map(flow$jobs, ~ list(steps = purrr::map(.$steps, test_parse_run))) %>% unlist()
-  if (!all(run_parseable)) {
+  if (!all(parseable)) {
     stop(paste(c(
-      "Run statement(s)", paste0(
-        names(run_parseable[!run_parseable]),
+      "Statement(s)", paste0(
+        names(parseable[!parseable]),
         " : ",
-        run_parseable[!run_parseable],
+        exprs[!parseable],
         ", "
       ),
       "in", flow_name, "not parseable."
