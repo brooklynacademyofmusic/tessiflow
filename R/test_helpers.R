@@ -1,4 +1,6 @@
 make_fixtures <- function() {
+  flow_name <- job_name <- NULL
+  
   files <- dir(testthat::test_path("tessiflow.d"), pattern = "*.yml", full.names = TRUE, recursive = TRUE)
   flows <- lapply(files, yaml::read_yaml)
   saveRDS(flows, testthat::test_path("flows.Rds"))
@@ -24,7 +26,7 @@ local_log_dir <- function(envir = parent.frame()) {
 
 local_flows_data_table <- function(envir = parent.frame()) {
   test_path <- scheduled_runs <- `runs-on` <- needs <- NULL
-  
+
   tessiflow$flows <- readRDS(test_path("flows_data_table.Rds"))
   tessiflow$flows[1, scheduled_runs := list(list(NULL))]
   tessiflow$flows[1, `if` := list(list(NULL))]

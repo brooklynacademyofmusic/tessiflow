@@ -26,8 +26,8 @@ job_log_write <- function(flow_name, job_name, lines, console = FALSE) {
   }
 
   write(lines, filename, sep = "\r\n", append = TRUE)
-  
-  if(console) invisible(lapply(lines,message))
-  
+
+  if (console) invisible(lapply(lines, message))
+
   invisible()
 }
