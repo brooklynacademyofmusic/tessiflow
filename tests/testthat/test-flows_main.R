@@ -43,12 +43,13 @@ test_that("flows_main calls job_poll_resilient when tasks are running", {
 })
 
 test_that("flows_main resets tasks to waiting when they are done", {
-  flows[, status := "Waiting"]
+  flows[, status := "Running"]
   stub(flows_main, "flows_parse", flows)
   m <- mock()
   stub(flows_main, "job_maybe_start_resilient", m)
-  stub(flows_main, "job_poll_resilient", function() {
-    tessiflow$flows[, status := "Finished"]
+  stub(flows_main, "job_poll_resilient", function(...) {
+    tessiflow$flows[, `:=`(status="Finished",
+                           scheduled_runs = list(list()))]
   })
   stub(flows_main, "readLines", function() {
     stop("first loop")
