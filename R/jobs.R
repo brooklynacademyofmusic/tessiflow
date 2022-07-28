@@ -23,33 +23,25 @@ job_maybe_start <- function(flow_name, job_name) {
   }
 
   # check runs-on
-  if (!is.null(job_runs_on <- job$`runs-on`)) {
-    check_runs_on <- job_runs_on == Sys.info()["nodename"]
-  }
-
+  check_runs_on <- job$`runs-on` %||% NA == Sys.info()["nodename"] # T/F/NA
   # check if
-  if (!is.null(job_if <- job$`if`)) {
-    check_if <- eval(rlang::parse_expr(as.character(job_if)))
-  }
-
+  check_if <- eval(rlang::parse_expr(as.character(job$`if` %||% NA))) # T/F/NA
   # check needs
-  if (length(job_needs <- job$needs[[1]]) > 0) {
-    dependencies <- flows_log_get_last_run(job$flow_name, job_needs)
-    check_needs <- all(dependencies$end_time > last_run$end_time) &&
-      (all(dependencies$retval == 0) || exists("check_if") && check_if) &&
-      nrow(dependencies) == length(job_needs)
-  }
-
+  dependencies <- flows_log_get_last_run(job$flow_name, job$needs[[1]] %||% "")
+  if(nrow(dependencies) == 0) dependencies <- NULL
+  
+  check_needs <- all(dependencies$end_time > last_run$end_time) &&
+    (all(dependencies$retval == 0) || !is.na(check_if) && check_if) &&
+    nrow(dependencies) == length(job$needs[[1]]) 
   # check schedule
-  if (length(job_scheduled_runs <- job$scheduled_runs[[1]]) > 0) {
-    check_schedule <- any(job_scheduled_runs %>% lapply(purrr::keep, ~ . < now()) %>% lapply(tail, 1) >
-      last_run$end_time)
-  }
+  check_schedule <- any(job$scheduled_runs[[1]] %>% unlist %>% purrr::keep(~ . < now()) %||% NA >
+    last_run$end_time) # T/F/NA
 
-  if ((!exists("check_runs_on") || check_runs_on) &&
-    (!exists("check_if") || check_if) &&
-    (!exists("check_needs") || check_needs) &&
-    (!exists("check_schedule") || !is.na(check_schedule) && check_schedule)) {
+  if (
+    (is.na(check_runs_on) || check_runs_on) &&
+    (is.na(check_if) || check_if) &&
+    (is.na(check_needs) || check_needs) &&
+    (is.na(check_schedule) || check_schedule)) {
     job_start(flow_name, job_name)
   }
 }
