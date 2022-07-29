@@ -11,8 +11,8 @@
 #' @importFrom utils zip
 #'
 job_log_write <- function(flow_name, job_name, lines, console = FALSE) {
-  assert_character(flow_name, len = 1)
-  assert_character(job_name, len = 1)
+  assert_flow_job_name(flow_name, job_name)
+  assert_character(lines)
 
   # add time and job info
   lines <- paste("[", Sys.time(), ":", job_name, "]", lines)

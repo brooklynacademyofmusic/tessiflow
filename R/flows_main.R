@@ -1,12 +1,19 @@
 #' flows_main
 #'
 #' main flows loop
+#' 
+#' @importFrom stats runif
+#' @export
 #'
 #' @return NULL, never!
 flows_main <- function() {
   status <- on.schedule <- NULL
 
   tessiflow$flows <- flows_parse()
+  
+  message("Starting...")
+  
+  server <- serverSocket(ceiling(runif(1,2^10,2^16)))
 
   while (!all(tessiflow$flows$status == "Finished")) {
     if ("Waiting" %in% tessiflow$flows$status) {
@@ -30,18 +37,27 @@ flows_main <- function() {
         )
       ]
     }
-
-    if (!test_parse(stdin <- readLines())) {
-      message(paste0("Can't parse '", stdin, "' from input stream."))
-    } else if (length(stdin) > 0) {
-      eval(rlang::parse_expr(stdin))
-    }
-
+    
+    flows_main_read_server(server)
+   
     Sys.sleep(1)
   }
+  
+  close(server)
 }
 
-
+flows_main_read_server <- function(server) {
+  socket <- try(socketAccept(server,timeout=1),silent=TRUE)
+  if(!"try-error" %in% class(socket)) {
+    input <- readLines(socket,n=1)
+    if (!test_parse(input)) {
+      message(paste0("Can't parse '", input, "' from input stream."))
+    } else if (length(input) > 0) {
+      tryCatch(eval(rlang::parse_expr(input)),error=print)
+    }
+    close(socket)
+  }
+}
 
 #' flows_get_job
 #'
@@ -56,8 +72,8 @@ flows_main <- function() {
 flows_get_job <- function(.flow_name, .job_name) {
   flow_name <- job_name <- NULL
 
-  assert_character(.flow_name, len = 1)
-  assert_character(.job_name, len = 1)
+  assert_flow_job_name(.flow_name, .job_name)
+  
   job <- tessiflow$flows[flow_name == .flow_name &
     job_name == .job_name, ]
 
@@ -78,8 +94,8 @@ flows_get_job <- function(.flow_name, .job_name) {
 flows_update_job <- function(.flow_name, .job_name, data) {
   flow_name <- job_name <- NULL
 
-  assert_character(.flow_name, len = 1)
-  assert_character(.job_name, len = 1)
+  assert_flow_job_name(.flow_name, .job_name)
+  
   assert_list(data)
 
   tessiflow$flows[flow_name == .flow_name &

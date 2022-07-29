@@ -15,6 +15,8 @@
 #' @importFrom utils tail
 #'
 job_maybe_start <- function(flow_name, job_name) {
+  assert_flow_job_name(flow_name, job_name)
+  
   job <- flows_get_job(flow_name, job_name)
 
   last_run <- flows_log_get_last_run(job$flow_name, job$job_name)
@@ -67,6 +69,8 @@ job_maybe_start <- function(flow_name, job_name) {
 #' @return invisibly
 #'
 job_start <- function(flow_name, job_name) {
+  assert_flow_job_name(flow_name, job_name)
+  
   # spin up a callr process
   job <- flows_get_job(flow_name, job_name)
 
@@ -106,6 +110,8 @@ job_start <- function(flow_name, job_name) {
 #' @return invisibly
 #'
 job_step <- function(flow_name, job_name) {
+  assert_flow_job_name(flow_name, job_name)
+  
   job <- flows_get_job(flow_name, job_name)
 
   if (job$step == length(job$steps)) {
@@ -191,8 +197,7 @@ job_make_remote_expr <- function(env_vars = NULL, if_expr = NULL, run_expr = NUL
 #' @return invisibly
 job_on_error <- function(flow_name, job_name, error) {
   assert_class(error, "error")
-  assert_character(flow_name, len = 1)
-  assert_character(job_name, len = 1)
+  assert_flow_job_name(flow_name, job_name)
 
   flows_update_job(flow_name, job_name, list(retval = 1))
   job_log_write(flow_name, job_name, error$message, console = TRUE)
@@ -207,6 +212,8 @@ job_on_error <- function(flow_name, job_name, error) {
 
 
 job_poll <- function(flow_name, job_name) {
+  assert_flow_job_name(flow_name, job_name)
+  
   job <- flows_get_job(flow_name, job_name)
 
   if (is.null(job$r_session) || job$r_session[[1]]$get_state() == "finished") {
@@ -244,6 +251,8 @@ job_poll <- function(flow_name, job_name) {
 }
 
 job_finalize <- function(flow_name, job_name) {
+  assert_flow_job_name(flow_name, job_name)
+  
   job <- flows_get_job(flow_name, job_name)
 
   r_session <- job$r_session
