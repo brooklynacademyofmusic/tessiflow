@@ -3,14 +3,14 @@ local_log_dir()
 # tessiflow_start ---------------------------------------------------------
 
 test_that("tessiflow_start starts a background process",{
-  expect_length(ps::ps_find_tree("tessiflow_daemon"),0)
+  expect_equal(length(ps::ps_find_tree("tessiflow_daemon")),0)
   tessiflow_start()
-  expect_length(ps::ps_find_tree("tessiflow_daemon"),2)
+  expect_gte(length(ps::ps_find_tree("tessiflow_daemon")),1)
 })
 
 test_that("tessiflow_start refuses to start if one is already running",{
- expect_error(tessiflow_start(),"Running tessiflow")
- expect_length(ps::ps_find_tree("tessiflow_daemon"),2)
+  expect_error(tessiflow_start(),"Running tessiflow")
+  expect_gte(length(ps::ps_find_tree("tessiflow_daemon")),1)
 })
 
 test_that("tessiflow_start logs to a log file",{
@@ -21,9 +21,9 @@ test_that("tessiflow_start logs to a log file",{
 # tessiflow_stop ----------------------------------------------------------
 
 test_that("tessiflow_stop kills the daemon process",{
- expect_length(ps::ps_find_tree("tessiflow_daemon"),2)
+ expect_gte(length(ps::ps_find_tree("tessiflow_daemon")),1)
  tessiflow_stop()
- expect_length(ps::ps_find_tree("tessiflow_daemon"),0)
+ expect_equal(length(ps::ps_find_tree("tessiflow_daemon")),0)
 })
 
 test_that("tessiflow_stop kills all running jobs",{})
