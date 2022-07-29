@@ -13,12 +13,12 @@ make_fixtures <- function() {
 }
 
 local_log_dir <- function(envir = parent.frame()) {
-  dir.create(file.path(tempdir(), "logs"))
+  dir.create(config::get("tessiflow.log"))
   withr::defer(
     {
       flows_log_close()
       gc()
-      unlink(file.path(tempdir(), "logs"), recursive = TRUE, force = TRUE)
+      unlink(config::get("tessiflow.log"), recursive = TRUE, force = TRUE)
     },
     envir = envir
   )

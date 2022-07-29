@@ -4,10 +4,7 @@
 \alias{tessiflow_start}
 \title{tessiflow_start}
 \usage{
-tessiflow_start(flows_log_dir = config::get("tessiflow.log"))
-}
-\arguments{
-\item{flows_log_dir}{directory where \code{tessiflow.log} file and \code{tessiflow.pipe} input will be stored}
+tessiflow_start()
 }
 \value{
 the process object

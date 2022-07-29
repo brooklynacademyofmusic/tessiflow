@@ -11,6 +11,7 @@ flows <- tessiflow$flows
 test_that("flows_main does nothing when all tasks are finished", {
   flows[, status := "Finished"]
   stub(flows_main, "flows_parse", flows)
+  stub(flows_main, "flows_main_read_server", close)
   m <- mock()
   stub(flows_main, "job_maybe_start_resilient", m)
   stub(flows_main, "job_poll_resilient", m)
@@ -23,7 +24,8 @@ test_that("flows_main calls job_maybe_start_resilient when tasks are waiting", {
   stub(flows_main, "flows_parse", flows)
   m <- mock()
   stub(flows_main, "job_maybe_start_resilient", m)
-  stub(flows_main, "readLines", function() {
+  stub(flows_main, "flows_main_read_server", function(...) {
+    close(...)
     stop("first loop")
   })
   expect_error(flows_main(), "first loop")
@@ -35,7 +37,8 @@ test_that("flows_main calls job_poll_resilient when tasks are running", {
   stub(flows_main, "flows_parse", flows)
   m <- mock()
   stub(flows_main, "job_poll_resilient", m)
-  stub(flows_main, "readLines", function() {
+  stub(flows_main, "flows_main_read_server", function(...) {
+    close(...)
     stop("first loop")
   })
   expect_error(flows_main(), "first loop")
@@ -51,37 +54,36 @@ test_that("flows_main resets tasks to waiting when they are done", {
     tessiflow$flows[, `:=`(status="Finished",
                            scheduled_runs = list(list()))]
   })
-  stub(flows_main, "readLines", function() {
+  stub(flows_main, "flows_main_read_server", function(...) {
+    close(...)
     stop("first loop")
   })
   expect_error(flows_main(), "first loop")
   expect_equal(flows, tessiflow$flows)
 })
 
-test_that("flows_main reads from stdin if there is something to read and executes the command", {
-  file <- file(tempfile(), "w+")
-  stub(flows_main, "readLines", function() {
-    readLines(file)
-  })
-  stub(flows_main, "Sys.sleep", function(t) {
-    stop("first loop")
-  })
-  m <- mock()
+
+# flows_main_read_server --------------------------------------------------
+
+
+test_that("flows_main_read_server reads from the server port if there is something to read and executes the command", {
+  server <- serverSocket(32768)
+  
   job_start <- mock()
-  stub(flows_main, "job_maybe_start_resilient", m)
-  stub(flows_main, "job_poll_resilient", m)
-  stub(flows_main, "job_start", job_start)
-  expect_error(flows_main(), "first loop")
+  stub(flows_main_read_server,"job_start",job_start)
+  
+  socket <- socketConnection(port=32768)
+  cat("do something", file = socket, sep = "\n")
+  expect_message(flows_main_read_server(server), "do something")
+  close(socket)
 
-  cat("do something", file = file, sep = "\n")
-  expect_error(expect_message(flows_main(), "do something"), "first loop")
-
-  cat(deparse(quote(job_start("flow_name", "job_name"))), file = file, sep = "\n")
-  expect_error(flows_main(), "first loop")
-
+  socket <- socketConnection(port=32768)
+  cat(deparse(quote(job_start("flow_name", "job_name"))), file = socket, sep = "\n")
+  expect_silent(flows_main_read_server(server))
   expect_length(mock_args(job_start), 1)
-
-  close(file)
+  close(socket)
+  
+  close(server)
 })
 
 
@@ -120,7 +122,7 @@ test_that("flows_get_job gets the corresponding row from the flows table as a li
 })
 
 test_that("flows_get_job errors if it can't find the job", {
-  expect_error(flows_get_job("not a workflow", "not a job"), "not a workflow")
+  expect_error(flows_get_job("not a workflow", "not a job"), "flow_name.+Dummy workflow")
 })
 
 # flows_update_job --------------------------------------------------------

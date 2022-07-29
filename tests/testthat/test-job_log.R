@@ -2,9 +2,12 @@ withr::local_package("checkmate")
 withr::local_package("mockery")
 local_log_dir()
 
+tessiflow$flows <- data.table(flow_name="this is a flow",job_name="this is a job")
+
 test_that("job_log_write complains if flow and job are not simple strings", {
   expect_error(job_log_write(1, c("a", "b")))
 })
+
 
 test_that("job_log_write writes lines to a file", {
   job_log_write("this is a flow", "this is a job", c("these", "are", "messages"))
