@@ -61,7 +61,8 @@ script_expr <- function(expr) {
   r_command <- paste(deparse(expr,width.cutoff = 500),collapse=";")
   
   paste(
-    Sys.which("Rscript"),
+    paste0(file.path(Sys.getenv("R_HOME"),"bin","Rscript"),
+           ifelse(.Platform$OS.type=="windows",".exe","")),
     "-e", shQuote(r_command),
     "--no-save","--no-restore"
   )  

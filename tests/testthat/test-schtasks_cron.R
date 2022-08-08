@@ -1,6 +1,6 @@
 withr::local_package("mockery")
-withr::defer(eval(rlang::expr(.Platform$OS.type <- !!.Platform$OS.type)))
-.Platform$OS.type <- "windows"
+#withr::defer(eval(rlang::expr(.Platform$OS.type <- !!.Platform$OS.type)))
+#.Platform$OS.type <- "windows"
 
 temp <- tempfile()
 expr <- rlang::expr({print("Here I am!"); writeLines("hello world!",!!temp)})
@@ -11,7 +11,7 @@ if(.Platform$OS.type != "windows") {
 }
 
 test_that("script_expr creates a runnable string", {
-  withr::local_file(temp)
+  withr::local_file(list(temp=file.create(temp)))
   expect_match(system(script_expr(expr),intern = TRUE),"Here I am!")
   expect_equal(readLines(temp),"hello world!")
 })
@@ -22,7 +22,7 @@ test_that("schedule_schtasks runs successfully", {
 })
 
 test_that("schedule_schtasks creates a usable task", {
-  withr::local_file(temp)
+  withr::local_file(list(temp=file.create(temp)))
   if(.Platform$OS.type == "windows") {
     expect_match(system("schtasks /run /tn dummy_task",intern=TRUE),"SUCCESS")
   } else {
