@@ -17,17 +17,30 @@ job_log_write <- function(flow_name, job_name, lines, console = FALSE) {
   # add time and job info
   lines <- paste("[", Sys.time(), ":", job_name, "]", lines)
   filename <- file.path(config::get("tessiflow.log"), paste0(flow_name, ".log"))
-
-  # rotate logs if over 1M
-  if (file.exists(filename) && file.info(filename)$size > 1024^2) {
-    zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", today(), ".zip")
-    zip(zip_filename, filename, flags = "-j -q") # -j : "junk" the directory structure
-    if (file.exists(zip_filename)) file.remove(filename)
-  }
+  log_rotate(filename)
 
   write(lines, filename, sep = "\r\n", append = TRUE)
 
   if (console) invisible(lapply(lines, message))
 
+  invisible()
+}
+
+#' log_rotate
+#'
+#' Rotate log file `filename` into a zip file if its size exceeds `size` bytes
+#'
+#' @param filename string filename of logfile to (potentially) rotate
+#' @param size integer size in bytes, default is 1 megabyte
+#'
+#' @return nothing, invisibly
+log_rotate <- function(filename, size = 1024^2) {
+  
+  if (file.exists(filename) && file.info(filename)$size > size) {
+    zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", today(), ".zip")
+    zip(zip_filename, filename, flags = "-j -q") # -j : "junk" the directory structure
+    if (file.exists(zip_filename)) file.remove(filename)
+  }
+  
   invisible()
 }
