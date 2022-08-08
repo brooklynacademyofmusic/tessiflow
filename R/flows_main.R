@@ -11,8 +11,6 @@ flows_main <- function() {
 
   tessiflow$flows <- flows_parse()
   
-  message("Starting...")
-  
   server <- serverSocket(ceiling(runif(1,2^10,2^16)))
 
   while (!all(tessiflow$flows$status == "Finished")) {
