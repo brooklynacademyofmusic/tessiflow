@@ -108,9 +108,9 @@ tessiflow_job_start <- function(flow_name, job_name) {
   invisible()
 }
 
-#' @describeIn tessiflow_job_start Stops a tessiflow job identified by `flow_name` and `job_name`
+#' @describeIn tessiflow_job_stop Stops a tessiflow job identified by `flow_name` and `job_name`
 #' @export
-tessiflow_job_start <- function(flow_name, job_name) {
+tessiflow_job_stop <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
   
   tree <- ps::ps_find_tree("tessiflow")
@@ -121,7 +121,7 @@ tessiflow_job_start <- function(flow_name, job_name) {
   conns <- rbindlist(lapply(tree,ps::ps_connections))
   socket <- socketConnection(port = conns$lport[[1]])
   
-  writeLines(deparse(rlang::expr(job_start(!!flow_name, !!job_name))),socket)
+  writeLines(deparse(rlang::expr(job_stop(!!flow_name, !!job_name))),socket)
   
   invisible()
 }

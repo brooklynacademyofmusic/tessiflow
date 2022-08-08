@@ -10,7 +10,7 @@ run_expr <- quote({
     message("Running flows_main()")
     Sys.sleep(1) # just here to separate these messages from leaking into the logdir cat 
     cat(config::get("tessiflow.log"),sep="\n")
-    Sys.sleep(10) # has to be long enough to allow the process to persist between tests
+    Sys.sleep(60) # has to be long enough to allow the process to persist between tests
   })
   tessiflow_run()
 })
