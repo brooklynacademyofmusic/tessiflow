@@ -45,12 +45,20 @@ flows_main <- function() {
 }
 
 flows_main_read_server <- function(server) {
+  allowed_calls = c("job_start","job_stop")
+  
   socket <- try(socketAccept(server,timeout=1),silent=TRUE)
   if(!"try-error" %in% class(socket)) {
     input <- readLines(socket,n=1)
     if (!test_parse(input)) {
       message(paste0("Can't parse '", input, "' from input stream."))
     } else if (length(input) > 0) {
+      expr <- rlang::parse_expr(input)
+      if(!is.call(expr) || !rlang::call_name(expr) %in% allowed_calls)
+        return(message(paste0("Expression must be one of ",
+                             paste(allowed_calls,collapse=", "),
+                             ", got ",input)))
+        
       tryCatch(eval(rlang::parse_expr(input)),error=print)
     }
     close(socket)
