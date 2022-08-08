@@ -13,5 +13,5 @@ flow_to_data_table(flow)
 flow as a data.table
 }
 \description{
-flow_to_data_table
+parses a single flow from a yaml file to a data.table
 }
