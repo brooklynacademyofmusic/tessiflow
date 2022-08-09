@@ -25,10 +25,12 @@ test_that("tessiflow_run refuses to start if tessiflow is already running",{
   p1$poll_io(10000)
   p1_output <- p1$read_output_lines()
   expect_match(p1_output,"Starting tessiflow",all=FALSE)
-  expect_length(p1$read_error_lines(),0)
+  print(p1$read_output_lines())
   num_processes <<- length(ps::ps_find_tree("tessiflow-daemon"))
   expect_gte(num_processes,1)
   expect_equal(p1$get_status(),"running")
+  print(p1$read_all_error())
+  print(p1$read_all_output())
   
   p2 <- callr::r_bg(eval,list(run_expr))
   p2$poll_io(10000)
