@@ -19,27 +19,29 @@ run_expr <- quote({
 num_processes <- 0
 
 test_that("tessiflow_run refuses to start if tessiflow is already running",{
-  expect_equal(length(ps::ps_find_tree("tessiflow-daemon_0")),0)
+  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
   
   p1 <- callr::r_bg(eval,list(run_expr))
   p1$poll_io(10000)
   p1_output <- p1$read_output_lines()
   expect_match(p1_output,"Starting tessiflow",all=FALSE)
-  num_processes <<- length(ps::ps_find_tree("tessiflow-daemon_0"))
+  expect_length(p1$read_error_lines(),0)
+  num_processes <<- length(ps::ps_find_tree("tessiflow-daemon"))
   expect_gte(num_processes,1)
+  expect_equal(p1$get_state(),"busy")
   
   p2 <- callr::r_bg(eval,list(run_expr))
   p2$poll_io(10000)
   p2_error <- p2$read_error_lines()
   expect_match(p2_error,"Found running tessiflow",all=FALSE)
-  expect_equal(length(ps::ps_find_tree("tessiflow-daemon_0")),num_processes)
+  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),num_processes)
   
   p1$kill_tree()
   p2$kill_tree()
 })
 
 test_that("tessiflow_run logs to a log file",{
-  expect_equal(length(ps::ps_find_tree("tessiflow-daemon_0")),0)
+  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
   
   p1 <- callr::r_bg(eval,list(run_expr))
   p1$poll_io(10000)
@@ -64,9 +66,9 @@ test_that("tessiflow_run logs to a log file",{
 test_that("tessiflow_stop kills the daemon process",{
  p1 <- callr::r_bg(eval,list(run_expr))
  p1$poll_io(10000)
- expect_gte(length(ps::ps_find_tree("tessiflow-daemon_0")),1)
+ expect_gte(length(ps::ps_find_tree("tessiflow-daemon")),1)
  tessiflow_stop()
- expect_equal(length(ps::ps_find_tree("tessiflow-daemon_0")),0)
+ expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
 })
 
 test_that("tessiflow_stop kills all running jobs",{
@@ -83,10 +85,10 @@ test_that("tessiflow_stop kills all running jobs",{
   p1 <- callr::r_bg(eval,list(run_expr))
   p1$poll_io(10000)
   Sys.sleep(1)
-  expect_gt(length(ps::ps_find_tree("tessiflow-daemon_0")),num_processes)
+  expect_gt(length(ps::ps_find_tree("tessiflow-daemon")),num_processes)
   
   tessiflow_stop()
-  expect_equal(length(ps::ps_find_tree("tessiflow-daemon_0")),0)
+  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
 })
 
 # tessiflow_enable --------------------------------------------------------

@@ -14,7 +14,7 @@ tessiflow_run <- function() {
   # called for error-checking side-effects
   flows_parse()
   
-  tree <- ps::ps_find_tree("tessiflow-daemon_0")
+  tree <- ps::ps_find_tree("tessiflow-daemon")
   if(length(tree)>0) {
     stop("Found running tessiflow process, cowardly refusing to start another.")
   } 
@@ -22,7 +22,7 @@ tessiflow_run <- function() {
   logfile <- file.path(flows_log_dir, "tessiflow.log")
   log_rotate(logfile)
   
-  local_envvar("tessiflow-daemon_0"="YES")
+  local_envvar("tessiflow-daemon"="YES")
   local_output_sink(logfile, append = TRUE, split = TRUE, .local_envir = environment())
   local_message_sink(logfile, append = TRUE, .local_envir = environment())
   
@@ -37,7 +37,7 @@ tessiflow_run <- function() {
 #'
 #' @importFrom ps ps_kill_tree
 tessiflow_stop <- function() {
-  ps_kill_tree("tessiflow-daemon_0")
+  ps_kill_tree("tessiflow-daemon")
 }
 
 #' tessiflow_enable
