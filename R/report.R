@@ -7,6 +7,7 @@
 #' @importFrom dplyr tbl filter mutate transmute collect
 #' @describeIn flows_report Pull process data from the SQLite database from the last 24hours.
 flows_report_load <- function() {
+  start_time <- flow_name <- job_name <- retval <- status <- step <- end_time <- `End Time` <- `Start Time` <- NULL
   
   flows_log_open()
   
