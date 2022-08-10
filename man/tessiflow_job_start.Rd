@@ -34,7 +34,7 @@ Starts a tessiflow job identified by \code{flow_name} and \code{job_name}
 
 \examples{
 \dontrun{
-tessiflow::tessiflow_job_start("Workflow A","Job 1")
-tessiflow::tessiflow_job_stop("Workflow A","Job 1")
+tessiflow::tessiflow_job_start("Workflow A", "Job 1")
+tessiflow::tessiflow_job_stop("Workflow A", "Job 1")
 }
 }
