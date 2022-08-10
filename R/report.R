@@ -39,7 +39,7 @@ tessiflow_report_load <- function() {
 #' @describeIn tessiflow_report Send the flows report
 tessiflow_report_send <- function() {
   subject <- "tessiflow report"
-  body <- flows_report_load() %>%
+  body <- tessiflow_report_load() %>%
     addHtmlTableStyle(col.rgroup = case_when(
       .$Status == "Failed" ~ "#F77",
       .$Status == "Running" ~ "#7F7",
@@ -50,8 +50,15 @@ tessiflow_report_send <- function() {
   send_email(subject = subject, body = body)
 }
 
+#' tessiflow_report_enable
+#' 
+#' Install `tessiflow.yml` into the `tessiflow.d` directory to run the tessiflow report daily at 9am.
+#'
+#' @return TRUE if success, FALSE if failure
+#' @export
 tessiflow_report_enable <- function() {
-  file.copy(system.file("tessiflow.yml"), config::get("tessiflow.d"))
+  file.copy(system.file("extdata","tessiflow.yml",package="tessiflow"), 
+            config::get("tessiflow.d"))
 }
 
 #' interval_to_period
