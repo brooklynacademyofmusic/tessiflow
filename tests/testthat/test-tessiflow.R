@@ -160,7 +160,7 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket",{
   
   p1 <- callr::r_bg(eval,list(run_expr))
   consume_output_lines(p1)
-  
+
   tessiflow_run_command("Dummy workflow","Job 1","this_is_a_function")
   
   while(length(p1_output <- p1$read_output_lines())==0)

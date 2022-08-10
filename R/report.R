@@ -1,12 +1,12 @@
 
-#' flows_report
+#' tessiflow_report
 #' 
 #'
 #' @return nothing
 #' @importFrom lubridate now ddays as_datetime
 #' @importFrom dplyr tbl filter mutate transmute collect
-#' @describeIn flows_report Pull process data from the SQLite database from the last 24hours.
-flows_report_load <- function() {
+#' @describeIn tessiflow_report Pull process data from the SQLite database from the last 24hours.
+tessiflow_report_load <- function() {
   start_time <- flow_name <- job_name <- retval <- status <- step <- end_time <- `End Time` <- `Start Time` <- NULL
   
   flows_log_open()
@@ -32,8 +32,8 @@ flows_report_load <- function() {
 
 #' @importFrom htmlTable addHtmlTableStyle htmlTable
 #' @importFrom dplyr case_when
-#' @describeIn flows_report Send the flows report
-flows_report_send <- function() {
+#' @describeIn tessiflow_report Send the flows report
+tessiflow_report_send <- function() {
   
    
     subject <- "tessiflow report"
@@ -44,6 +44,10 @@ flows_report_send <- function() {
       htmlTable(rnames = FALSE)
     
     send_email(subject = subject,body=body)
+}
+
+tessiflow_report_enable <- function() {
+  file.copy(system.file("tessiflow.yml"),config::get("tessiflow.d"))
 }
 
 #' interval_to_period

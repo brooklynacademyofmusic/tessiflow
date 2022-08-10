@@ -1,0 +1,13 @@
+name: Tessiflow
+
+on:
+  schedule: 
+    - cron: '0 9 * * *'
+
+jobs:
+  job1:
+    name: Report
+    steps: 
+      - run: |
+          library(tessiflow)
+          flows_report_send()
