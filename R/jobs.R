@@ -16,7 +16,7 @@
 #'
 job_maybe_start <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
-  
+
   job <- flows_get_job(flow_name, job_name)
 
   last_run <- flows_log_get_last_run(job$flow_name, job$job_name)
@@ -30,20 +30,20 @@ job_maybe_start <- function(flow_name, job_name) {
   check_if <- eval(rlang::parse_expr(as.character(job$`if` %||% NA))) # T/F/NA
   # check needs
   dependencies <- flows_log_get_last_run(job$flow_name, job$needs[[1]] %||% "")
-  if(nrow(dependencies) == 0) dependencies <- NULL
-  
+  if (nrow(dependencies) == 0) dependencies <- NULL
+
   check_needs <- all(dependencies$end_time > last_run$end_time) &&
     (all(dependencies$retval == 0) || !is.na(check_if) && check_if) &&
-    nrow(dependencies) == length(job$needs[[1]]) 
+    nrow(dependencies) == length(job$needs[[1]])
   # check schedule
-  check_schedule <- any(job$scheduled_runs[[1]] %>% unlist %>% purrr::keep(~ . < now()) %||% NA >
+  check_schedule <- any(job$scheduled_runs[[1]] %>% unlist() %>% purrr::keep(~ . < now()) %||% NA >
     last_run$end_time) # T/F/NA
 
   if (
     (is.na(check_runs_on) || check_runs_on) &&
-    (is.na(check_if) || check_if) &&
-    (is.na(check_needs) || check_needs) &&
-    (is.na(check_schedule) || check_schedule)) {
+      (is.na(check_if) || check_if) &&
+      (is.na(check_needs) || check_needs) &&
+      (is.na(check_schedule) || check_schedule)) {
     job_start(flow_name, job_name)
   }
 }
@@ -62,7 +62,7 @@ job_maybe_start <- function(flow_name, job_name) {
 #'
 job_start <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
-  
+
   # spin up a callr process
   job <- flows_get_job(flow_name, job_name)
 
@@ -103,7 +103,7 @@ job_start <- function(flow_name, job_name) {
 #'
 job_step <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
-  
+
   job <- flows_get_job(flow_name, job_name)
 
   if (job$step == length(job$steps)) {
@@ -205,7 +205,7 @@ job_on_error <- function(flow_name, job_name, error) {
 
 job_poll <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
-  
+
   job <- flows_get_job(flow_name, job_name)
 
   if (is.null(job$r_session) || job$r_session[[1]]$get_state() == "finished") {
@@ -244,7 +244,7 @@ job_poll <- function(flow_name, job_name) {
 
 job_finalize <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
-  
+
   job <- flows_get_job(flow_name, job_name)
 
   r_session <- job$r_session

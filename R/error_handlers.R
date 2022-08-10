@@ -27,7 +27,6 @@ error_print <- function(error) {
 #' @importFrom checkmate test_character test_list
 #' @importFrom cli ansi_html_style ansi_html
 error_email <- function(error) {
-
   process_name <- "tessiflow"
 
   if ("flow_name" %in% names(error) || "job_name" %in% names(error)) {
@@ -42,9 +41,8 @@ error_email <- function(error) {
     process_name, "reported the following error:<p>",
     cli::ansi_html(error)
   ), collapse = " ")
-  
-  send_email(subject = subject,body = body)
-  
+
+  send_email(subject = subject, body = body)
 }
 
 #' @param fun function to wrap

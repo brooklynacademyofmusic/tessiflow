@@ -51,8 +51,10 @@ test_that("flows_main resets tasks to waiting when they are done", {
   m <- mock()
   stub(flows_main, "job_maybe_start_resilient", m)
   stub(flows_main, "job_poll_resilient", function(...) {
-    tessiflow$flows[, `:=`(status="Finished",
-                           scheduled_runs = list(list()))]
+    tessiflow$flows[, `:=`(
+      status = "Finished",
+      scheduled_runs = list(list())
+    )]
   })
   stub(flows_main, "flows_main_read_server", function(...) {
     close(...)
@@ -68,38 +70,38 @@ test_that("flows_main resets tasks to waiting when they are done", {
 
 test_that("flows_main_read_server reads from the server port if there is something to read and executes the command", {
   server <- serverSocket(32768)
-  
-  job_start <- mock()
-  stub(flows_main_read_server,"job_start",job_start)
 
-  socket <- socketConnection(port=32768)
+  job_start <- mock()
+  stub(flows_main_read_server, "job_start", job_start)
+
+  socket <- socketConnection(port = 32768)
   cat(deparse(quote(job_start("flow_name", "job_name"))), file = socket, sep = "\n")
   expect_silent(flows_main_read_server(server))
   expect_length(mock_args(job_start), 1)
   close(socket)
-  
+
   close(server)
 })
 
 
 test_that("flows_main_read_server returns a message if the string isn't a call or isn't allowed", {
   server <- serverSocket(32768)
-  
-  socket <- socketConnection(port=32768)
+
+  socket <- socketConnection(port = 32768)
   cat("do something", file = socket, sep = "\n")
   expect_message(flows_main_read_server(server), "Can't parse.+do something")
   close(socket)
-  
-  socket <- socketConnection(port=32768)
+
+  socket <- socketConnection(port = 32768)
   cat(deparse(quote(TRUE)), file = socket, sep = "\n")
-  expect_message(flows_main_read_server(server),"Expression must be.+job_start.+job_stop.+TRUE")
+  expect_message(flows_main_read_server(server), "Expression must be.+job_start.+job_stop.+TRUE")
   close(socket)
-  
-  socket <- socketConnection(port=32768)
+
+  socket <- socketConnection(port = 32768)
   cat(deparse(quote(stop("I am trying to make you fail!"))), file = socket, sep = "\n")
-  expect_message(flows_main_read_server(server),"Expression must be.+job_start.+job_stop.+make you fail")
+  expect_message(flows_main_read_server(server), "Expression must be.+job_start.+job_stop.+make you fail")
   close(socket)
-  
+
   close(server)
 })
 

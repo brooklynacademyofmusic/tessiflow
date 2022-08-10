@@ -2,7 +2,7 @@ withr::local_package("checkmate")
 withr::local_package("mockery")
 local_log_dir()
 
-tessiflow$flows <- data.table(flow_name="this is a flow",job_name="this is a job")
+tessiflow$flows <- data.table(flow_name = "this is a flow", job_name = "this is a job")
 
 test_that("job_log_write complains if flow and job are not simple strings", {
   expect_error(job_log_write(1, c("a", "b")))
@@ -43,14 +43,13 @@ test_that("log_rotate rotates a log file when it's over size=size", {
   filename <- tempfile()
   zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", today(), ".zip")
 
-  write(c("these","are","lines"),filename,append=T,sep="\n")
-  
-  log_rotate(filename, size=file.info(filename)$size)
+  write(c("these", "are", "lines"), filename, append = T, sep = "\n")
+
+  log_rotate(filename, size = file.info(filename)$size)
   expect_length(readLines(filename), 3)
   expect_false(file.exists(zip_filename))
-  
-  log_rotate(filename, size=file.info(filename)$size-1)
+
+  log_rotate(filename, size = file.info(filename)$size - 1)
   expect_false(file.exists(filename))
   expect_true(file.exists(zip_filename))
 })
-
