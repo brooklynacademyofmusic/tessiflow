@@ -36,6 +36,7 @@ tessiflow_run <- function() {
 #' tessiflow_stop
 #'
 #' @importFrom ps ps_kill_tree
+#' @export
 tessiflow_stop <- function() {
   ps_kill_tree("tessiflow-daemon")
 }

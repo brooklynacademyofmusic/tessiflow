@@ -85,7 +85,7 @@ test_that("tessiflow_stop kills all running jobs",{
   p1 <- callr::r_bg(eval,list(run_expr))
   consume_output_lines(p1)
   
-  expect_gt(length(ps::ps_find_tree("tessiflow-daemon")),num_processes)
+  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")),num_processes)
   
   tessiflow_stop()
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
@@ -96,7 +96,7 @@ test_that("tessiflow_stop kills all running jobs",{
 test_that("tessiflow_enable schedules tessiflow",{
   schedule_schtasks <- mock()
   schedule_crontab <- mock()
-  Platform <- copy(.Platform)
+  Platform <- .Platform
   stub(tessiflow_enable,"schedule_schtasks",schedule_schtasks)
   stub(tessiflow_enable,"schedule_crontab",schedule_crontab)  
   
@@ -117,7 +117,7 @@ test_that("tessiflow_enable schedules tessiflow",{
 test_that("tessiflow_disable unschedules tessiflow",{
   unschedule_schtasks <- mock()
   unschedule_crontab <- mock()
-  Platform <- copy(.Platform)
+  Platform <- .Platform
   stub(tessiflow_disable,"unschedule_schtasks",unschedule_schtasks)
   stub(tessiflow_disable,"unschedule_crontab",unschedule_crontab)  
   
