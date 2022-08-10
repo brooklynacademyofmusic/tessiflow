@@ -13,6 +13,13 @@ run_expr <- quote({
   tessiflow_run()
 })
 
+consume_output_lines <- function(process) {
+  # consume the rest of the output lines
+  process$poll_io(10000)
+  while(length(process$read_output_lines())>0)
+    Sys.sleep(1)
+}
+
 num_processes <- 0
 
 test_that("tessiflow_run refuses to start if tessiflow is already running",{
@@ -22,10 +29,7 @@ test_that("tessiflow_run refuses to start if tessiflow is already running",{
   p1$poll_io(10000)
   p1_output <- p1$read_output_lines()
   expect_match(p1_output,"Starting tessiflow")
-  # consume the rest of the output lines
-  p1$poll_io(10000)
-  while(length(p1$read_output_lines())>0)
-    Sys.sleep(1)
+  consume_output_lines(p1)
   num_processes <<- length(ps::ps_find_tree("tessiflow-daemon"))
   expect_gte(num_processes,1)
   
@@ -45,10 +49,7 @@ test_that("tessiflow_run logs to a log file",{
   p1 <- callr::r_session$new(callr::r_session_options(stderr="",stdout=""))
   logdir <- p1$run_with_output(eval,list(quote(config::get("tessiflow.log"))))$result
   p1$call(eval,list(run_expr))
-  p1$poll_io(10000)
-  # consume the rest of the mssages
-  while(length(p1$read_output_lines())>0)
-    Sys.sleep(1)
+  consume_output_lines(p1)
   
   expect_length(logdir,1) # message isn't printed to console
   logdata <- readLines(file.path(logdir,"tessiflow.log"))
@@ -63,7 +64,8 @@ test_that("tessiflow_run logs to a log file",{
 
 test_that("tessiflow_stop kills the daemon process",{
  p1 <- callr::r_bg(eval,list(run_expr))
- p1$poll_io(10000)
+ consume_output_lines(p1)
+ 
  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")),1)
  tessiflow_stop()
  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
@@ -81,8 +83,8 @@ test_that("tessiflow_stop kills all running jobs",{
   })
   
   p1 <- callr::r_bg(eval,list(run_expr))
-  p1$poll_io(10000)
-  Sys.sleep(1)
+  consume_output_lines(p1)
+  
   expect_gt(length(ps::ps_find_tree("tessiflow-daemon")),num_processes)
   
   tessiflow_stop()
