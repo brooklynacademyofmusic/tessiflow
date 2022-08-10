@@ -93,28 +93,21 @@ tessiflow_disable <- function() {
 #' tessiflow::tessiflow_job_start("Workflow A","Job 1")
 #' tessiflow::tessiflow_job_stop("Workflow A","Job 1")
 #' }
-tessiflow_job_start <- function(flow_name, job_name) {
-  assert_flow_job_name(flow_name, job_name)
-  
-  tree <- ps::ps_find_tree("tessiflow")
-  if(length(tree)==0) {
-    stop("No running tessiflow process found, can't start job")
-  } 
-  
-  conns <- rbindlist(lapply(tree,ps::ps_connections))
-  socket <- socketConnection(port = conns$lport[[1]])
-  
-  writeLines(deparse(rlang::expr(job_start(!!flow_name, !!job_name))),socket)
-  
-  invisible()
-}
+tessiflow_job_start <- function(flow_name, job_name)
+  tessiflow_run_command(flow_name,job_name,"job_start")
+
 
 #' @describeIn tessiflow_job_start Stops a tessiflow job identified by `flow_name` and `job_name`
 #' @export
-tessiflow_job_stop <- function(flow_name, job_name) {
+tessiflow_job_stop <- function(flow_name, job_name)
+  tessiflow_run_command(flow_name,job_name,"job_stop")
+
+#' @describeIn tessiflow_job_start Template function for executing commands on the main tessiflow instance
+#' @param command string function to be called with flow_name and job_name as parameters
+tessiflow_run_command <- function(flow_name, job_name, command) {
   assert_flow_job_name(flow_name, job_name)
   
-  tree <- ps::ps_find_tree("tessiflow")
+  tree <- ps::ps_find_tree("tessiflow-daemon")
   if(length(tree)==0) {
     stop("No running tessiflow process found, can't start job")
   } 
@@ -122,7 +115,7 @@ tessiflow_job_stop <- function(flow_name, job_name) {
   conns <- rbindlist(lapply(tree,ps::ps_connections))
   socket <- socketConnection(port = conns$lport[[1]])
   
-  writeLines(deparse(rlang::expr(job_stop(!!flow_name, !!job_name))),socket)
+  writeLines(deparse(rlang::call2(command, flow_name = flow_name, job_name = job_name)),socket)
   
   invisible()
 }

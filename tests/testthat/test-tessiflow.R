@@ -133,14 +133,38 @@ test_that("tessiflow_disable unschedules tessiflow",{
   expect_equal(mock_args(unschedule_crontab)[[1]],list("tessiflow"))
 })
 
-# tessiflow_job_start -----------------------------------------------------
+# tessiflow_run_command -----------------------------------------------------
 
-test_that("tessiflow_job_start writes to the tessiflow input file/socket",{})
+test_that("tessiflow_run_command errors if there's no running tessiflow process",{
+  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
+  expect_error(tessiflow_run_command("Dummy workflow","Job 1","this_is_a_function"),"No running tessiflow process")
+})
 
-test_that("tessiflow_job_start starts a job",{})
-
-# tessiflow_job_stop -----------------------------------------------------
-
-test_that("tessiflow_job_stop writes to the tessiflow input file/socket",{})
-
-test_that("tessiflow_job_stop stops a job",{})
+test_that("tessiflow_run_command writes to the tessiflow input file/socket",{
+  run_expr <- quote({
+    tessiflow:::local_log_dir(envir=new.env())
+    tryCatch(devtools::load_all(quiet = TRUE),
+             error = function(e) {library("tessiflow")})
+    mockery::stub(flows_main,"flows_main_read_server",function(server) {
+      socket <- try(socketAccept(server,timeout=1),silent=TRUE)
+      if(!"try-error" %in% class(socket)) {
+        input <- readLines(socket,n=1)
+        print(input)
+      }
+    })
+    flows_main()
+  })
+  
+  withr::local_envvar("tessiflow-daemon"="YES")
+  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
+  
+  p1 <- callr::r_bg(eval,list(run_expr))
+  consume_output_lines(p1)
+  
+  tessiflow_run_command("Dummy workflow","Job 1","this_is_a_function")
+  
+  while(length(p1_output <- p1$read_output_lines())==0)
+    Sys.sleep(1)
+  
+  expect_match(p1_output,"this_is_a_function(.+Dummy workflow.+Job 1.+)")
+})
