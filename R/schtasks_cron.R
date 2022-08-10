@@ -33,7 +33,7 @@ unschedule_schtasks <- function(taskname="tessiflow") {
 schedule_crontab <- function(expr,taskname="tessiflow") {
   crontab_temp <- tempfile()
   crontab_updated <- c(
-    system2("crontab","-l"),
+    system2("crontab","-l",stdout=TRUE),
     paste("#",taskname),
     paste("* * * * *     ",script_expr(expr)))
   writeLines(crontab_updated,crontab_temp)
@@ -43,7 +43,7 @@ schedule_crontab <- function(expr,taskname="tessiflow") {
 #' @describeIn schedule_schtasks deletes a job named `taskname` using *nix `crontab`
 unschedule_crontab <- function(taskname="tessiflow") {
   crontab_temp <- tempfile()
-  crontab_current <- system2("crontab","-l")
+  crontab_current <- system2("crontab","-l",stdout=TRUE)
   rows <- grep(paste("#",taskname),crontab_current)
   writeLines(crontab_current[-c(rows,rows+1)],crontab_temp)
   system2(Sys.which("crontab"),crontab_temp)
