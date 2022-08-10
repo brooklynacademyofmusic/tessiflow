@@ -16,9 +16,11 @@ jobs/steps have access to the previous results. The motivation is to allow
 complex workflow dependencies while maintaining transparency and to encourage 
 modular, testable code, because steps are by default, just R function calls.
 
-* Why not Airflow or a similar existing workflow tool?
-Because this is an R-native workflow tool it is more transparent about errors and
-back traces and allows the possibility of remote debugging. 
+*Why not use Airflow or a similar existing workflow tool?*
+
+- Because this is an R-native workflow tool there will be less disk i/o required between steps 
+because data can remain in memory. It is also more straightforward to collect rich error information 
+and back-traces and will even allow the possibility of remote debugging. 
 
 ## Installation
 
