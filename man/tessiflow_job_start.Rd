@@ -16,6 +16,8 @@ tessiflow_run_command(flow_name, job_name, command)
 \item{flow_name}{string flow name}
 
 \item{job_name}{sting job name}
+
+\item{command}{string function to be called with flow_name and job_name as parameters}
 }
 \value{
 invisibly

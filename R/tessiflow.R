@@ -103,6 +103,7 @@ tessiflow_job_stop <- function(flow_name, job_name)
   tessiflow_run_command(flow_name,job_name,"job_stop")
 
 #' @describeIn tessiflow_job_start Template function for executing commands on the main tessiflow instance
+#' @param command string function to be called with flow_name and job_name as parameters
 tessiflow_run_command <- function(flow_name, job_name, command) {
   assert_flow_job_name(flow_name, job_name)
   
