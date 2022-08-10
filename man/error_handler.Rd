@@ -11,20 +11,12 @@ error_handler(error)
 
 error_print(error)
 
-error_email(
-  error,
-  emails = config::get("tessiflow.email"),
-  smtp = config::get("tessiflow.smtp")
-)
+error_email(error)
 
 error_handler_factory(fun)
 }
 \arguments{
 \item{error}{error condition}
-
-\item{emails}{list of email addresses, default is from \code{tessiflow.email} configuration variable; \code{from} address will be the first email}
-
-\item{smtp}{list of smtp configuration data for \code{\link[mailR:send.mail]{mailR::send.mail}}}
 
 \item{fun}{function to wrap}
 }

@@ -37,5 +37,6 @@ Imports:
     mailR,
     cli,
     ps,
-    withr
+    withr,
+    htmlTable
 Language: en-US

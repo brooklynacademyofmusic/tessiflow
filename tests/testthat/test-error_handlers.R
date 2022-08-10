@@ -54,31 +54,19 @@ test_that("error_print prints the error", {
   expect_output(tryCatch(eval(error), error = error_print), "I am an error")
 })
 
-test_that("error_email emails the error", {
-  stub(send.mail, ".jTryCatch", function(...) {
-    rlang::warn(class = "sent!")
-  })
-  stub(error_email, "send.mail", send.mail)
-  stub(error_email, "config::get", mock("test@test.com", list(host.name = "blah"), cycle = TRUE))
-  error <- quote(rlang::abort("I am an error"))
-  expect_warning(tryCatch(eval(error), error = error_email), class = "sent!")
-})
-
 test_that("error_email reads flow_name and job_name", {
-  send_mail <- mock(0)
-  stub(error_email, "send.mail", send_mail)
-  stub(error_email, "config::get", mock("test@test.com", list(host.name = "blah"), cycle = TRUE))
+  send_email <- mock(0)
+  stub(error_email, "send_email", send_email)
   error <- quote(rlang::abort("I am an error", flow_name = "something", job_name = "something else"))
   tryCatch(eval(error), error = error_email)
-  expect_length(mock_args(send_mail), 1)
-  expect_match(mock_args(send_mail)[[1]][["subject"]], "something.+something else")
-  expect_match(mock_args(send_mail)[[1]][["body"]], "something.+something else")
+  expect_length(mock_args(send_email), 1)
+  expect_match(mock_args(send_email)[[1]][["subject"]], "something.+something else")
+  expect_match(mock_args(send_email)[[1]][["body"]], "something.+something else")
 })
 
 test_that("error_email reads flow_name and job_name from error_handler_factory", {
-  send_mail <- mock()
-  stub(error_email, "send.mail", send_mail)
-  stub(error_email, "config::get", mock("test@test.com", list(host.name = "blah"), cycle = TRUE))
+  send_email <- mock()
+  stub(error_email, "send_email", send_email)
   stub(error_handler_factory, "error_email", error_email)
   stub(error_handler_factory, "job_on_error", function(flow_name, job_name, error) {
     error_email(error)
@@ -90,7 +78,7 @@ test_that("error_email reads flow_name and job_name from error_handler_factory",
 
   f("something", "something else")
 
-  expect_length(mock_args(send_mail), 1)
-  expect_match(mock_args(send_mail)[[1]][["subject"]], "something.+something else")
-  expect_match(mock_args(send_mail)[[1]][["body"]], "something.+something else")
+  expect_length(mock_args(send_email), 1)
+  expect_match(mock_args(send_email)[[1]][["subject"]], "something.+something else")
+  expect_match(mock_args(send_email)[[1]][["body"]], "something.+something else")
 })

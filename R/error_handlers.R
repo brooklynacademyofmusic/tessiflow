@@ -23,21 +23,10 @@ error_print <- function(error) {
   print(error$trace)
 }
 
-#' @param emails list of email addresses, default is from `tessiflow.email` configuration variable; `from` address will be the first email
-#' @param smtp list of smtp configuration data for [`mailR::send.mail`]
 #' @describeIn error_handler sends an error message to an email address
-#' @importFrom mailR send.mail
 #' @importFrom checkmate test_character test_list
 #' @importFrom cli ansi_html_style ansi_html
-error_email <- function(error,
-                        emails = config::get("tessiflow.email"),
-                        smtp = config::get("tessiflow.smtp")) {
-  if (!test_character(emails, min.len = 1)) {
-    stop("Set tessiflow.email to the sender (first email) and list of recipients for error messages")
-  }
-  if (!test_list(smtp)) {
-    stop("Set tessiflow.smtp to the smtp server used to send error messages")
-  }
+error_email <- function(error) {
 
   process_name <- "tessiflow"
 
@@ -45,7 +34,7 @@ error_email <- function(error,
     process_name <- paste(process_name, ":", error$flow_name, "/", error$job_name)
   }
 
-  subject <- paste0(process_name, " [ERROR] (", Sys.info()["nodename"], ")")
+  subject <- paste(process_name, "[ERROR]")
   body <- paste(c(
     "<style type='text/css'>",
     format(cli::ansi_html_style()),
@@ -53,16 +42,9 @@ error_email <- function(error,
     process_name, "reported the following error:<p>",
     cli::ansi_html(error)
   ), collapse = " ")
-
-  send.mail(
-    from = emails[[1]],
-    to = emails,
-    subject = subject,
-    body = body,
-    smtp = smtp,
-    html = TRUE,
-    send = TRUE
-  )
+  
+  send_email(subject = subject,body = body)
+  
 }
 
 #' @param fun function to wrap
