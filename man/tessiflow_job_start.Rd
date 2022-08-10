@@ -2,11 +2,15 @@
 % Please edit documentation in R/tessiflow.R
 \name{tessiflow_job_start}
 \alias{tessiflow_job_start}
+\alias{tessiflow_job_stop}
+\alias{tessiflow_run_command}
 \title{tessiflow_job_start}
 \usage{
 tessiflow_job_start(flow_name, job_name)
 
-tessiflow_job_start(flow_name, job_name)
+tessiflow_job_stop(flow_name, job_name)
+
+tessiflow_run_command(flow_name, job_name, command)
 }
 \arguments{
 \item{flow_name}{string flow name}
@@ -21,7 +25,9 @@ Starts a tessiflow job identified by \code{flow_name} and \code{job_name}
 }
 \section{Functions}{
 \itemize{
-\item \code{tessiflow_job_start}: Stops a tessiflow job identified by \code{flow_name} and \code{job_name}
+\item \code{tessiflow_job_stop}: Stops a tessiflow job identified by \code{flow_name} and \code{job_name}
+
+\item \code{tessiflow_run_command}: Template function for executing commands on the main tessiflow instance
 }}
 
 \examples{
