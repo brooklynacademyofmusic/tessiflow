@@ -56,8 +56,6 @@ test_that("tessiflow_run logs to a log file", {
   expect_match(logdata, "Starting tessiflow", all = FALSE)
   expect_match(logdata, "Running flows_main", all = FALSE)
   expect_equal(length(logdata), 2)
-
-  p1$kill_tree()
 })
 
 # tessiflow_stop ----------------------------------------------------------
