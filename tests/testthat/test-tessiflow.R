@@ -88,6 +88,8 @@ test_that("tessiflow_stop kills all running jobs",{
   expect_gte(length(ps::ps_find_tree("tessiflow-daemon")),num_processes)
   
   tessiflow_stop()
+  Sys.sleep(1)
+  
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
 })
 
