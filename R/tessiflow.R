@@ -28,7 +28,7 @@ tessiflow_run <- function() {
   
   cat(paste("[", Sys.time(), ": tessiflow ]", "Starting tessiflow scheduler ...\n"))
   
-  flows_main()
+  callr::r(flows_main,stdout="",stderr="")
   
   invisible()
 }
@@ -108,7 +108,7 @@ tessiflow_job_start <- function(flow_name, job_name) {
   invisible()
 }
 
-#' @describeIn tessiflow_job_stop Stops a tessiflow job identified by `flow_name` and `job_name`
+#' @describeIn tessiflow_job_start Stops a tessiflow job identified by `flow_name` and `job_name`
 #' @export
 tessiflow_job_stop <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)

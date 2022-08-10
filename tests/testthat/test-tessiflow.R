@@ -8,9 +8,6 @@ run_expr <- quote({
             error = function(e) {library("tessiflow")})
   mockery::stub(tessiflow_run,"flows_main",function() {
     message("Running flows_main()")
-    Sys.sleep(1) # just here to separate these messages from leaking into the logdir cat 
-    cat(config::get("tessiflow.log"),sep="\n")
-    print(Sys.getenv())
     Sys.sleep(10) # has to be long enough to allow the process to persist between tests
   })
   tessiflow_run()
@@ -24,13 +21,13 @@ test_that("tessiflow_run refuses to start if tessiflow is already running",{
   p1 <- callr::r_bg(eval,list(run_expr))
   p1$poll_io(10000)
   p1_output <- p1$read_output_lines()
-  expect_match(p1_output,"Starting tessiflow",all=FALSE)
-  print(p1$read_output_lines())
+  expect_match(p1_output,"Starting tessiflow")
+  # consume the rest of the output lines
+  p1$poll_io(10000)
+  while(length(p1$read_output_lines())>0)
+    Sys.sleep(1)
   num_processes <<- length(ps::ps_find_tree("tessiflow-daemon"))
   expect_gte(num_processes,1)
-  expect_equal(p1$get_status(),"running")
-  print(p1$read_all_error())
-  print(p1$read_all_output())
   
   p2 <- callr::r_bg(eval,list(run_expr))
   p2$poll_io(10000)
@@ -45,20 +42,19 @@ test_that("tessiflow_run refuses to start if tessiflow is already running",{
 test_that("tessiflow_run logs to a log file",{
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")),0)
   
-  p1 <- callr::r_bg(eval,list(run_expr))
+  p1 <- callr::r_session$new(callr::r_session_options(stderr="",stdout=""))
+  logdir <- p1$run_with_output(eval,list(quote(config::get("tessiflow.log"))))$result
+  p1$call(eval,list(run_expr))
   p1$poll_io(10000)
-  p1_output <- p1$read_output_lines()
-  expect_match(p1_output,"Starting tessiflow")
-  
-  Sys.sleep(1)
-  while(length(logdir <- p1$read_output_lines())==0)
-    p1$poll_io(10000)
+  # consume the rest of the mssages
+  while(length(p1$read_output_lines())>0)
+    Sys.sleep(1)
   
   expect_length(logdir,1) # message isn't printed to console
   logdata <- readLines(file.path(logdir,"tessiflow.log"))
   expect_match(logdata,"Starting tessiflow",all = FALSE)
   expect_match(logdata,"Running flows_main",all = FALSE)
-  expect_equal(length(logdata),3) 
+  expect_equal(length(logdata),2) 
   
   p1$kill_tree()
 })
