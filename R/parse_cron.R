@@ -176,7 +176,7 @@ parse_cron_value <- function(cron_value) {
   }
 
   ret <- suppressWarnings(as.integer(cron_value))
-  if (!checkmate::test_count(ret, positive = TRUE)) {
+  if (!checkmate::test_count(ret)) {
     stop(paste("Can't parse the cron value", cron_value))
   }
 
