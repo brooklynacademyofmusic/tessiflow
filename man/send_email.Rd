@@ -12,9 +12,9 @@ send_email(
 )
 }
 \arguments{
-\item{subject}{}
+\item{subject}{string subject line}
 
-\item{body}{}
+\item{body}{string body of email}
 
 \item{emails}{list of email addresses, default is from \code{tessiflow.email} configuration variable; \code{from} address will be the first email}
 
