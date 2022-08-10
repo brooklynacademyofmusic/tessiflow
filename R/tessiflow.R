@@ -107,13 +107,12 @@ tessiflow_job_stop <- function(flow_name, job_name)
 tessiflow_run_command <- function(flow_name, job_name, command) {
   assert_flow_job_name(flow_name, job_name)
   
-  tree <- ps::ps_find_tree("tessiflow-daemon")
-  if(length(tree)==0) {
+  conns <- rbindlist(lapply(ps::ps_find_tree("tessiflow-daemon"),ps::ps_connections))
+  if(is.null(na.omit(conns$lport))) {
     stop("No running tessiflow process found, can't start job")
   } 
   
-  conns <- rbindlist(lapply(tree,ps::ps_connections))
-  socket <- socketConnection(port = conns$lport[[1]])
+  socket <- socketConnection(port = na.omit(conns$lport))
   
   writeLines(deparse(rlang::call2(command, flow_name = flow_name, job_name = job_name)),socket)
   
