@@ -175,7 +175,7 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
 
   tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function")
 
-  while (length(p1_output <- p1$read_output_lines()[[1]]) == 0) {
+  while (length(p1_output <- p1$read_output_lines()) == 0) {
     Sys.sleep(1)
   }
 
