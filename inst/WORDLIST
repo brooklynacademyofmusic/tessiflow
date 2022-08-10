@@ -6,11 +6,14 @@ Tessiract
 Unschedule
 YML
 callr
+config
 cron
 crontab
+datetime
 expr
 ie
 logfile
+lubridate
 magrittr
 parseable
 retval
