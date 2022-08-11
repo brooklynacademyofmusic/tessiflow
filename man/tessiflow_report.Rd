@@ -7,7 +7,10 @@
 \usage{
 tessiflow_report_load()
 
-tessiflow_report_send()
+tessiflow_report_send(report = tessiflow_report_load())
+}
+\arguments{
+\item{report}{data.frame of a report, minimally with a "Status" column}
 }
 \value{
 nothing
@@ -19,6 +22,6 @@ tessiflow_report
 \itemize{
 \item \code{tessiflow_report_load}: Pull process data from the SQLite database from the last 24hours.
 
-\item \code{tessiflow_report_send}: Send the flows report
+\item \code{tessiflow_report_send}: Style and send the flows report in the body of an HTML email
 }}
 
