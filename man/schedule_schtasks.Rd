@@ -6,14 +6,14 @@
 \alias{unschedule_crontab}
 \title{schedule_schtasks}
 \usage{
-schedule_schtasks(expr, taskname = "tessiflow")
+schedule_schtasks(command, taskname = "tessiflow")
 
 unschedule_schtasks(taskname = "tessiflow")
 
 unschedule_crontab(taskname = "tessiflow")
 }
 \arguments{
-\item{expr}{expression to call in an Rscript process}
+\item{command}{string command line expression}
 
 \item{taskname}{string name of task}
 }

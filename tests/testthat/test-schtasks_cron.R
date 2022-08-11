@@ -24,7 +24,7 @@ test_that("script_expr creates a runnable string", {
 })
 
 test_that("schedule_schtasks runs successfully", {
-  return <- schedule_schtasks(expr, "dummy_task")
+  return <- schedule_schtasks(script_expr(expr), "dummy_task")
   expect_match(return, "SUCCESS")
 })
 
@@ -48,7 +48,7 @@ filename <- NULL
 test_that("schedule_crontab adds the script to the crontab file", {
   system2 <- mock("this is a task already there", 0)
   stub(schedule_crontab, "system2", system2)
-  schedule_crontab(expr, "dummy_task")
+  schedule_crontab(script_expr(expr), "dummy_task")
   filename <<- mock_args(system2)[[2]][[2]]
   crontab <- readLines(filename)
   expect_length(crontab, 3)

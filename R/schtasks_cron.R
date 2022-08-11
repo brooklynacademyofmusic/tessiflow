@@ -2,17 +2,17 @@
 #'
 #' creates a job named `taskname` that runs every minute using Windows `schtasks.exe`
 #'
-#' @param expr expression to call in an Rscript process
+#' @param command string command line expression
 #' @param taskname string name of task
 #'
 #' @return result of system call
-schedule_schtasks <- function(expr, taskname = "tessiflow") {
+schedule_schtasks <- function(command, taskname = "tessiflow") {
   system2(Sys.which("schtasks"), c(
     "/create",
     "/tn", taskname,
     "/sc", "minute",
     "/mo", 1,
-    "/tr", shQuote(script_expr(expr))
+    "/tr", shQuote(command)
   ), stdout = TRUE)
 }
 
@@ -28,16 +28,16 @@ unschedule_schtasks <- function(taskname = "tessiflow") {
 #'
 #' creates a job named `taskname` that runs every minute using *nix `crontab`
 #'
-#' @param expr expression to call in an Rscript process
+#' @param command string command line expression
 #' @param taskname string name of task
 #'
 #' @return result of system call
-schedule_crontab <- function(expr, taskname = "tessiflow") {
+schedule_crontab <- function(command, taskname = "tessiflow") {
   crontab_temp <- tempfile()
   crontab_updated <- c(
     system2("crontab", "-l", stdout = TRUE),
     paste("#", taskname),
-    paste("* * * * *     ", script_expr(expr))
+    paste("* * * * *     ", command)
   )
   writeLines(crontab_updated, crontab_temp)
   system2(Sys.which("crontab"), crontab_temp)

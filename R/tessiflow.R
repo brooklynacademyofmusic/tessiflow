@@ -59,8 +59,14 @@ tessiflow_enable <- function() {
     schedule_crontab
   }
 
-  schedule(rlang::expr({setwd(!!Sys.getenv("R_USER"))
-    tessiflow::tessiflow_run()}), "tessiflow")
+  schedule(
+    script_expr(
+      {
+        setwd(!!Sys.getenv("R_USER"))
+        tessiflow::tessiflow_run()
+      }
+    ), "tessiflow"
+  )
 
   invisible()
 }

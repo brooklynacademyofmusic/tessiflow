@@ -4,10 +4,10 @@
 \alias{schedule_crontab}
 \title{schedule_crontab}
 \usage{
-schedule_crontab(expr, taskname = "tessiflow")
+schedule_crontab(command, taskname = "tessiflow")
 }
 \arguments{
-\item{expr}{expression to call in an Rscript process}
+\item{command}{string command line expression}
 
 \item{taskname}{string name of task}
 }

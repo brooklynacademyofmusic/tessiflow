@@ -1,6 +1,5 @@
 withr::local_package("mockery")
 withr::local_package("devtools")
-local_log_dir()
 
 # tessiflow_run ---------------------------------------------------------
 
@@ -18,7 +17,7 @@ consume_output_lines <- function(process) {
   # consume the rest of the output lines
   process$poll_io(10000)
   while (length(current_output <- process$read_output_lines()) > 0) {
-    append(output, current_output)
+    output <- append(output, current_output)
     Sys.sleep(1)
   }
   output
@@ -28,10 +27,10 @@ num_processes <- 0
 
 test_that("tessiflow_run refuses to start if tessiflow is already running", {
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
+  local_log_dir()
 
   p1 <- callr::r_bg(run_fun, package = "tessiflow")
-  p1$poll_io(10000)
-  p1_output <- p1$read_output_lines()
+  p1_output <- consume_output_lines(p1)
   expect_match(p1_output, "Starting tessiflow")
   consume_output_lines(p1)
   expect_equal(p1$read_error_lines(), character())
@@ -46,6 +45,8 @@ test_that("tessiflow_run refuses to start if tessiflow is already running", {
 
 test_that("tessiflow_run logs to a log file", {
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
+  local_log_dir()
+
   stub(tessiflow_run, "flows_main", function() {
     message("Running flows_main()")
   })
@@ -64,7 +65,7 @@ test_that("tessiflow_stop kills the daemon process", {
   p1 <- callr::r_bg(run_fun, package = "tessiflow")
   consume_output_lines(p1)
 
-  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
+  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), num_processes)
   tessiflow_stop()
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 })
@@ -108,7 +109,39 @@ test_that("tessiflow_enable schedules tessiflow", {
 
   expect_match(as.character(mock_args(schedule_schtasks)[[1]][[1]]), "tessiflow::tessiflow_run\\(\\)", all = FALSE)
   expect_match(as.character(mock_args(schedule_crontab)[[1]][[1]]), "tessiflow::tessiflow_run\\(\\)", all = FALSE)
-  
+})
+
+test_that("tessiflow_enable schedules a runnable script", {
+  local_log_dir()
+  schedule_schtasks <- mock()
+  Platform <- .Platform
+  stub(tessiflow_enable, "Sys.getenv", getwd())
+  stub(tessiflow_enable, "schedule_schtasks", schedule_schtasks)
+
+  Platform$OS.type <- "windows"
+  assign(".Platform", Platform, envir = environment(tessiflow_enable))
+  tessiflow_enable()
+
+  # create a config.yml file to mimic what happens in a normal install
+  withr::local_file(list("config.yml" = yaml::write_yaml(
+    list(default = list(
+      tessiflow.log = config::get("tessiflow.log"),
+      tessiflow.d = config::get("tessiflow.d")
+    )),
+    "config.yml"
+  )))
+
+  p <- callr::r_bg(system, list(mock_args(schedule_schtasks)[[1]][[1]]),
+    env = c(R_CONFIG_FILE = "config.yml")
+  )
+
+  p_output <- consume_output_lines(p)
+  expect_match(p_output, "Starting tessiflow scheduler")
+  expect_equal(p$read_error_lines(), character(0))
+
+  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), num_processes)
+
+  p$kill_tree()
 })
 
 # tessiflow_disable -------------------------------------------------------
