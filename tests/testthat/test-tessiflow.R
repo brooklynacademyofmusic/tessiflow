@@ -106,8 +106,9 @@ test_that("tessiflow_enable schedules tessiflow", {
   assign(".Platform", Platform, envir = environment(tessiflow_enable))
   tessiflow_enable()
 
-  expect_equal(mock_args(schedule_schtasks)[[1]], list(quote(tessiflow::tessiflow_run()), "tessiflow"))
-  expect_equal(mock_args(schedule_crontab)[[1]], list(quote(tessiflow::tessiflow_run()), "tessiflow"))
+  expect_match(as.character(mock_args(schedule_schtasks)[[1]][[1]]), "tessiflow::tessiflow_run\\(\\)", all = FALSE)
+  expect_match(as.character(mock_args(schedule_crontab)[[1]][[1]]), "tessiflow::tessiflow_run\\(\\)", all = FALSE)
+  
 })
 
 # tessiflow_disable -------------------------------------------------------

@@ -28,7 +28,7 @@ tessiflow_run <- function() {
 
   cat(paste("[", Sys.time(), ": tessiflow ]", "Starting tessiflow scheduler ...\n"))
 
-  callr::r(flows_main, stdout = "", stderr = "")
+  callr::r(flows_main, stdout = "", stderr = "", package = TRUE)
 
   invisible()
 }
@@ -59,7 +59,8 @@ tessiflow_enable <- function() {
     schedule_crontab
   }
 
-  schedule(rlang::expr(tessiflow::tessiflow_run()), "tessiflow")
+  schedule(rlang::expr({setwd(!!Sys.getenv("R_USER"))
+    tessiflow::tessiflow_run()}), "tessiflow")
 
   invisible()
 }
