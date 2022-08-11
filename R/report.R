@@ -34,12 +34,13 @@ tessiflow_report_load <- function() {
   return(tasks)
 }
 
+#' @param report data.frame of a report, minimally with a "Status" column
 #' @importFrom htmlTable addHtmlTableStyle htmlTable
 #' @importFrom dplyr case_when
-#' @describeIn tessiflow_report Send the flows report
-tessiflow_report_send <- function() {
+#' @describeIn tessiflow_report Style and send the flows report in the body of an HTML email
+tessiflow_report_send <- function(report = tessiflow_report_load()) {
   subject <- "tessiflow report"
-  body <- tessiflow_report_load() %>%
+  body <- report %>%
     addHtmlTableStyle(col.rgroup = case_when(
       .$Status == "Failed" ~ "#F77",
       .$Status == "Running" ~ "#7F7",
@@ -51,14 +52,16 @@ tessiflow_report_send <- function() {
 }
 
 #' tessiflow_report_enable
-#' 
+#'
 #' Install `tessiflow.yml` into the `tessiflow.d` directory to run the tessiflow report daily at 9am.
 #'
 #' @return TRUE if success, FALSE if failure
 #' @export
 tessiflow_report_enable <- function() {
-  file.copy(system.file("extdata","tessiflow.yml",package="tessiflow"), 
-            config::get("tessiflow.d"))
+  file.copy(
+    system.file("extdata", "tessiflow.yml", package = "tessiflow"),
+    config::get("tessiflow.d")
+  )
 }
 
 #' interval_to_period

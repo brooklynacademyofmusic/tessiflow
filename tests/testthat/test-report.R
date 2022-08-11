@@ -1,11 +1,31 @@
-# load.tessiflow_report ---------------------------------------------------
+withr::local_package("lubridate")
+withr::local_package("mockery")
+withr::local_package("checkmate")
 
-test_that("load.tessiflow_report reads the last day's run info from the job database", {})
+local_log_dir()
+local_flows_data_table()
+tessiflow$flows$start_time <- seq(now(tzone = Sys.timezone()) - dhours(36), now() - dseconds(1), dhours(6))
+flows_log_upsert(data = tessiflow$flows)
 
-# process.tessiflow_report ------------------------------------------------
 
-test_that("process.tessiflow_report adds `status` and `elapsed` columns", {})
+# tessiflow_report_load ---------------------------------------------------
 
-# send.tessiflow_report ---------------------------------------------------
+test_that("tessiflow_report_load reads the last day's run info from the job database", {
+  expect_equal(nrow(tessiflow_report_load()), 4)
+  expect_equal(tessiflow_report_load()$`Start Time`, tessiflow$flows$start_time[3:6])
+})
 
-test_that("send.tessiflow_report emails the report", {})
+test_that("tessiflow_report_load adds `status` and `elapsed` columns", {
+  expect_names(colnames(tessiflow_report_load()), must.include = c("Status", "Elapsed"))
+})
+
+# tessiflow_report_send ---------------------------------------------------
+
+test_that("tessiflow_report_send emails the report", {
+  send_email <- mock()
+  stub(tessiflow_report_send, "send_email", send_email)
+  tessiflow_report_send()
+  expect_length(mock_args(send_email), 1)
+  expect_match(mock_args(send_email)[[1]]$subject, "tessiflow")
+  expect_match(mock_args(send_email)[[1]]$body, paste0("table.+Job 1.+Job 2.+Job 3.+", today(), ".+6H 0M 0S"))
+})
