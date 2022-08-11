@@ -27,5 +27,5 @@ test_that("tessiflow_report_send emails the report", {
   tessiflow_report_send()
   expect_length(mock_args(send_email), 1)
   expect_match(mock_args(send_email)[[1]]$subject, "tessiflow")
-  expect_match(mock_args(send_email)[[1]]$body, paste0("table.+Job 1.+Job 2.+Job 3.+", today(), ".+6H 0M 0S"))
+  expect_match(mock_args(send_email)[[1]]$body, paste0("table.+Job 1.+Job 2.+Job 3.+", today(tzone = Sys.timezone()), ".+6H 0M 0S"))
 })
