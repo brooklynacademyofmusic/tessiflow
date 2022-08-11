@@ -4,7 +4,7 @@ withr::local_package("checkmate")
 
 local_log_dir()
 local_flows_data_table()
-tessiflow$flows$start_time <- seq(now(tzone = Sys.timezone()) - dhours(36), now() - dseconds(1), dhours(6))
+tessiflow$flows$start_time <- seq(now(tzone = Sys.timezone()) - dhours(30) - dseconds(1), now(), dhours(6))
 flows_log_upsert(data = tessiflow$flows)
 
 
@@ -27,5 +27,6 @@ test_that("tessiflow_report_send emails the report", {
   tessiflow_report_send()
   expect_length(mock_args(send_email), 1)
   expect_match(mock_args(send_email)[[1]]$subject, "tessiflow")
-  expect_match(mock_args(send_email)[[1]]$body, paste0("table.+Job 1.+Job 2.+Job 3.+", today(tzone = Sys.timezone()), ".+6H 0M 0S"))
+  expect_match(mock_args(send_email)[[1]]$body, paste0("table.+>Job 1<.+>12H 0M.+>Job 2<.+>6H 0M.+>Job 3.+>",
+                                                       today()))
 })
