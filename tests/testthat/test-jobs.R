@@ -252,18 +252,6 @@ suppressMessages({
     expect_mapequal(mock_args(job_make_remote_expr)[[1]][[1]], c(job$env, job$steps[[1]]$env))
   })
 
-  # test_that("job_step calls job_on_error on error",{
-  #   job_make_remote_expr <- function(...){stop("This is a test!")}
-  #   job_on_error <- mock(TRUE)
-  #   stub(job_step,"job_make_remote_expr",job_make_remote_expr)
-  #   stub(job_step,"job_on_error",job_on_error)
-  #
-  #   job_step(flow_name,job_name)
-  #   expect_length(mock_args(job_on_error),1)
-  #   expect_class(mock_args(job_on_error)[[1]][[3]],"error")
-  #   expect_match(as.character(mock_args(job_on_error)[[1]][[3]]),"This is a test!")
-  # })
-
   test_that("job_step calls job_finalize when all steps are exhausted", {
     job_finalize <- mock(TRUE)
     stub(job_step, "job_finalize", job_finalize)

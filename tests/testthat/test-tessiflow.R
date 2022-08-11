@@ -17,8 +17,8 @@ consume_output_lines <- function(process) {
   output <- character()
   # consume the rest of the output lines
   process$poll_io(10000)
-  while (length(current_output<-process$read_output_lines()) > 0) {
-    append(output,current_output)
+  while (length(current_output <- process$read_output_lines()) > 0) {
+    append(output, current_output)
     Sys.sleep(1)
   }
   output
@@ -28,13 +28,13 @@ num_processes <- 0
 
 test_that("tessiflow_run refuses to start if tessiflow is already running", {
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
-  
+
   p1 <- callr::r_bg(run_fun, package = "tessiflow")
   p1$poll_io(10000)
   p1_output <- p1$read_output_lines()
   expect_match(p1_output, "Starting tessiflow")
   consume_output_lines(p1)
-  expect_equal(p1$read_error_lines(),character())
+  expect_equal(p1$read_error_lines(), character())
   num_processes <<- length(ps::ps_find_tree("tessiflow-daemon"))
   expect_gte(num_processes, 1)
 
@@ -49,8 +49,8 @@ test_that("tessiflow_run logs to a log file", {
   stub(tessiflow_run, "flows_main", function() {
     message("Running flows_main()")
   })
-  
-  expect_output(tessiflow_run(),"Starting tessiflow",all = FALSE)
+
+  expect_output(tessiflow_run(), "Starting tessiflow", all = FALSE)
 
   logdata <- readLines(file.path(config::get("tessiflow.log"), "tessiflow.log"))
   expect_match(logdata, "Starting tessiflow", all = FALSE)
@@ -145,8 +145,9 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
       socket <- try(socketAccept(server, timeout = 1), silent = TRUE)
       if (!"try-error" %in% class(socket)) {
         input <- readLines(socket, n = 1)
-        if(length(input)>0)
+        if (length(input) > 0) {
           print(input)
+        }
       }
     })
     flows_main()
@@ -159,7 +160,7 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
   consume_output_lines(p1)
 
   tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function")
-  
+
   while (length(p1_output <- p1$read_output_lines()) == 0) {
     Sys.sleep(1)
   }

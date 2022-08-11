@@ -118,7 +118,7 @@ tessiflow_run_command <- function(flow_name, job_name, command) {
   socket <- socketConnection(port = na.omit(conns$lport))
 
   writeLines(deparse(rlang::call2(command, flow_name = flow_name, job_name = job_name)), socket)
-  
+
   close(socket)
 
   invisible()
