@@ -10,4 +10,4 @@ jobs:
     steps: 
       - run: |
           library(tessiflow)
-          flows_report_send()
+          tessiflow_report_send()

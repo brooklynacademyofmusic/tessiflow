@@ -38,6 +38,7 @@ tessiflow_report_load <- function() {
 #' @importFrom htmlTable addHtmlTableStyle htmlTable
 #' @importFrom dplyr case_when
 #' @describeIn tessiflow_report Style and send the flows report in the body of an HTML email
+#' @export
 tessiflow_report_send <- function(report = tessiflow_report_load()) {
   subject <- "tessiflow report"
   body <- report %>%
