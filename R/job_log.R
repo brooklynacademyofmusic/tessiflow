@@ -15,7 +15,7 @@ job_log_write <- function(flow_name, job_name, lines, console = FALSE) {
   assert_character(lines)
 
   # add time and job info
-  lines <- paste("[", Sys.time(), ":", job_name, "]", lines)
+  lines <- paste("[", Sys.time(), ":", flow_name, "/", job_name, "]", lines)
   filename <- file.path(config::get("tessiflow.log"), paste0(flow_name, ".log"))
   log_rotate(filename)
 
