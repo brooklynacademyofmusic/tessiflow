@@ -29,11 +29,9 @@ flows_main <- function() {
     if ("Finished" %in% tessiflow$flows$status) {
       tessiflow$flows[
         status == "Finished" & sapply(on.schedule, length) > 0,
-        `:=`(
-          status = "Waiting",
-          scheduled_runs = lapply(on.schedule, lapply, parse_cron)
-        )
-      ]
+        apply(.SD, 1, function(.) {
+          job_reset_resilient(.$flow_name, .$job_name)
+        })]
     }
 
     flows_main_read_server(server)

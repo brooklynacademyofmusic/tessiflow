@@ -276,5 +276,37 @@ job_finalize <- function(flow_name, job_name) {
   }
 }
 
+#' job_reset
+#'
+#' resets job for next run, updates flows table and database, writes to log
+#'
+#' @param flow_name string workflow name
+#' @param job_name string job name
+#'
+#' @return invisibly
+job_reset <-  function(flow_name, job_name) {
+  assert_flow_job_name(flow_name, job_name)
+  
+  job <- flows_get_job(flow_name, job_name)
+  
+  flows_update_job(
+    flow_name, job_name,
+    list(
+      status = "Waiting",
+      retval = NA_integer_,
+      r_session = list(NULL),
+      pid = NA_integer_,
+      step = NA_integer_,
+      scheduled_runs = lapply(job$on.schedule, lapply, parse_cron),
+      start_time = as.POSIXct(NA),
+      end_time = as.POSIXct(NA)
+    )
+  )
+  
+  job_log_write(flow_name, job_name, paste("Resetting job..."), console = TRUE)
+  
+}
+
 job_maybe_start_resilient <- error_handler_factory(job_maybe_start)
 job_poll_resilient <- error_handler_factory(job_poll)
+job_reset_resilient <- error_handler_factory(job_reset)
