@@ -44,7 +44,7 @@
 #' `30 4 1,15 * 5` would cause a command to be run at 4:30 am on the
 #' 1st and 15th of each month, plus every Friday.
 #'
-#' @return next two runtimes (assumption: this function takes less than 60 seconds to run)
+#' @return last and next runtime
 #' @importFrom checkmate assert_string
 #' @importFrom lubridate make_date hours minutes now force_tz ceiling_date
 #'
@@ -68,7 +68,7 @@ parse_cron <- function(cron_string) {
     c(0, 7)
   ), parse_cron_part)
 
-  cron$year <- year(now()) %>% seq(.,.+1)
+  cron$year <- year(now()) %>% {seq(.-1,.+1)}
 
   ### Day parts
   cron_data_table <- data.table()
@@ -99,7 +99,7 @@ parse_cron <- function(cron_string) {
   
   setorder(cron_data_table,date,-today)
   today_row = which(cron_data_table$today==TRUE)
-  cron_data_table <- cron_data_table[c(today_row+1,today_row+2),]
+  cron_data_table <- cron_data_table[c(today_row-1, today_row+1, today_row+2),]
   
   ### Time parts
   
@@ -112,9 +112,9 @@ parse_cron <- function(cron_string) {
   
   setorder(cron_data_table, datetime, -now)
   now_row = which(cron_data_table$now==TRUE)
-  cron_data_table <- cron_data_table[c(now_row+1,now_row+2),]
+  cron_data_table <- cron_data_table[c(now_row-1, now_row+1),]
   
-  return(cron_data_table$datetime)
+  return(na.omit(cron_data_table$datetime))
 }
 
 #' parse_cron_part

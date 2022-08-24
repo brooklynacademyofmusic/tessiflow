@@ -10,7 +10,7 @@ parse_cron(cron_string)
 \item{cron_string}{string with the standard *nix format, see Details for details}
 }
 \value{
-next two runtimes (assumption: this function takes less than 60 seconds to run)
+last and next runtime
 }
 \description{
 parse_cron
