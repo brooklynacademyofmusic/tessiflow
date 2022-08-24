@@ -20,7 +20,8 @@ modular, testable code, because steps are by default, just R function calls.
 
 - Because this is an R-native workflow tool there will be less disk i/o required between steps 
 because data can remain in memory. It is also more straightforward to collect rich error information 
-and back-traces and will even allow the possibility of remote debugging. 
+and back-traces and will even allow the possibility of remote debugging. Also, orchestrators are complicated 
+and this is designed to be very very simple!
 
 ## Installation
 
