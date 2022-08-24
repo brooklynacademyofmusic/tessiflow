@@ -1,4 +1,4 @@
-name: Tessiflow
+name: tessiflow
 
 on:
   schedule: 
@@ -6,7 +6,7 @@ on:
 
 jobs:
   job1:
-    name: Report
+    name: report
     steps: 
       - run: |
           library(tessiflow)
