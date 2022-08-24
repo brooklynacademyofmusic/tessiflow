@@ -46,7 +46,7 @@ test_that("flows_main calls job_poll_resilient when tasks are running", {
 })
 
 test_that("flows_main call job_reset_resilient when they are done", {
-  flows[, status := rep(c("Finished","Waiting"),3)]
+  flows[, status := rep(c("Finished", "Waiting"), 3)]
   stub(flows_main, "flows_parse", flows)
   m <- mock()
   stub(flows_main, "job_reset_resilient", m)

@@ -27,15 +27,17 @@ test_that("tessiflow_report_send emails the report", {
   tessiflow_report_send()
   expect_length(mock_args(send_email), 1)
   expect_match(subject <- mock_args(send_email)[[1]]$subject, "tessiflow")
-  expect_match(body <- mock_args(send_email)[[1]]$body, paste0("table.+>Job 1<.+>12H 0M.+>Job 2<.+>6H 0M.+>Job 3.+>",
-                                                       today()))
-  
+  expect_match(body <- mock_args(send_email)[[1]]$body, paste0(
+    "table.+>Job 1<.+>12H 0M.+>Job 2<.+>6H 0M.+>Job 3.+>",
+    today()
+  ))
+
   rm(send_email)
-  
+
   stub(send.mail, ".jTryCatch", function(...) {
     rlang::warn(class = "sent!")
   })
   stub(send_email, "send.mail", send.mail)
   stub(send_email, "config::get", mock("test@test.com", list(host.name = "blah"), cycle = TRUE))
-  expect_warning(send_email(subject,body), class = "sent!")
+  expect_warning(send_email(subject, body), class = "sent!")
 })

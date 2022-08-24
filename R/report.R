@@ -47,10 +47,11 @@ tessiflow_report_send <- function(report = tessiflow_report_load()) {
       .$Status == "Running" ~ "#7F7",
       TRUE ~ "none"
     )) %>%
-    htmlTable(rnames = FALSE) %>% as.character()
+    htmlTable(rnames = FALSE) %>%
+    as.character()
 
   send_email(subject = subject, body = body)
-  
+
   invisible()
 }
 

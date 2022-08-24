@@ -60,12 +60,10 @@ tessiflow_enable <- function() {
   }
 
   schedule(
-    script_expr(
-      {
-        setwd(!!Sys.getenv("R_USER"))
-        tessiflow::tessiflow_run()
-      }
-    ), "tessiflow"
+    script_expr({
+      setwd(!!Sys.getenv("R_USER"))
+      tessiflow::tessiflow_run()
+    }), "tessiflow"
   )
 
   invisible()

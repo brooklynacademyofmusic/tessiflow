@@ -66,8 +66,8 @@ test_that("parse_cron_part complains about other combinations of operators", {
 # parse_cron -------------------------------------------------------
 
 withr::local_package("lubridate")
-mockery::stub(parse_cron,"now",as.POSIXct("2020-01-01 00:00:00",Sys.timezone()))
-mockery::stub(parse_cron,"today",as.Date("2020-01-01"))
+mockery::stub(parse_cron, "now", as.POSIXct("2020-01-01 00:00:00", Sys.timezone()))
+mockery::stub(parse_cron, "today", as.Date("2020-01-01"))
 
 test_that("parse_cron requires cron strings with 5 components", {
   expect_error(parse_cron("a b c d"))
@@ -88,8 +88,8 @@ test_that("parse_cron retuns next two dates when day not specified", {
   cron_string <- "30 4 * jan-dec/2 mon-fri/2"
   expect_length(parse_cron(cron_string), 2)
   expect_equal(minute(parse_cron(cron_string)), c(30, 30))
-  expect_equal(hour(parse_cron(cron_string)), c(4,4))
-  expect_equal(wday(parse_cron(cron_string)), c(5,5))
+  expect_equal(hour(parse_cron(cron_string)), c(4, 4))
+  expect_equal(wday(parse_cron(cron_string)), c(5, 5))
   expect_equal(month(parse_cron(cron_string)), c(11, 1))
 })
 
@@ -99,5 +99,5 @@ test_that("parse_cron retuns next two dates when day and wday specified", {
   expect_equal(minute(parse_cron(cron_string)), c(30, 30))
   expect_equal(hour(parse_cron(cron_string)), c(4, 4))
   expect_true(all(wday(parse_cron(cron_string)) == 5 |
-                  day(parse_cron(cron_string)) %in% c(1,15)))
+    day(parse_cron(cron_string)) %in% c(1, 15)))
 })
