@@ -13,7 +13,7 @@ flows_main <- function() {
 
   server <- serverSocket(ceiling(runif(1, 2^10, 2^16)))
 
-  while (!all(tessiflow$flows$status == "Finished")) {
+  while (! all(tessiflow$flows$status=="Finished")) {
     if ("Waiting" %in% tessiflow$flows$status) {
       tessiflow$flows[status == "Waiting", apply(.SD, 1, function(.) {
         job_maybe_start_resilient(.$flow_name, .$job_name)
@@ -48,6 +48,8 @@ flows_main_read_server <- function(server) {
   socket <- try(socketAccept(server, timeout = 1), silent = TRUE)
   if (!"try-error" %in% class(socket)) {
     input <- readLines(socket, n = 1)
+    close(socket)
+    
     if (!test_parse(input)) {
       message(paste0("Can't parse '", input, "' from input stream."))
     } else if (length(input) > 0) {
@@ -62,7 +64,6 @@ flows_main_read_server <- function(server) {
 
       tryCatch(eval(rlang::parse_expr(input)), error = print)
     }
-    close(socket)
   }
 }
 
