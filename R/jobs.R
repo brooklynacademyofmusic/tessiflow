@@ -92,15 +92,7 @@ job_start <- function(flow_name, job_name) {
   return(invisible())
 }
 
-#' job_step
-#'
-#' Run the next step in a job
-#'
-#' @param flow_name string workflow name
-#' @param job_name string job name
-#'
-#' @return invisibly
-#'
+#' @describeIn job_start Run the next step in a job
 job_step <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
@@ -175,18 +167,10 @@ job_make_remote_expr <- function(env_vars = NULL, if_expr = NULL, run_expr = NUL
   }))
 }
 
-#' job_on_error
-#'
-#' updates flows table and database, writes to log, and finalizes running session on error
-#'
-#' @param flow_name string workflow name
-#' @param job_name string job name
 #' @param error error condition object
-#'
 #' @importFrom checkmate assert_class assert_character
 #' @importFrom cli ansi_strip
-#'
-#' @return invisibly
+#' @describeIn job_start Updates flows table and database, writes to log, and finalizes running session on error
 job_on_error <- function(flow_name, job_name, error) {
   assert_class(error, "error")
   assert_flow_job_name(flow_name, job_name)
@@ -202,7 +186,7 @@ job_on_error <- function(flow_name, job_name, error) {
   invisible()
 }
 
-
+#' @describeIn job_start Read stdout and stderr from the process and write to log. When ready, call job_step
 job_poll <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
@@ -242,6 +226,7 @@ job_poll <- function(flow_name, job_name) {
   }
 }
 
+#' @describeIn job_start Closes R session, writes to log, console and database, and updates retval.
 job_finalize <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
@@ -276,14 +261,7 @@ job_finalize <- function(flow_name, job_name) {
   }
 }
 
-#' job_reset
-#'
-#' resets job for next run, updates flows table and database, writes to log
-#'
-#' @param flow_name string workflow name
-#' @param job_name string job name
-#'
-#' @return invisibly
+#' @describeIn job_start Resets job for next run, updates flows table and database, writes to log
 job_reset <-  function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
   

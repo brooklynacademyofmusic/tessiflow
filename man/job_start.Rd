@@ -2,14 +2,31 @@
 % Please edit documentation in R/jobs.R
 \name{job_start}
 \alias{job_start}
+\alias{job_step}
+\alias{job_on_error}
+\alias{job_poll}
+\alias{job_finalize}
+\alias{job_reset}
 \title{job_start}
 \usage{
 job_start(flow_name, job_name)
+
+job_step(flow_name, job_name)
+
+job_on_error(flow_name, job_name, error)
+
+job_poll(flow_name, job_name)
+
+job_finalize(flow_name, job_name)
+
+job_reset(flow_name, job_name)
 }
 \arguments{
 \item{flow_name}{string workflow name}
 
 \item{job_name}{string job name}
+
+\item{error}{error condition object}
 }
 \value{
 invisibly
@@ -17,3 +34,16 @@ invisibly
 \description{
 Run the job in a callr process
 }
+\section{Functions}{
+\itemize{
+\item \code{job_step}: Run the next step in a job
+
+\item \code{job_on_error}: Updates flows table and database, writes to log, and finalizes running session on error
+
+\item \code{job_poll}: Read stdout and stderr from the process and write to log. When ready, call job_step
+
+\item \code{job_finalize}: Closes R session, writes to log, console and database, and updates retval.
+
+\item \code{job_reset}: Resets job for next run, updates flows table and database, writes to log
+}}
+
