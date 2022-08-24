@@ -44,13 +44,13 @@
 #' `30 4 1,15 * 5` would cause a command to be run at 4:30 am on the
 #' 1st and 15th of each month, plus every Friday.
 #'
-#' @return vector of times from the last, current, and future year, matching the cron string
+#' @return next two runtimes (assumption: this function takes less than 60 seconds to run)
 #' @importFrom checkmate assert_string
-#' @importFrom lubridate make_date hours minutes now force_tz
+#' @importFrom lubridate make_date hours minutes now force_tz ceiling_date
 #'
 parse_cron <- function(cron_string) {
-  . <- datetime <- day <- NULL
-
+  . <- datetime <- NULL
+  
   # split string into components
   cron_parts <- strsplit(cron_string, "\\s+", perl = TRUE)[[1]]
 
@@ -58,7 +58,7 @@ parse_cron <- function(cron_string) {
     stop(paste("Cron string", cron_string, "does not have five parts."))
   }
 
-  names(cron_parts) <- c("min", "hour", "day", "month", "wday")
+  names(cron_parts) <- c("min", "hour", "mday", "month", "wday")
 
   cron <- map2(cron_parts, list(
     c(0, 59),
@@ -68,41 +68,53 @@ parse_cron <- function(cron_string) {
     c(0, 7)
   ), parse_cron_part)
 
-  # looks across three years... this could be more efficient but
-  # "premature optimization is the root of all evil (or at least most of it) in programming"
-  # - Donald Knuth
-  cron$year <- seq(year(now()) - 1, year(now()) + 1)
+  cron$year <- year(now()) %>% seq(.,.+1)
 
+  ### Day parts
   cron_data_table <- data.table()
   # if weekday is restricted
   if (cron_parts["wday"] != "*") {
-    cron_wday <- copy(cron)
+    cron_wday <- cron
     # ... unrestrict day
-    cron_wday$day <- seq(1, 31)
-    cron_data_table <- expand.grid(cron_wday) %>%
-      setDT() %>%
-      # use make_date instead of make_datetime because make_datetime rolls over to the next day/month for invalid dates
-      .[, datetime := make_date(year, month, day) + hours(hour) + minutes(min)] %>%
-      # ... and restrict wday
-      .[wday(datetime) == wday] %>%
-      rbind(cron_data_table, fill = TRUE)
-  }
-
+    cron_wday$mday <- seq(1, 31)
+    cron_data_table <- expand.grid(cron_wday[c("year","month","mday","wday")])
+  } 
+  
   # if day is restricted (or weekday is not)
-  if (cron_parts["day"] != "*" || cron_parts["wday"] == "*") {
-    cron_day <- copy(cron)
+  if (cron_parts["mday"] != "*" || cron_parts["wday"] == "*") {
+    cron_mday <- cron
     # ... unrestrict wday
-    cron_day$wday <- NULL
-    cron_data_table <- expand.grid(cron_day) %>%
-      setDT() %>%
-      .[, datetime := make_date(year, month, day) + hours(hour) + minutes(min)] %>%
-      .[!is.na(datetime)] %>%
-      rbind(cron_data_table, fill = TRUE)
+    cron_mday$wday <- NA
+    cron_data_table <- expand.grid(cron_mday[c("year","month","mday","wday")]) %>%
+      rbind(cron_data_table)
   }
-
-  setkey(cron_data_table, datetime)
-
-  force_tz(cron_data_table$datetime, Sys.timezone())
+  
+  ### Filter dates
+  cron_data_table <- cron_data_table %>% setDT %>% 
+    .[,`:=`(date=make_date(year,month,mday),
+            today=FALSE)] %>%
+    .[is.na(wday) & !is.na(date) | # is a valid date
+      !is.na(wday) & wday(date) == wday] %>% # is the right weekday
+    rbind(data.table(date=today(),today=TRUE),fill=TRUE)
+  
+  setorder(cron_data_table,date,-today)
+  today_row = which(cron_data_table$today==TRUE)
+  cron_data_table <- cron_data_table[c(today_row+1,today_row+2),]
+  
+  ### Time parts
+  
+  times <- expand.grid(cron[c("min","hour")])
+  
+  cron_data_table <- merge.data.frame(cron_data_table,times) %>% setDT %>% 
+    .[,`:=`(datetime = lubridate::force_tz(date + hours(hour) + minutes(min),Sys.timezone()),
+                        now = FALSE)] %>%
+    rbind(data.table(datetime=ceiling_date(now(),"minutes"),now=TRUE),fill=TRUE)
+  
+  setorder(cron_data_table, datetime, -now)
+  now_row = which(cron_data_table$now==TRUE)
+  cron_data_table <- cron_data_table[c(now_row+1,now_row+2),]
+  
+  return(cron_data_table$datetime)
 }
 
 #' parse_cron_part

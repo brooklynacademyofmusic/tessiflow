@@ -63,9 +63,11 @@ test_that("parse_cron_part complains about other combinations of operators", {
 })
 
 
-# parse_cron_string -------------------------------------------------------
+# parse_cron -------------------------------------------------------
 
 withr::local_package("lubridate")
+mockery::stub(parse_cron,"now",as.POSIXct("2020-01-01 00:00:00",Sys.timezone()))
+mockery::stub(parse_cron,"today",as.Date("2020-01-01",Sys.timezone()))
 
 test_that("parse_cron requires cron strings with 5 components", {
   expect_error(parse_cron("a b c d"))
@@ -73,28 +75,29 @@ test_that("parse_cron requires cron strings with 5 components", {
   expect_silent(parse_cron("1 * * * *"))
 })
 
-test_that("parse_cron retuns previous and next dates when wday not specified", {
+test_that("parse_cron retuns next two dates when wday not specified", {
   cron_string <- "30 4-7 1 jan-mar/2 *"
-  expect_length(parse_cron(cron_string), 1 * 4 * 1 * 2 * 3)
-  expect_equal(unique(minute(parse_cron(cron_string))), c(30))
-  expect_equal(unique(hour(parse_cron(cron_string))), seq(4, 7))
-  expect_equal(unique(day(parse_cron(cron_string))), c(1))
-  expect_equal(unique(month(parse_cron(cron_string))), seq(1, 3, 2))
+  expect_length(parse_cron(cron_string), 2)
+  expect_equal(minute(parse_cron(cron_string)), c(30,30))
+  expect_equal(hour(parse_cron(cron_string)), c(4, 5))
+  expect_equal(day(parse_cron(cron_string)), c(1,1))
+  expect_equal(month(parse_cron(cron_string)), c(1,1))
 })
 
-test_that("parse_cron retuns previous and next dates when day not specified", {
-  cron_string <- "30 4-7 * jan-dec/2 mon-fri/2"
-  expect_equal(unique(minute(parse_cron(cron_string))), c(30))
-  expect_equal(unique(hour(parse_cron(cron_string))), seq(4, 7))
-  expect_equal(unique(wday(parse_cron(cron_string))), c(1, 3, 5))
-  expect_equal(unique(month(parse_cron(cron_string))), seq(1, 12, 2))
+test_that("parse_cron retuns next two dates when day not specified", {
+  cron_string <- "30 4 * jan-dec/2 mon-fri/2"
+  expect_length(parse_cron(cron_string), 2)
+  expect_equal(minute(parse_cron(cron_string)), c(30,30))
+  expect_equal(hour(parse_cron(cron_string)), c(4,4))
+  expect_equal(wday(parse_cron(cron_string)), c(5,1))
+  expect_equal(month(parse_cron(cron_string)), c(1,1))
 })
 
-test_that("parse_cron retuns previous and next dates when day and wday specified", {
+test_that("parse_cron retuns next two dates when day and wday specified", {
   cron_string <- "30 4 1,15 * 5"
-  expect_length(parse_cron(cron_string), (1 * 1 * 2 * 12 + 1 * 1 * 52) * 3)
-  expect_equal(unique(minute(parse_cron(cron_string))), c(30))
-  expect_equal(unique(hour(parse_cron(cron_string))), c(4))
-  expect_true(all(wday(parse_cron(cron_string)) == 5 %in% c(5) |
-    day(parse_cron(cron_string))) %in% c(1, 15))
+  expect_length(parse_cron(cron_string), 2)
+  expect_equal(minute(parse_cron(cron_string)), c(30,30))
+  expect_equal(hour(parse_cron(cron_string)), c(4,4))
+  expect_true(all(wday(parse_cron(cron_string)) == 5 |
+                  day(parse_cron(cron_string)) == 1))
 })

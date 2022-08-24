@@ -10,7 +10,7 @@ parse_cron(cron_string)
 \item{cron_string}{string with the standard *nix format, see Details for details}
 }
 \value{
-vector of times from the last, current, and future year, matching the cron string
+next two runtimes (assumption: this function takes less than 60 seconds to run)
 }
 \description{
 parse_cron
