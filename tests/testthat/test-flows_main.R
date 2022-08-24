@@ -45,28 +45,21 @@ test_that("flows_main calls job_poll_resilient when tasks are running", {
   expect_equal(length(mock_args(m)), nrow(flows))
 })
 
-test_that("flows_main resets tasks to waiting when they are done", {
-  flows[, status := "Running"]
+test_that("flows_main call job_reset_resilient when they are done", {
+  flows[, status := rep(c("Finished","Waiting"),3)]
   stub(flows_main, "flows_parse", flows)
   m <- mock()
-  stub(flows_main, "job_maybe_start_resilient", m)
-  stub(flows_main, "job_poll_resilient", function(...) {
-    tessiflow$flows[, `:=`(
-      status = "Finished",
-      scheduled_runs = list(list())
-    )]
-  })
+  stub(flows_main, "job_reset_resilient", m)
   stub(flows_main, "flows_main_read_server", function(...) {
     close(...)
     stop("first loop")
   })
   expect_error(flows_main(), "first loop")
-  expect_equal(flows, tessiflow$flows)
+  expect_equal(length(mock_args(m)), 3)
 })
 
 
 # flows_main_read_server --------------------------------------------------
-
 
 test_that("flows_main_read_server reads from the server port if there is something to read and executes the command", {
   server <- serverSocket(32768)
