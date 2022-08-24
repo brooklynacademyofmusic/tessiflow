@@ -19,7 +19,7 @@ tessiflow_run <- function() {
     stop("Found running tessiflow process, cowardly refusing to start another.")
   }
 
-  logfile <- file.path(flows_log_dir, "tessiflow.log")
+  logfile <- file.path(flows_log_dir, "tessiflow-daemon.log")
   log_rotate(logfile)
 
   local_envvar("tessiflow-daemon" = "YES")

@@ -53,7 +53,7 @@ test_that("tessiflow_run logs to a log file", {
 
   expect_output(tessiflow_run(), "Starting tessiflow", all = FALSE)
 
-  logdata <- readLines(file.path(config::get("tessiflow.log"), "tessiflow.log"))
+  logdata <- readLines(file.path(config::get("tessiflow.log"), "tessiflow-daemon.log"))
   expect_match(logdata, "Starting tessiflow", all = FALSE)
   expect_match(logdata, "Running flows_main", all = FALSE)
   expect_equal(length(logdata), 2)
