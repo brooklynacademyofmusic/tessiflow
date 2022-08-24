@@ -19,6 +19,8 @@ parseable
 retval
 schtasks
 smtp
+stderr
+stdout
 subprocess
 th
 upsert
