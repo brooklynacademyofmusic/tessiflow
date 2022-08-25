@@ -1,4 +1,6 @@
 #' flows_log_open
+#' 
+#' opens the jobs database connection
 #'
 #' @param flows_log_dir directory where the SQLite database is stored
 #'
@@ -21,7 +23,7 @@ flows_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
 }
 
 
-#' @describeIn flows_log_open Tear down the SQL connection
+#' @describeIn flows_log_open closes the jobs database connection
 flows_log_close <- function() {
   if (!is.null(tessiflow$db)) {
     DBI::dbDisconnect(tessiflow$db)

@@ -1,9 +1,4 @@
-#' performance_log_open
-#'
-#' @param flows_log_dir directory where the SQLite database is stored
-#'
-#' @return invisible
-#'
+#' @describeIn flows_log_open opens the performance database connection
 performance_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
   if (is.null(flows_log_dir) || !dir.exists(flows_log_dir)) {
     stop("Please set the tessiflow.log config option to a directory where log files will be stored")
@@ -20,6 +15,14 @@ performance_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
   invisible()
 }
 
+#' @describeIn flows_log_open closes the performance database connection
+performance_log_close <- function() {
+  if (!is.null(tessiflow$db2)) {
+    DBI::dbDisconnect(tessiflow$db2)
+  }
+  tessiflow$db2 <- NULL
+}
+
 #' performance_poll
 #' 
 #' return a list of process data from `python psutil`
@@ -34,12 +37,14 @@ performance_poll <- function(pid) {
   performance <- list(
     cpu_times = process$cpu_times(),
     cpu_percent = process$cpu_percent(),
-    memory_full_info = process$memory_full_info(),
-    memory_percent = process$memory_percent(),
+    #memory_full_info = process$memory_full_info(),
     io_counters = process$io_counters(),
     pid = pid,
     ppid = process$ppid()
   )
+  
+  performance <- c(performance,
+                   memory_full_info=ps::ps_memory_info(ps::ps_handle(pid)))
   
   performance <- lapply(performance,function(o) {
     if(inherits(o,"python.builtin.object")) {
@@ -50,6 +55,8 @@ performance_poll <- function(pid) {
     }
   }) %>% unlist %>% 
     purrr::discard(~inherits(.,"python.builtin.object"))
+  
+  return(performance)
     
 }
 
@@ -113,20 +120,18 @@ performance_log_create <- function() {
     cpu_times.system = "double", 
     cpu_times.user = "double", 
     cpu_percent = "double",  
-    memory_full_info.nonpaged_pool = "double", 
-    memory_full_info.num_page_faults = "double",  
-    memory_full_info.paged_pool = "double", 
-    memory_full_info.pagefile = "double",  
-    memory_full_info.peak_nonpaged_pool = "double", 
-    memory_full_info.peak_paged_pool = "double",  
-    memory_full_info.peak_pagefile = "double", 
+    memory_full_info.num_page_faults = "double", 
     memory_full_info.peak_wset = "double",  
-    memory_full_info.private = "double", 
-    memory_full_info.rss = "double",  
-    memory_full_info.uss = "double", 
-    memory_full_info.vms = "double",  
     memory_full_info.wset = "double", 
-    memory_percent = "double",  
+    memory_full_info.peak_paged_pool = "double",  
+    memory_full_info.paged_pool = "double", 
+    memory_full_info.peak_non_paged_pool = "double",  
+    memory_full_info.non_paged_pool = "double", 
+    memory_full_info.pagefile = "double",  
+    memory_full_info.peak_pagefile = "double", 
+    memory_full_info.mem_private = "double",  
+    memory_full_info.rss = "double", 
+    memory_full_info.vms = "double",
     io_counters.other_bytes = "double", 
     io_counters.other_count = "double",  
     io_counters.read_bytes = "double", 
