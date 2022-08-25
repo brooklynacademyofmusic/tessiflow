@@ -29,44 +29,13 @@ test_that("flows_log_open opens a database connection", {
   expect_class(tessiflow$db, "SQLiteConnection")
 })
 
-
-
-
-# flows_log_upsert --------------------------------------------------------
-
-test_that("flows_log_upsert complains if the table isn't in the database or doesn't have the join columns", {
-  expect_error(flows_log_upsert("notatable", c(x = 1)), "notatable")
-  expect_error(flows_log_upsert("jobs", c(notafield = 1)), "notafield")
-  expect_error(flows_log_upsert("jobs", data.frame(start_time = lubridate::now())), "job_name.+flow_name")
-})
-
-test_that("flows_log_upsert writes a new row to the table", {
-  flows_log_upsert("jobs", data.frame(
-    flow_name = "Dummy workflow",
-    job_name = "Job 1",
-    status = "Waiting",
-    start_time = now(),
-    end_time = NA,
-    retval = NA
-  ))
-  expect_equal(DBI::dbGetQuery(tessiflow$db, "select count(*) from jobs")[[1]], 1)
-})
-
-test_that("flows_log_upsert writes a row to the table", {
-  job <- flows_log_get_last_run("Dummy workflow", "Job 1")
-  job$status <- "Running"
-  flows_log_upsert("jobs", job)
-  expect_equal(DBI::dbGetQuery(tessiflow$db, "select count(*) from jobs")[[1]], 1)
-  expect_equal(flows_log_get_last_run("Dummy workflow", "Job 1")$status, "Running")
-})
-
 # flows_low_get_last_run --------------------------------------------------
 
-flows_log_upsert("jobs", readRDS(test_path("jobs.Rds")))
+sqlite_upsert("jobs", readRDS(test_path("jobs.Rds")))
 test_that("flows_log_get_last_run reports the last run by flow and job", {
   start_time <- as.double(now())
 
-  flows_log_upsert("jobs", data.frame(
+  sqlite_upsert("jobs", data.frame(
     flow_name = "Dummy workflow",
     job_name = "Job 1",
     status = "Waiting",

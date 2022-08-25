@@ -12,7 +12,7 @@ flows_main <- function() {
   tessiflow$flows <- flows_parse()
 
   server <- serverSocket(ceiling(runif(1, 2^10, 2^16)))
-
+  
   while (!all(tessiflow$flows$status == "Finished")) {
     if ("Waiting" %in% tessiflow$flows$status) {
       tessiflow$flows[status == "Waiting", apply(.SD, 1, function(.) {
@@ -110,7 +110,8 @@ flows_update_job <- function(.flow_name, .job_name, data) {
   tessiflow$flows[flow_name == .flow_name &
     job_name == .job_name, (names(data)) := data]
 
-  flows_log_upsert("jobs", tessiflow$flows[flow_name == .flow_name &
+  sqlite_upsert("jobs", tessiflow$flows[flow_name == .flow_name &
     job_name == .job_name, ])
+  
   invisible()
 }

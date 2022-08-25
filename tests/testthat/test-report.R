@@ -5,7 +5,7 @@ withr::local_package("checkmate")
 local_log_dir()
 local_flows_data_table()
 tessiflow$flows$start_time <- seq(now(tzone = Sys.timezone()) - dhours(30) - dseconds(1), now(), dhours(6))
-flows_log_upsert(data = tessiflow$flows)
+sqlite_upsert(data = tessiflow$flows)
 
 
 # tessiflow_report_load ---------------------------------------------------

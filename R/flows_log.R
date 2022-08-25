@@ -43,47 +43,11 @@ flows_log_create <- function() {
     start_time = "double",
     end_time = "double",
     retval = "integer",
-    step = "integer"
+    step = "integer",
+    pid = "integer"
   ))
 
   DBI::dbExecute(tessiflow$db, "CREATE UNIQUE INDEX jobs_index ON jobs(flow_name,job_name,start_time)")
-}
-
-#' flows_log_upsert
-#'
-#' @param table string, right now only `jobs` is valid
-#' @param data data.frame of data to update, rows will be matched on flow_name, job_name, and start_time
-#' @importFrom dplyr copy_to
-#' @importFrom checkmate assert_names assert_data_frame assert_choice
-#' @return invisibly
-flows_log_upsert <- function(table = "jobs", data) {
-  assert_choice(table, "jobs")
-  flows_log_open()
-  matching_cols <- c("job_name", "flow_name", "start_time")
-  assert_names(names(data),
-    # subset.of=DBI::dbListFields(tessiflow$db,"jobs"),
-    must.include = matching_cols,
-    .var.name = names(rlang::enexpr(data))
-  )
-  assert_data_frame(data, min.rows = 1)
-
-  data <- dplyr::select(data, intersect(names(data), DBI::dbListFields(tessiflow$db, "jobs"))) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate_if(~ !is.double(.) && !is.integer(.), as.character)
-
-  copy_to(tessiflow$db, data, "flows_log_upsert", overwrite = TRUE, temporary = TRUE)
-
-  data_names <- paste0("\"", names(data), "\"")
-
-  sql <- paste(
-    "INSERT INTO", table, "(", paste(data_names, collapse = ", "), ")",
-    "SELECT", paste(data_names, collapse = ", "),
-    "FROM flows_log_upsert f WHERE true",
-    "ON CONFLICT (", paste(matching_cols, collapse = ", "), ")",
-    "DO UPDATE SET", paste(paste0(data_names, " = excluded.", data_names), collapse = ", ")
-  )
-
-  DBI::dbExecute(tessiflow$db, sql)
 }
 
 #' flows_log_get_last_run
