@@ -38,5 +38,6 @@ Imports:
     cli,
     ps,
     withr,
-    htmlTable
+    htmlTable,
+    reticulate
 Language: en-US
