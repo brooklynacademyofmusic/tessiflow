@@ -10,7 +10,7 @@ flows_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
   }
 
   if (is.null(tessiflow$db)) {
-    tessiflow$db <- DBI::dbConnect(RSQLite::SQLite(), file.path(flows_log_dir, "flows.sqlite"))
+    tessiflow$db <- DBI::dbConnect(RSQLite::SQLite(), file.path(flows_log_dir, "tessiflow.sqlite"))
   }
 
   if (!DBI::dbExistsTable(tessiflow$db, "jobs")) {
@@ -20,7 +20,6 @@ flows_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
   invisible()
 }
 
-tessiflow <- new.env()
 
 #' @describeIn flows_log_open Tear down the SQL connection
 flows_log_close <- function() {

@@ -1,3 +1,4 @@
+tessiflow <- new.env()
 
 #' tessiflow_run
 #'
@@ -21,7 +22,7 @@ tessiflow_run <- function() {
 
   logfile <- file.path(flows_log_dir, "tessiflow-daemon.log")
   log_rotate(logfile)
-
+  
   local_envvar("tessiflow-daemon" = "YES")
   local_output_sink(logfile, append = TRUE, split = TRUE, .local_envir = environment())
   local_message_sink(logfile, append = TRUE, .local_envir = environment())
