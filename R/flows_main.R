@@ -62,8 +62,11 @@ flows_main_read_server <- function(server) {
           ", got ", input
         )))
       }
-
-      tryCatch(eval(rlang::parse_expr(input)), error = print)
+      
+      # Construct safe call
+      tryCatch(eval(rlang::call2(rlang::call_name(expr),
+                                 !!!lapply(rlang::call_args(expr),as.character))),
+               error = print)
     }
   }
 }
