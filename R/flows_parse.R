@@ -7,7 +7,6 @@
 #' @return named list of workflows as data.tables
 #' @importFrom purrr map_chr map2
 #' @importFrom checkmate test_character
-#' @importFrom config get
 
 flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
   on.schedule <- NULL
