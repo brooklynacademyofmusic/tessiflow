@@ -23,6 +23,8 @@ tessiflow_run <- function() {
   logfile <- file.path(flows_log_dir, "tessiflow-daemon.log")
   log_rotate(logfile)
   
+  flows_log_cleanup()
+  
   callr::r_bg(performance_main,stdout="",stderr="",package = TRUE)
 
   local_envvar("tessiflow-daemon" = "YES")
@@ -124,7 +126,7 @@ tessiflow_run_command <- function(flow_name, job_name, command) {
   }
 
   socket <- socketConnection(port = na.omit(conns$lport))
-
+  
   writeLines(deparse(rlang::call2(command, flow_name = flow_name, job_name = job_name)), socket)
 
   close(socket)
