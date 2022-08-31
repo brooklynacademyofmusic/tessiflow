@@ -12,7 +12,7 @@ flows_main <- function() {
   tessiflow$flows <- flows_parse()
 
   server <- serverSocket(ceiling(runif(1, 2^10, 2^16)))
-  
+
   while (!all(tessiflow$flows$status == "Finished")) {
     if ("Waiting" %in% tessiflow$flows$status) {
       tessiflow$flows[status == "Waiting", apply(.SD, 1, function(.) {
@@ -44,7 +44,7 @@ flows_main <- function() {
 }
 
 #' flows_main_read_server
-#' 
+#'
 #' Reads from socket server and (safely) executes commands by checking the call name and converting arguments to strings.
 #'
 #' @param server Server object created by `base::socketServer`
@@ -69,11 +69,14 @@ flows_main_read_server <- function(server) {
           ", got ", input
         )))
       }
-      
+
       # Construct safe call
-      tryCatch(eval(rlang::call2(rlang::call_name(expr),
-                                 !!!lapply(rlang::call_args(expr),as.character))),
-               error = print)
+      tryCatch(eval(rlang::call2(
+        rlang::call_name(expr),
+        !!!lapply(rlang::call_args(expr), as.character)
+      )),
+      error = print
+      )
     }
   }
 }
@@ -122,6 +125,6 @@ flows_update_job <- function(.flow_name, .job_name, data) {
 
   sqlite_upsert("jobs", tessiflow$flows[flow_name == .flow_name &
     job_name == .job_name, ])
-  
+
   invisible()
 }

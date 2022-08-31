@@ -20,6 +20,7 @@ parseable
 retval
 schtasks
 smtp
+sqlite
 stderr
 stdout
 subprocess

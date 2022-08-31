@@ -8,7 +8,7 @@ local_log_dir()
 
 test_that("sqlite_upsert complains if the table isn't in the database or doesn't have the join columns", {
   expect_error(sqlite_upsert("notatable", c(x = 1)), "notatable")
-  expect_error(sqlite_upsert("jobs", c(notafield = 1)), "include the elements",)
+  expect_error(sqlite_upsert("jobs", c(notafield = 1)), "include the elements", )
   expect_error(sqlite_upsert("jobs", data.frame(start_time = lubridate::now())), "flow_name.+job_name")
 })
 

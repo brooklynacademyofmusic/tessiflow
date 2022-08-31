@@ -49,36 +49,34 @@ test_that("flows_log_get_last_run reports the last run by flow and job", {
 
 # flows_log_cleanup -------------------------------------------------------
 
-test_that("flows_log_cleanup corrects the status of jobs in the log that are no longer running.",{
+test_that("flows_log_cleanup corrects the status of jobs in the log that are no longer running.", {
   start_time <- as.double(now())
   test_jobs <- data.frame(
     flow_name = "Test",
-    job_name = c("Running job","Killed job"),
+    job_name = c("Running job", "Killed job"),
     status = "Running",
     start_time = start_time,
     end_time = NA,
     retval = NA,
-    pid = c(123,456)
+    pid = c(123, 456)
   )
 
   sqlite_upsert("jobs", test_jobs)
-  query <- tbl(tessiflow$db,"jobs") %>% filter(flow_name == "Test")
-  
-  stub(flows_log_cleanup,"ps::ps_find_tree",c(123,456))
-  stub(flows_log_cleanup,"ps::ps_pid",c(123,456))
-  
+  query <- tbl(tessiflow$db, "jobs") %>% filter(flow_name == "Test")
+
+  stub(flows_log_cleanup, "ps::ps_find_tree", c(123, 456))
+  stub(flows_log_cleanup, "ps::ps_pid", c(123, 456))
+
   flows_log_cleanup()
-  
-  expect_names(collect(filter(query, status == "Running"))$job_name, permutation.of = c("Running job","Killed job"))
-  
+
+  expect_names(collect(filter(query, status == "Running"))$job_name, permutation.of = c("Running job", "Killed job"))
+
   rm(flows_log_cleanup)
-  stub(flows_log_cleanup,"ps::ps_find_tree",c(123))
-  stub(flows_log_cleanup,"ps::ps_pid",c(123))
-  
+  stub(flows_log_cleanup, "ps::ps_find_tree", c(123))
+  stub(flows_log_cleanup, "ps::ps_pid", c(123))
+
   flows_log_cleanup()
-  
+
   expect_equal(collect(filter(query, status == "Running"))$job_name, "Running job")
   expect_equal(collect(filter(query, status == "Cancelled"))$job_name, "Killed job")
 })
-
-

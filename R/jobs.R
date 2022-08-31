@@ -285,11 +285,11 @@ job_reset <- function(flow_name, job_name) {
 #' @describeIn job_start Stops job, updates flows table and database, writes to log
 job_stop <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
-  
+
   job <- flows_get_job(flow_name, job_name)
-  
+
   job_log_write(flow_name, job_name, paste("Stopping job, pid:", job$pid), console = TRUE)
-  
+
   job_finalize(flow_name, job_name)
 
   flows_update_job(
@@ -298,7 +298,6 @@ job_stop <- function(flow_name, job_name) {
       status = "Stopped"
     )
   )
-  
 }
 
 job_maybe_start_resilient <- error_handler_factory(job_maybe_start)

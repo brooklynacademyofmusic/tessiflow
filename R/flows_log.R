@@ -1,5 +1,5 @@
 #' flows_log_open
-#' 
+#'
 #' opens the jobs database connection
 #'
 #' @param flows_log_dir directory where the SQLite database is stored
@@ -87,27 +87,28 @@ flows_log_get_create_time <- function() {
 }
 
 #' flows_log_cleanup
-#' 
-#' Cleans up jobs in the log that are marked as `Running` but no longer are. 
+#'
+#' Cleans up jobs in the log that are marked as `Running` but no longer are.
 #'
 #' @return invisibly
 flows_log_cleanup <- function() {
   status <- pid <- flow_name <- job_name <- start_time <- NULL
-  
+
   flows_log_open()
-  
+
   tree <- ps::ps_find_tree("tessiflow-daemon")
-  
-  pids <- sapply(tree,ps::ps_pid)
-  
+
+  pids <- sapply(tree, ps::ps_pid)
+
   data <- tbl(tessiflow$db, "jobs") %>%
     filter(status == "Running" & !pid %in% pids) %>%
-    mutate(status = "Cancelled") %>% 
-    select(flow_name,job_name,start_time,status) %>% collect
-  
-  if(nrow(data)>0)
-    sqlite_upsert("jobs",data,tessiflow$db)
-  
+    mutate(status = "Cancelled") %>%
+    select(flow_name, job_name, start_time, status) %>%
+    collect()
+
+  if (nrow(data) > 0) {
+    sqlite_upsert("jobs", data, tessiflow$db)
+  }
+
   invisible()
 }
-

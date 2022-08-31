@@ -100,16 +100,16 @@ test_that("flows_main_read_server returns a message if the string isn't a call o
 
 test_that("flows_main_read_server doesn't execute other commands", {
   server <- serverSocket(32768)
-  
+
   job_start <- mock()
   stub(flows_main_read_server, "job_start", job_start)
-  
+
   socket <- socketConnection(port = 32768)
   cat(deparse(quote(job_start(print("hello")))), file = socket, sep = "\n")
   expect_silent(flows_main_read_server(server))
   expect_character(mock_args(job_start)[[1]][[1]])
   close(socket)
-  
+
   close(server)
 })
 
