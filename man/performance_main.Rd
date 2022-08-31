@@ -10,5 +10,5 @@ performance_main()
 never
 }
 \description{
-Main peformance logger loop. Calls performance_log_update every 30 seconds
+Main performance logger loop. Calls \code{performance_log_update} every 30 seconds
 }
