@@ -68,17 +68,17 @@ test_that("performance_poll gets disk information on process",{
                  must.include=c("io_counters.read_bytes",
                                 "io_counters.write_bytes"))
   filename <- tempfile()
-    expect_lte(performance_poll(pid)$io_counters.read_bytes,2^25)
-    expect_lte(performance_poll(pid)$io_counters.write_bytes,2^25)
-    r_session$run(eval,list(rlang::expr({writeBin(rep(1,2^25),
+    expect_lte(performance_poll(pid)$io_counters.read_bytes,2^26)
+    expect_lte(performance_poll(pid)$io_counters.write_bytes,2^26)
+    r_session$run(eval,list(rlang::expr({writeBin(rep(1,2^26),
                                             !!filename)})))
-    expect_lte(performance_poll(pid)$io_counters.read_bytes,2^25)
-    expect_gte(performance_poll(pid)$io_counters.write_bytes,2^25)
+    expect_lte(performance_poll(pid)$io_counters.read_bytes,2^26)
+    expect_gte(performance_poll(pid)$io_counters.write_bytes,2^26)
     r_session$run(eval,list(rlang::expr({readBin(!!filename,
                                                  "integer",
-                                                 2^25);1})))
-    expect_gte(performance_poll(pid)$io_counters.read_bytes,2^25)
-    expect_gte(performance_poll(pid)$io_counters.write_bytes,2^25)
+                                                 2^26);1})))
+    expect_gte(performance_poll(pid)$io_counters.read_bytes,2^26)
+    expect_gte(performance_poll(pid)$io_counters.write_bytes,2^26)
     # ...and disk i/o impacts system times
     expect_gte(performance_poll(pid)$cpu_times.system,1)
 })
