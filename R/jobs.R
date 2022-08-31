@@ -244,8 +244,6 @@ job_finalize <- function(flow_name, job_name) {
     flow_name, job_name,
     list(
       r_session = list(NULL),
-      pid = NA_integer_,
-      step = NA_integer_,
       retval = job$retval,
       end_time = now(),
       status = "Finished"

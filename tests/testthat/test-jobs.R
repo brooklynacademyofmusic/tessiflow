@@ -357,7 +357,7 @@ suppressMessages({
     job_finalize(flow_name, job_name)
     expect_length(mock_args(flows_update_job), 1)
     expect_names(lapply(mock_args(flows_update_job)[[1]][-c(1, 2)], names)[[1]],
-      permutation.of = c("r_session", "pid", "status", "end_time", "step", "retval")
+      permutation.of = c("r_session", "status", "end_time", "retval")
     )
   })
 
