@@ -44,8 +44,9 @@ tessiflow_report_send <- function(report = tessiflow_report_load()) {
   body <- report %>%
     addHtmlTableStyle(col.rgroup = case_when(
       .$Status == "Failed" ~ "#F77",
-      .$Status == "Running" ~ "#7F7",
-      TRUE ~ "none"
+      .$Status == "Finished" ~ "#7F7",
+      .$Status == "Running" ~ "none",
+      TRUE ~ "#FF7"
     )) %>%
     htmlTable(rnames = FALSE) %>%
     as.character()
