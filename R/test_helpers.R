@@ -10,6 +10,9 @@ make_fixtures <- function() {
 
   jobs <- with(flows_data_table, data.table(flow_name, job_name, status = "Waiting", retval = NA_integer_, start_time = now(), end_time = NA_real_))
   saveRDS(jobs, testthat::test_path("jobs.Rds"))
+  
+  performance <- performance_poll(Sys.getpid())
+  saveRDS(performance,test_path("performance.Rds"))
 }
 
 local_log_dir <- function(envir = parent.frame()) {
