@@ -261,15 +261,15 @@ job_finalize <- function(flow_name, job_name) {
   }
 }
 
-#' @describeIn job_start Resets job for next run, updates flows table and database, writes to log
+#' @describeIn job_start Resets job for next run, updates flows table but NOT database, writes to log
 job_reset <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
   job <- flows_get_job(flow_name, job_name)
 
-  flows_update_job(
-    flow_name, job_name,
-    list(
+  tessiflow$flows[
+    eval(rlang::expr(flow_name == !!flow_name & job_name == !!job_name)),
+    `:=`(
       status = "Waiting",
       retval = NA_integer_,
       r_session = list(NULL),
@@ -279,9 +279,28 @@ job_reset <- function(flow_name, job_name) {
       start_time = as.POSIXct(NA),
       end_time = as.POSIXct(NA)
     )
-  )
+  ]
 
-  job_log_write(flow_name, job_name, paste("Resetting job..."), console = TRUE)
+  job_log_write(flow_name, job_name, paste("Resetting job"), console = TRUE)
+}
+
+#' @describeIn job_start Stops job, updates flows table and database, writes to log
+job_stop <- function(flow_name, job_name) {
+  assert_flow_job_name(flow_name, job_name)
+  
+  job <- flows_get_job(flow_name, job_name)
+  
+  job_log_write(flow_name, job_name, paste("Stopping job, pid:", job$pid), console = TRUE)
+  
+  job_finalize(flow_name, job_name)
+
+  flows_update_job(
+    flow_name, job_name,
+    list(
+      status = "Stopped"
+    )
+  )
+  
 }
 
 job_maybe_start_resilient <- error_handler_factory(job_maybe_start)

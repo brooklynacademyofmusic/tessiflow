@@ -7,6 +7,7 @@
 \alias{job_poll}
 \alias{job_finalize}
 \alias{job_reset}
+\alias{job_stop}
 \title{job_start}
 \usage{
 job_start(flow_name, job_name)
@@ -20,6 +21,8 @@ job_poll(flow_name, job_name)
 job_finalize(flow_name, job_name)
 
 job_reset(flow_name, job_name)
+
+job_stop(flow_name, job_name)
 }
 \arguments{
 \item{flow_name}{string workflow name}
@@ -44,6 +47,8 @@ Run the job in a callr process
 
 \item \code{job_finalize}: Closes R session, writes to log, console and database, and updates retval.
 
-\item \code{job_reset}: Resets job for next run, updates flows table and database, writes to log
+\item \code{job_reset}: Resets job for next run, updates flows table but NOT database, writes to log
+
+\item \code{job_stop}: Stops job, updates flows table and database, writes to log
 }}
 
