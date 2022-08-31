@@ -43,6 +43,13 @@ flows_main <- function() {
   close(server)
 }
 
+#' flows_main_read_server
+#' 
+#' Reads from socket server and (safely) executes commands by checking the call name and converting arguments to strings.
+#'
+#' @param server Server object created by `base::socketServer`
+#'
+#' @return result of call
 flows_main_read_server <- function(server) {
   allowed_calls <- c("job_start", "job_stop")
 
