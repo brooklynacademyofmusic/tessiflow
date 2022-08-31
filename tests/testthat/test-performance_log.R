@@ -91,7 +91,7 @@ test_that("performance_poll gets disk information on process", {
   expect_lte(performance_poll(pid)$io_counters.write_bytes, 2^26)
   r_session$run(eval, list(rlang::expr({
     writeBin(
-      rep(1, 2^26),
+      rep(1, 2^27),
       !!filename
     )
   })))
@@ -101,7 +101,7 @@ test_that("performance_poll gets disk information on process", {
     readBin(
       !!filename,
       "integer",
-      2^26
+      2^27
     )
     1
   })))
@@ -132,13 +132,15 @@ stub(performance_log_update, "performance_poll", performance)
 
 test_that("performance_log_update updates the performance db table", {
   performance_log_update(performance$pid)
+  
+  test_cols <- c("pid","ppid","io_counters.read_bytes","cpu_times.user","memory_full_info.rss")
 
   expect_mapequal(
     tbl(tessiflow$db2, "performance") %>%
       collect() %>% as.data.table() %>%
-      select(-c(flow_name, job_name, step, timestamp)) %>%
+      select(all_of(test_cols)) %>%
       as.list(),
-    performance
+    performance[test_cols]
   )
 })
 
