@@ -24,6 +24,12 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v1
         with:
           extra-packages: covr
+          
+      - name: install python
+        run: |
+          Rscript -e 'library("reticulate"); install_python();'
+          pip install psutil
+        shell: bash
 
       - name: Test coverage
         run: covr::codecov( token = ${{ secrets.CODECOV_TOKEN }} )
