@@ -7,6 +7,9 @@
 #' @importFrom checkmate assert_names assert_data_frame assert_choice
 #' @return invisibly
 sqlite_upsert <- function(table = "jobs", data, con = tessiflow$db) {
+  
+  table_name <- column_name <- NULL
+  
   assert_choice(table, c("jobs","performance"))
   flows_log_open()
   
