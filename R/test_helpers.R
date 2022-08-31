@@ -13,6 +13,7 @@ make_fixtures <- function() {
 }
 
 local_log_dir <- function(envir = parent.frame()) {
+  withr::local_envvar(R_CONFIG_FILE = "config-tessiflow.yml", envir = envir)
   dirname <- config::get("tessiflow.log")
   dir.create(dirname)
   withr::defer(
