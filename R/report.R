@@ -17,7 +17,7 @@ tessiflow_report_load <- function() {
     transmute(
       `Flow Name` = flow_name,
       `Job Name` = job_name,
-      `Status` = ifelse(retval != 0 & status != "Running", "Failed", status),
+      `Status` = ifelse(dplyr::coalesce(retval,0) != 0 & status != "Running", "Failed", status),
       `Step` = step,
       `Start Time` = as_datetime(start_time, tz = Sys.timezone()),
       `End Time` = as_datetime(end_time, tz = Sys.timezone())
