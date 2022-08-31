@@ -100,13 +100,11 @@ performance_log_update <- function(pids = sapply(
 #'
 #' @return never
 performance_main <- function() {
-  Sys.sleep(30) # wait for daemon to start
-
   performance_log_open()
 
-  while (length(ps::ps_find_tree("tessiflow-daemon")) > 0) {
+  while (TRUE) {
     try(performance_log_update())
-    Sys.sleep(30)
+    Sys.sleep(10)
   }
 }
 

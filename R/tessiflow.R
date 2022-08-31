@@ -25,14 +25,13 @@ tessiflow_run <- function() {
 
   flows_log_cleanup()
 
-  callr::r_bg(performance_main, stdout = "", stderr = "", package = TRUE)
-
   local_envvar("tessiflow-daemon" = "YES")
   local_output_sink(logfile, append = TRUE, split = TRUE, .local_envir = environment())
   local_message_sink(logfile, append = TRUE, .local_envir = environment())
 
   cat(paste("[", Sys.time(), ": tessiflow ]", "Starting tessiflow scheduler ...\n"))
 
+  performance_logger <- callr::r_bg(performance_main, stdout = "", stderr = "", package = TRUE)
   callr::r(flows_main, stdout = "", stderr = "", package = TRUE)
 
   invisible()
