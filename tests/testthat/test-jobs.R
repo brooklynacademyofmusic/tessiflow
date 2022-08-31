@@ -306,7 +306,7 @@ suppressMessages({
     expect_length(mock_args(job_step), 1)
   })
 
-  # job_on_error ------------------------------------------------------------
+# job_on_error ------------------------------------------------------------
 
   stub(job_on_error, "job_finalize", TRUE)
   test_that("job_on_error updates the database and data.table", {
@@ -346,7 +346,7 @@ suppressMessages({
     expect_equal(mock_args(error_handler)[[1]][[1]]$job_name, job_name)
   })
 
-  # job_finalize ------------------------------------------------------------
+# job_finalize ------------------------------------------------------------
 
   local_flows_data_table()
   flows_update_job(flow_name, job_name, list(r_session = list(r_session)))
@@ -387,25 +387,45 @@ suppressMessages({
 # job_reset ------------------------------------------------------------
 
 local_flows_data_table()
-flows_update_job <- mock(TRUE, cycle = TRUE)
 job_log_write <- mock(TRUE, cycle = TRUE)
 stub(job_reset, "job_log_write", job_log_write)
-stub(job_reset, "flows_update_job", flows_update_job)
 
-test_that("job_reset updates the flows data.table and database", {
+test_that("job_reset updates the flows data.table", {
+  old_flows = copy(tessiflow$flows)
+  old_flows[,`:=`(step = NA_integer_, pid = NA_integer_, r_session = list(NULL),
+                  scheduled_runs = lapply(`on.schedule`[[1]],lapply,parse_cron))]
+  tessiflow$flows[1:2,`:=`(start_time = now(),
+                       step = 1,
+                       status = "Running",
+                       pid = 123,
+                       r_session = list("process"))]
   job_reset(flow_name, job_name)
-  expect_length(mock_args(flows_update_job), 1)
-  expect_names(lapply(mock_args(flows_update_job)[[1]][-c(1, 2)], names)[[1]],
-    permutation.of = c(
-      "step", "status", "retval", "pid", "r_session",
-      "scheduled_runs", "start_time", "end_time"
-    )
-  )
+  expect_equal(tessiflow$flows[1,],old_flows[1,])
+  expect_equal(tessiflow$flows[2,status],"Running")
 })
 
 test_that("job_finalize writes to the log file and console", {
   job_reset(flow_name, job_name)
   expect_length(mock_args(job_log_write), 2)
   expect_match(mock_args(job_log_write)[[2]][[3]], "Resetting job")
+  expect_equal(unlist(mock_args(job_log_write)[[2]])[4], c(console = "TRUE"))
+})
+
+# job_stop ----------------------------------------------------------------
+
+local_flows_data_table()
+job_log_write <- mock(TRUE, cycle = TRUE)
+stub(job_stop, "job_log_write", job_log_write)
+stub(job_stop, "job_finalize", TRUE)
+
+test_that("job_stop updates the flows data.table and database", {
+  job_stop(flow_name,job_name)
+  expect_equal(flows_get_job(flow_name,job_name)$status, "Stopped")
+})
+
+test_that("job_stop writes to the log file and console", {
+  job_stop(flow_name, job_name)
+  expect_length(mock_args(job_log_write), 2)
+  expect_match(mock_args(job_log_write)[[2]][[3]], "Stopping job")
   expect_equal(unlist(mock_args(job_log_write)[[2]])[4], c(console = "TRUE"))
 })

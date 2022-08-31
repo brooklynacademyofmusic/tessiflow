@@ -173,33 +173,28 @@ test_that("tessiflow_run_command errors if there's no running tessiflow process"
 })
 
 test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
+  
   run_fun <- function() {
     local_log_dir(envir = new.env())
-    mockery::stub(flows_main, "flows_main_read_server", function(server) {
-      socket <- try(socketAccept(server, timeout = 1), silent = TRUE)
-      if (!"try-error" %in% class(socket)) {
-        input <- readLines(socket, n = 1)
-        if (length(input) > 0) {
-          print(input)
-        }
-      }
+    mockery::stub(flows_main_read_server, "rlang::parse_expr", function(...) {
+      return(print(...))
     })
+    mockery::stub(flows_main,"flows_main_read_server",flows_main_read_server)
+    print("Starting flows_main")
     flows_main()
   }
-
+  
   withr::local_envvar("tessiflow-daemon" = "YES")
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 
   p1 <- callr::r_bg(run_fun, package = "tessiflow")
-  consume_output_lines(p1)
-
+  expect_match(consume_output_lines(p1),"Starting flows_main")
+  
   tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function")
-
-  # while (length(p1_output <- p1$read_output_lines()) == 0) {
-  #   Sys.sleep(1)
-  # }
-
-  p1_output <- p1$read_output_lines()
+  
+  while(length(p1_output <- consume_output_lines(p1)) == 0)
+    p1$poll_io(10000)
+  
   expect_match(p1_output, "this_is_a_function(.+Dummy workflow.+Job 1.+)")
 
   p1$kill_tree()
