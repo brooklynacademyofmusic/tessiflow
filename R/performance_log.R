@@ -29,6 +29,8 @@ performance_log_close <- function() {
 #'
 #' @param pid integer process id
 #'
+#' @importFrom stats setNames
+#'
 #' @return integer list of process data 
 performance_poll <- function(pid) {
   
@@ -72,6 +74,8 @@ performance_poll <- function(pid) {
 performance_log_update <- function(pids = sapply(ps::ps_find_tree("tessiflow-daemon"),
                                                  ps::ps_pid)) {
   
+  . <- pid <- status <- start_time <- flow_name <- job_name <- step <- NULL
+  
   performance_data <- rbindlist(lapply(pids,performance_poll)) %>% 
     .[,`:=`(timestamp = now())]
   
@@ -87,7 +91,7 @@ performance_log_update <- function(pids = sapply(ps::ps_find_tree("tessiflow-dae
 
 #' performance_main
 #' 
-#' Main peformance logger loop. Calls performance_log_update every 30 seconds
+#' Main performance logger loop. Calls `performance_log_update` every 30 seconds
 #'
 #' @return never
 performance_main <- function() {
