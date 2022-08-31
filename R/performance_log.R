@@ -112,36 +112,15 @@ performance_log_create <- function() {
   if(DBI::dbExistsTable(tessiflow$db2,"performance"))
     return(invisible())
   
+  performance_poll_fields <- performance_poll(Sys.getpid())
+  performance_poll_fields[] <- "double"
+  
   DBI::dbCreateTable(tessiflow$db2, "performance", fields = c(
     flow_name = "character",
     job_name = "character",
     timestamp = "double",
     step = "integer",
-    pid = "double",
-    ppid = "double",
-    cpu_times.children_system = "double", 
-    cpu_times.children_user = "double",  
-    cpu_times.system = "double", 
-    cpu_times.user = "double", 
-    cpu_percent = "double",  
-    memory_full_info.num_page_faults = "double", 
-    memory_full_info.peak_wset = "double",  
-    memory_full_info.wset = "double", 
-    memory_full_info.peak_paged_pool = "double",  
-    memory_full_info.paged_pool = "double", 
-    memory_full_info.peak_non_paged_pool = "double",  
-    memory_full_info.non_paged_pool = "double", 
-    memory_full_info.pagefile = "double",  
-    memory_full_info.peak_pagefile = "double", 
-    memory_full_info.mem_private = "double",  
-    memory_full_info.rss = "double", 
-    memory_full_info.vms = "double",
-    io_counters.other_bytes = "double", 
-    io_counters.other_count = "double",  
-    io_counters.read_bytes = "double", 
-    io_counters.read_count = "double",  
-    io_counters.write_bytes = "double", 
-    io_counters.write_count = "double"
+    performance_poll_fields
   ))
   
   DBI::dbExecute(tessiflow$db2, "CREATE UNIQUE INDEX performance_index ON performance(pid,timestamp)")
