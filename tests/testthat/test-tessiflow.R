@@ -184,10 +184,14 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
   }
 
   withr::local_envvar("tessiflow-daemon" = "YES")
+  
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 
-  p1 <- callr::r_bg(run_fun, package = "tessiflow")
-  expect_match(consume_output_lines(p1), "Starting flows_main")
+  p1 <- callr::r_bg(run_fun, package = "tessiflow", env = c("R_CONFIG_FILE" = "config-tessiflow.yml"))
+  
+  p1_output <- consume_output_lines(p1)
+  
+  expect_match(p1_output, "Starting flows_main")
 
   tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function")
 

@@ -30,16 +30,17 @@ test_that("performance_log_open opens a database connection", {
 
 # performance_poll --------------------------------------------------------
 
-r_session <- callr::r_session$new()
-pid <- r_session$get_pid()
-
 test_that("performance_poll gets ppid information on process", {
+  r_session <- callr::r_session$new()
+  pid <- r_session$get_pid()
   expect_names(names(performance_poll(pid)),
     must.include = c("pid", "ppid")
   )
 })
 
 test_that("performance_poll gets cpu information on process", {
+  r_session <- callr::r_session$new()
+  pid <- r_session$get_pid()
   expect_names(names(performance_poll(pid)),
     must.include = c(
       "cpu_times.system",
@@ -57,6 +58,8 @@ test_that("performance_poll gets cpu information on process", {
 })
 
 test_that("performance_poll gets memory information on process", {
+  r_session <- callr::r_session$new()
+  pid <- r_session$get_pid()
   expect_names(names(performance_poll(pid)),
     must.include = c(
       "memory_full_info.rss",
@@ -80,6 +83,9 @@ test_that("performance_poll gets memory information on process", {
 })
 
 test_that("performance_poll gets disk information on process", {
+  r_session <- callr::r_session$new()
+  pid <- r_session$get_pid()
+  system_time <- performance_poll(pid)$cpu_times.system
   expect_names(names(performance_poll(pid)),
     must.include = c(
       "io_counters.read_bytes",
@@ -87,31 +93,34 @@ test_that("performance_poll gets disk information on process", {
     )
   )
   filename <- tempfile()
-  expect_lte(performance_poll(pid)$io_counters.read_bytes, 2^26)
-  expect_lte(performance_poll(pid)$io_counters.write_bytes, 2^26)
+  expect_lte(performance_poll(pid)$io_counters.read_bytes, 2^25)
+  expect_lte(performance_poll(pid)$io_counters.write_bytes, 2^25)
   r_session$run(eval, list(rlang::expr({
     writeBin(
-      rep(1, 2^27),
+      rep(1, 2^25),
       !!filename
     )
   })))
-  expect_lte(performance_poll(pid)$io_counters.read_bytes, 2^26)
-  expect_gte(performance_poll(pid)$io_counters.write_bytes, 2^26)
+  expect_lte(performance_poll(pid)$io_counters.read_bytes, 2^25)
+  expect_gte(performance_poll(pid)$io_counters.write_bytes, 2^25)
   r_session$run(eval, list(rlang::expr({
     readBin(
       !!filename,
       "integer",
-      2^27
+      2^25
     )
     1
   })))
-  expect_gte(performance_poll(pid)$io_counters.read_bytes, 2^26)
-  expect_gte(performance_poll(pid)$io_counters.write_bytes, 2^26)
+  expect_true(performance_poll(pid)$io_counters.read_bytes >= 2^25 || 
+                performance_poll(pid)$io_counters.read_chars >= 2^25)
+  expect_gte(performance_poll(pid)$io_counters.write_bytes, 2^25)
   # ...and disk i/o impacts system times
-  expect_gte(performance_poll(pid)$cpu_times.system, 1)
+  expect_gte(performance_poll(pid)$cpu_times.system, system_time)
 })
 
 test_that("all performance_poll variables are in database", {
+  r_session <- callr::r_session$new()
+  pid <- r_session$get_pid()
   expect_names(colnames(tbl(tessiflow$db2, "performance")),
     must.include = names(performance_poll(pid))
   )
