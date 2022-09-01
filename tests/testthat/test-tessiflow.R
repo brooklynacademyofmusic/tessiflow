@@ -62,16 +62,6 @@ test_that("tessiflow_run logs to a log file", {
 
 # tessiflow_stop ----------------------------------------------------------
 
-test_that("tessiflow_stop kills the daemon process", {
-  p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
-  consume_output_lines(p1)
-
-  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
-  tessiflow_stop()
-  Sys.sleep(1)
-  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
-})
-
 test_that("tessiflow_stop kills all running jobs", {
   run_fun <- function() {
     local_log_dir(envir = new.env())
