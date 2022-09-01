@@ -32,8 +32,8 @@ test_that("tessiflow_run refuses to start if tessiflow is already running", {
   p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
   p1_output <- consume_output_lines(p1)
   expect_match(p1_output, "Starting tessiflow")
-  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")),1)
- 
+  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
+
   expect_error(tessiflow_run(), "Found running tessiflow")
   expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
 
@@ -50,8 +50,8 @@ test_that("tessiflow_run logs to a log file", {
   stub(tessiflow_run, "performance_main", function() {
     message("Running performance_main()")
   })
-  
-  suppressMessages(expect_output(tessiflow_run(), "Running flows_main",all = FALSE))
+
+  suppressMessages(expect_output(tessiflow_run(), "Running flows_main", all = FALSE))
 
   logdata <- readLines(file.path(config::get("tessiflow.log"), "tessiflow-daemon.log"))
   expect_match(logdata, "Starting tessiflow", all = FALSE)
@@ -68,6 +68,7 @@ test_that("tessiflow_stop kills the daemon process", {
 
   expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
   tessiflow_stop()
+  Sys.sleep(1)
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 })
 
@@ -184,17 +185,17 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
   }
 
   withr::local_envvar("tessiflow-daemon" = "YES")
-  
+
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 
   p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
   p1_output <- consume_output_lines(p1)
   expect_match(p1_output, "Starting flows_main")
-  
+
   Sys.sleep(1)
   tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function")
   p1_output <- consume_output_lines(p1)
-  
+
   expect_match(p1_output, "this_is_a_function(.+Dummy workflow.+Job 1.+)")
 
   p1$kill_tree()
