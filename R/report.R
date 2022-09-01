@@ -74,10 +74,10 @@ tessiflow_report_enable <- function() {
 #' converts an interval of start and end times to a pretty printed elapsed time in the format
 #' `<hours> H <minutes> M <seconds> S`
 #'
-#' @param start_time datetime
-#' @param end_time datetime
+#' @param start_time POSIXct
+#' @param end_time POSIXct
 #' @importFrom  lubridate as.period as.duration interval
-#' @return lubridate period object for pretty printing of time differences
+#' @return `lubridate::Period` object for pretty printing of time differences
 interval_to_period <- function(start_time, end_time) {
   as.period(floor(as.duration(interval(start_time, end_time, tzone = Sys.timezone()))))
 }

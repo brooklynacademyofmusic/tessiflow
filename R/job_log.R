@@ -1,6 +1,6 @@
 #' job_log_write
 #'
-#' Simple logfile writer, with filename determined by the workflow. Timestamp and job name are prepended to each line before writing.
+#' Simple log file writer, with file name determined by the workflow. Timestamp and job name are prepended to each line before writing.
 #'
 #' @param flow_name character workflow name
 #' @param job_name character job name
@@ -29,7 +29,7 @@ job_log_write <- function(flow_name, job_name = NA, lines, console = FALSE) {
 #'
 #' Rotate log file `filename` into a zip file if its size exceeds `size` bytes
 #'
-#' @param filename string filename of logfile to (potentially) rotate
+#' @param filename string file name of log file to (potentially) rotate
 #' @param size integer size in bytes, default is 1 megabyte
 #'
 #' @return nothing, invisibly

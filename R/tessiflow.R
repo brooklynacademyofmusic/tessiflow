@@ -9,7 +9,7 @@ tessiflow <- new.env()
 tessiflow_run <- function() {
   flows_log_dir <- config::get("tessiflow.log")
   if (is.null(flows_log_dir) || !dir.exists(flows_log_dir)) {
-    stop("Please set the tessiflow.log config option to a directory where log files will be stored")
+    stop("Please set the tessiflow.log configuration option to a directory where log files will be stored")
   }
 
   # called for error-checking side-effects

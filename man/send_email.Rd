@@ -18,8 +18,8 @@ send_email(
 
 \item{emails}{list of email addresses, default is from \code{tessiflow.email} configuration variable; \code{from} address will be the first email}
 
-\item{smtp}{list of smtp configuration data for \code{\link[mailR:send.mail]{mailR::send.mail}}}
+\item{smtp}{list of \code{SMTP} configuration data for \code{\link[mailR:send.mail]{mailR::send.mail}}}
 }
 \description{
-Wrapper for \code{\link[mailR:send.mail]{mailR::send.mail}} that does input checking and pulls in configuration data from the config.yml file
+Wrapper for \code{\link[mailR:send.mail]{mailR::send.mail}} that does input checking and pulls in configuration data from the \code{config.yml} file
 }

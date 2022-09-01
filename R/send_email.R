@@ -1,11 +1,11 @@
 #' send_email
 #'
-#' Wrapper for [`mailR::send.mail`] that does input checking and pulls in configuration data from the config.yml file
+#' Wrapper for [`mailR::send.mail`] that does input checking and pulls in configuration data from the `config.yml` file
 #'
 #' @param subject string subject line
 #' @param body string body of email
 #' @param emails list of email addresses, default is from `tessiflow.email` configuration variable; `from` address will be the first email
-#' @param smtp list of smtp configuration data for [`mailR::send.mail`]
+#' @param smtp list of `SMTP` configuration data for [`mailR::send.mail`]
 #' @importFrom mailR send.mail
 send_email <- function(subject, body,
                        emails = config::get("tessiflow.email"),

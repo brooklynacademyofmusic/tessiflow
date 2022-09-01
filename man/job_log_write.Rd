@@ -16,5 +16,5 @@ job_log_write(flow_name, job_name = NA, lines, console = FALSE)
 \item{console}{boolean whether to echo to the console, default is FALSE}
 }
 \description{
-Simple logfile writer, with filename determined by the workflow. Timestamp and job name are prepended to each line before writing.
+Simple log file writer, with file name determined by the workflow. Timestamp and job name are prepended to each line before writing.
 }

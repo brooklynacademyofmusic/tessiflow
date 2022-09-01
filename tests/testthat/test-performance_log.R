@@ -17,7 +17,7 @@ test_that("performance_log_create creates an index on the table", {
 
 # performance_log_open ----------------------------------------------------------
 
-test_that("performance_log_open errors when the config option isn't set or the directory doesn't exist", {
+test_that("performance_log_open errors when the configuration option isn't set or the directory doesn't exist", {
   expect_error(performance_log_open("dirdoesntexist"), "config.+directory.+log")
   stub(performance_log_open, "config::get", "blah")
   expect_error(performance_log_open(), "config.+directory.+log")

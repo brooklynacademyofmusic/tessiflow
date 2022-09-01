@@ -39,7 +39,7 @@
 #' Examples: `mon,wed,fri`, `jan-mar`.
 #'
 #' *Note:* The day of a command's execution can be specified by two fields -
-#' day of month, and day of week. If both fields are restricted (ie, aren't *),
+#' day of month, and day of week. If both fields are restricted (i.e., aren't *),
 #' the command will be run when either field matches the current time. For example,
 #' `30 4 1,15 * 5` would cause a command to be run at 4:30 am on the
 #' 1st and 15th of each month, plus every Friday.

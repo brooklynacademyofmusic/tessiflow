@@ -7,7 +7,7 @@
 log_rotate(filename, size = 1024^2)
 }
 \arguments{
-\item{filename}{string filename of logfile to (potentially) rotate}
+\item{filename}{string file name of log file to (potentially) rotate}
 
 \item{size}{integer size in bytes, default is 1 megabyte}
 }

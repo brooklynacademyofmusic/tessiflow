@@ -20,7 +20,7 @@ the job will be started if following conditions are all true:
 \itemize{
 \item \code{runs-on} must match the computer name as listed in \code{Sys.info()["nodename"]}
 \item \code{if} must be true in the current context
-\item \code{needs} must have finished running since the last time this ran (with retval = 0 unless \code{if} evaluates to true)
+\item \code{needs} must have finished running since the last time this ran (with return value = 0 unless \code{if} evaluates to true)
 \item the most recent run in \code{scheduled_runs} is after the last actual run time for this job
 }
 }
