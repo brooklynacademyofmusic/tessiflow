@@ -15,7 +15,7 @@ run_fun <- function() {
 
 consume_output_lines <- function(process) {
   # consume the rest of the output lines
-  while (length(output <- process$read_output_lines()) == 0) {
+  while (length(output <- process$read_output_lines()) == 0 && process$is_alive()) {
     process$poll_io(10000)
   }
   while (length(current_output <- process$read_output_lines()) > 0) {
