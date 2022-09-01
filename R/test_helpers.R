@@ -12,7 +12,7 @@ make_fixtures <- function() {
   saveRDS(jobs, rprojroot::find_testthat_root_file("jobs.Rds"))
   
   performance <- performance_poll(Sys.getpid())
-  saveRDS(performance,test_path("performance.Rds"))
+  saveRDS(performance,rprojroot::find_testthat_root_file("performance.Rds"))
 }
 
 local_log_dir <- function(envir = parent.frame()) {
