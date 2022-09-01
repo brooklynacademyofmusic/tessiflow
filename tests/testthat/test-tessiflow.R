@@ -56,12 +56,10 @@ test_that("tessiflow_run logs to a log file", {
   logdata <- readLines(file.path(config::get("tessiflow.log"), "tessiflow-daemon.log"))
   expect_match(logdata, "Starting tessiflow", all = FALSE)
   expect_match(logdata, "Running flows_main", all = FALSE)
-
   expect_equal(length(logdata), 2)
 })
 
 # tessiflow_stop ----------------------------------------------------------
-gc()
 
 test_that("tessiflow_stop kills all running jobs", {
   run_fun <- function() {
