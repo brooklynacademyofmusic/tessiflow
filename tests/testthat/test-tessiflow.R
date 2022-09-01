@@ -1,14 +1,15 @@
 withr::local_package("mockery")
 withr::local_package("devtools")
+local_config_file()
 
 # tessiflow_run ---------------------------------------------------------
 
 run_fun <- function() {
   local_log_dir(envir = new.env())
   mockery::stub(tessiflow_run, "flows_main", function() {
-    message("Running flows_main()")
     Sys.sleep(10) # has to be long enough to allow the process to persist between tests
   })
+  mockery::stub(tessiflow_run, "performance_main", TRUE)
   tessiflow_run()
 }
 
@@ -31,12 +32,12 @@ test_that("tessiflow_run refuses to start if tessiflow is already running", {
 
   p1 <- callr::r_bg(run_fun, package = "tessiflow")
   p1_output <- consume_output_lines(p1)
-  expect_match(p1_output, "Starting tessiflow")
-  consume_output_lines(p1)
   expect_equal(p1$read_error_lines(), character())
+  expect_match(p1_output, "Starting tessiflow")
+  Sys.sleep(1)
   num_processes <<- length(ps::ps_find_tree("tessiflow-daemon"))
   expect_gte(num_processes, 1)
-
+ 
   expect_error(tessiflow_run(), "Found running tessiflow")
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), num_processes)
 
@@ -50,12 +51,16 @@ test_that("tessiflow_run logs to a log file", {
   stub(tessiflow_run, "flows_main", function() {
     message("Running flows_main()")
   })
-
-  expect_output(tessiflow_run(), "Starting tessiflow", all = FALSE)
+  stub(tessiflow_run, "performance_main", function() {
+    message("Running performance_main()")
+  })
+  
+  suppressMessages(expect_output(tessiflow_run(), "Running flows_main",all = FALSE))
 
   logdata <- readLines(file.path(config::get("tessiflow.log"), "tessiflow-daemon.log"))
   expect_match(logdata, "Starting tessiflow", all = FALSE)
   expect_match(logdata, "Running flows_main", all = FALSE)
+
   expect_equal(length(logdata), 2)
 })
 
@@ -187,18 +192,16 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
   
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 
-  p1 <- callr::r_bg(run_fun, package = "tessiflow", env = c("R_CONFIG_FILE" = "config-tessiflow.yml"))
-  
-  p1_output <- consume_output_lines(p1)
-  
-  expect_match(p1_output, "Starting flows_main")
-
-  tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function")
-
+  p1 <- callr::r_bg(run_fun, package = "tessiflow")
   while (length(p1_output <- consume_output_lines(p1)) == 0) {
     p1$poll_io(10000)
   }
+  expect_match(p1_output, "Starting flows_main")
 
+  tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function")
+  while (length(p1_output <- consume_output_lines(p1)) == 0) {
+    p1$poll_io(10000)
+  }
   expect_match(p1_output, "this_is_a_function(.+Dummy workflow.+Job 1.+)")
 
   p1$kill_tree()
