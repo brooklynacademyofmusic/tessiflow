@@ -61,6 +61,7 @@ test_that("tessiflow_run logs to a log file", {
 })
 
 # tessiflow_stop ----------------------------------------------------------
+gc()
 
 test_that("tessiflow_stop kills all running jobs", {
   run_fun <- function() {
