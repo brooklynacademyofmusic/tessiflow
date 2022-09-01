@@ -4,7 +4,7 @@
 \alias{job_log_write}
 \title{job_log_write}
 \usage{
-job_log_write(flow_name, job_name, lines, console = FALSE)
+job_log_write(flow_name, job_name = NA, lines, console = FALSE)
 }
 \arguments{
 \item{flow_name}{character workflow name}

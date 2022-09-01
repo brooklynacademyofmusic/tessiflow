@@ -26,13 +26,16 @@ tessiflow_run <- function() {
   flows_log_cleanup()
 
   local_envvar("tessiflow-daemon" = "YES")
-  local_output_sink(logfile, append = TRUE, split = TRUE, .local_envir = environment())
-  local_message_sink(logfile, append = TRUE, .local_envir = environment())
+  
+  performance_logger <- callr::r_bg(performance_main, package = TRUE)
 
-  cat(paste("[", Sys.time(), ": tessiflow ]", "Starting tessiflow scheduler ...\n"))
-
-  performance_logger <- callr::r_bg(performance_main, stdout = "", stderr = "", package = TRUE)
-  callr::r(flows_main, stdout = "", stderr = "", package = TRUE)
+  log_callback = function(line) {
+    job_log_write("tessiflow-daemon", lines=line, console = TRUE)
+  }
+  
+  log_callback("Starting tessiflow scheduler ...")
+               
+  callr::r(flows_main, show = TRUE, callback = log_callback, package = TRUE)
 
   invisible()
 }
