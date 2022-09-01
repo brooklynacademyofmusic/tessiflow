@@ -1,22 +1,21 @@
 make_fixtures <- function() {
   flow_name <- job_name <- NULL
 
-  files <- dir(testthat::test_path("tessiflow.d"), pattern = "*.yml", full.names = TRUE, recursive = TRUE)
+  files <- dir(rprojroot::find_testthat_root_file("tessiflow.d"), pattern = "*.yml", full.names = TRUE, recursive = TRUE)
   flows <- lapply(files, yaml::read_yaml)
-  saveRDS(flows, testthat::test_path("flows.Rds"))
+  saveRDS(flows, rprojroot::find_testthat_root_file("flows.Rds"))
 
-  flows_data_table <- flows_parse(testthat::test_path("tessiflow.d"))
-  saveRDS(flows_data_table, testthat::test_path("flows_data_table.Rds"))
+  flows_data_table <- flows_parse(rprojroot::find_testthat_root_file("tessiflow.d"))
+  saveRDS(flows_data_table, rprojroot::find_testthat_root_file("flows_data_table.Rds"))
 
   jobs <- with(flows_data_table, data.table(flow_name, job_name, status = "Waiting", retval = NA_integer_, start_time = now(), end_time = NA_real_))
-  saveRDS(jobs, testthat::test_path("jobs.Rds"))
+  saveRDS(jobs, rprojroot::find_testthat_root_file("jobs.Rds"))
   
   performance <- performance_poll(Sys.getpid())
   saveRDS(performance,test_path("performance.Rds"))
 }
 
 local_log_dir <- function(envir = parent.frame()) {
-  withr::local_envvar(R_CONFIG_FILE = "config-tessiflow.yml", envir = envir)
   dirname <- config::get("tessiflow.log")
   dir.create(dirname)
   withr::defer(
@@ -44,4 +43,9 @@ local_flows_data_table <- function(envir = parent.frame()) {
     },
     envir = envir
   )
+}
+
+local_config_file <- function(envir = parent.frame()) {
+  withr::local_envvar(R_CONFIG_FILE = rprojroot::find_testthat_root_file("config-tessiflow.yml"), 
+                      .local_envir = envir)
 }

@@ -1,6 +1,6 @@
 default:
 # tessiflow settings
-  tessiflow.d: !expr file.path(testthat::test_path(),"tessiflow.d")
+  tessiflow.d: !expr rprojroot::find_testthat_root_file("tessiflow.d")
   tessiflow.log: !expr file.path(tempdir(),"logs")
   tessiflow.email: test@test.com
   tessiflow.smtp:
