@@ -29,9 +29,8 @@ test_that("tessiflow_run refuses to start if tessiflow is already running", {
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
   local_log_dir()
 
-  p1 <- callr::r_bg(run_fun, package = "tessiflow")
+  p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
   p1_output <- consume_output_lines(p1)
-  expect_equal(p1$read_error_lines(), character())
   expect_match(p1_output, "Starting tessiflow")
   expect_gte(length(ps::ps_find_tree("tessiflow-daemon")),1)
  
@@ -64,7 +63,7 @@ test_that("tessiflow_run logs to a log file", {
 # tessiflow_stop ----------------------------------------------------------
 
 test_that("tessiflow_stop kills the daemon process", {
-  p1 <- callr::r_bg(run_fun, package = "tessiflow")
+  p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
   consume_output_lines(p1)
 
   expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
@@ -81,7 +80,7 @@ test_that("tessiflow_stop kills all running jobs", {
     tessiflow_run()
   }
 
-  p1 <- callr::r_bg(run_fun, package = "tessiflow")
+  p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
   consume_output_lines(p1)
 
   expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
@@ -134,12 +133,11 @@ test_that("tessiflow_enable schedules a runnable script", {
   )))
 
   p <- callr::r_bg(system, list(mock_args(schedule_schtasks)[[1]][[1]]),
-    env = c(R_CONFIG_FILE = "config.yml")
+    env = c(R_CONFIG_FILE = "config.yml"), stderr = "2>&1"
   )
 
   p_output <- consume_output_lines(p)
   expect_match(p_output, "Starting tessiflow scheduler")
-  expect_equal(p$read_error_lines(), character(0))
 
   expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
 
@@ -189,7 +187,7 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
   
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 
-  p1 <- callr::r_bg(run_fun, package = "tessiflow")
+  p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
   p1_output <- consume_output_lines(p1)
   expect_match(p1_output, "Starting flows_main")
   
