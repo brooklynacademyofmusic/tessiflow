@@ -14,17 +14,16 @@ run_fun <- function() {
 }
 
 consume_output_lines <- function(process) {
-  output <- character()
   # consume the rest of the output lines
-  process$poll_io(10000)
+  while (length(output <- process$read_output_lines()) == 0) {
+    process$poll_io(10000)
+  }
   while (length(current_output <- process$read_output_lines()) > 0) {
     output <- append(output, current_output)
     Sys.sleep(1)
   }
   output
 }
-
-num_processes <- 0
 
 test_that("tessiflow_run refuses to start if tessiflow is already running", {
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
@@ -34,12 +33,10 @@ test_that("tessiflow_run refuses to start if tessiflow is already running", {
   p1_output <- consume_output_lines(p1)
   expect_equal(p1$read_error_lines(), character())
   expect_match(p1_output, "Starting tessiflow")
-  Sys.sleep(1)
-  num_processes <<- length(ps::ps_find_tree("tessiflow-daemon"))
-  expect_gte(num_processes, 1)
+  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")),1)
  
   expect_error(tessiflow_run(), "Found running tessiflow")
-  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), num_processes)
+  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
 
   p1$kill_tree()
 })
@@ -70,7 +67,7 @@ test_that("tessiflow_stop kills the daemon process", {
   p1 <- callr::r_bg(run_fun, package = "tessiflow")
   consume_output_lines(p1)
 
-  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), num_processes)
+  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
   tessiflow_stop()
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 })
@@ -87,7 +84,7 @@ test_that("tessiflow_stop kills all running jobs", {
   p1 <- callr::r_bg(run_fun, package = "tessiflow")
   consume_output_lines(p1)
 
-  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), num_processes)
+  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
 
   tessiflow_stop()
   Sys.sleep(1)
@@ -144,7 +141,7 @@ test_that("tessiflow_enable schedules a runnable script", {
   expect_match(p_output, "Starting tessiflow scheduler")
   expect_equal(p$read_error_lines(), character(0))
 
-  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), num_processes)
+  expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
 
   p$kill_tree()
 })
@@ -193,15 +190,13 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 
   p1 <- callr::r_bg(run_fun, package = "tessiflow")
-  while (length(p1_output <- consume_output_lines(p1)) == 0) {
-    p1$poll_io(10000)
-  }
+  p1_output <- consume_output_lines(p1)
   expect_match(p1_output, "Starting flows_main")
-
+  
+  Sys.sleep(1)
   tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function")
-  while (length(p1_output <- consume_output_lines(p1)) == 0) {
-    p1$poll_io(10000)
-  }
+  p1_output <- consume_output_lines(p1)
+  
   expect_match(p1_output, "this_is_a_function(.+Dummy workflow.+Job 1.+)")
 
   p1$kill_tree()
