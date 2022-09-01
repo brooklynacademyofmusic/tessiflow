@@ -30,7 +30,7 @@ jobs:
           python-version: '3.9'
           cache: 'pip' # caching pip dependencies
       
-      - run: pip install psutil
+      - run: pip install -r requirements.txt
 
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
