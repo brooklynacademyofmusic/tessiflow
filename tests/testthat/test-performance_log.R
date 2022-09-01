@@ -126,10 +126,6 @@ test_that("all performance_poll variables are in database", {
   )
 })
 
-# performance <- performance_poll(pid)
-# saveRDS(performance,test_path("performance.Rds"))
-
-r_session$kill_tree()
 
 # performance_log_update --------------------------------------------------
 
