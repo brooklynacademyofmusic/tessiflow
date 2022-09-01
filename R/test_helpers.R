@@ -10,9 +10,9 @@ make_fixtures <- function() {
 
   jobs <- with(flows_data_table, data.table(flow_name, job_name, status = "Waiting", retval = NA_integer_, start_time = now(), end_time = NA_real_))
   saveRDS(jobs, rprojroot::find_testthat_root_file("jobs.Rds"))
-  
+
   performance <- performance_poll(Sys.getpid())
-  saveRDS(performance,rprojroot::find_testthat_root_file("performance.Rds"))
+  saveRDS(performance, rprojroot::find_testthat_root_file("performance.Rds"))
 }
 
 local_log_dir <- function(envir = parent.frame()) {
@@ -46,6 +46,8 @@ local_flows_data_table <- function(envir = parent.frame()) {
 }
 
 local_config_file <- function(envir = parent.frame()) {
-  withr::local_envvar(R_CONFIG_FILE = rprojroot::find_testthat_root_file("config-tessiflow.yml"), 
-                      .local_envir = envir)
+  withr::local_envvar(
+    R_CONFIG_FILE = rprojroot::find_testthat_root_file("config-tessiflow.yml"),
+    .local_envir = envir
+  )
 }

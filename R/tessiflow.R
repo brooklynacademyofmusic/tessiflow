@@ -26,15 +26,15 @@ tessiflow_run <- function() {
   flows_log_cleanup()
 
   local_envvar("tessiflow-daemon" = "YES")
-  
+
   performance_logger <- callr::r_bg(performance_main, package = TRUE)
 
-  log_callback = function(line) {
-    job_log_write("tessiflow-daemon", lines=line, console = TRUE)
+  log_callback <- function(line) {
+    job_log_write("tessiflow-daemon", lines = line, console = TRUE)
   }
-  
+
   log_callback("Starting tessiflow scheduler ...")
-               
+
   callr::r(flows_main, show = TRUE, callback = log_callback, package = TRUE)
 
   invisible()

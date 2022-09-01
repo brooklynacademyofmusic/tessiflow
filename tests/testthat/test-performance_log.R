@@ -111,8 +111,8 @@ test_that("performance_poll gets disk information on process", {
     )
     1
   })))
-  expect_true(performance_poll(pid)$io_counters.read_bytes >= 2^25 || 
-                performance_poll(pid)$io_counters.read_chars >= 2^25)
+  expect_true(performance_poll(pid)$io_counters.read_bytes >= 2^25 ||
+    performance_poll(pid)$io_counters.read_chars >= 2^25)
   expect_gte(performance_poll(pid)$io_counters.write_bytes, 2^25)
   # ...and disk i/o impacts system times
   expect_gte(performance_poll(pid)$cpu_times.system, system_time)
@@ -137,12 +137,13 @@ stub(performance_log_update, "performance_poll", performance)
 
 test_that("performance_log_update updates the performance db table", {
   performance_log_update(performance$pid)
-  
-  test_cols <- c("pid","ppid","io_counters.read_bytes","cpu_times.user","memory_full_info.rss")
+
+  test_cols <- c("pid", "ppid", "io_counters.read_bytes", "cpu_times.user", "memory_full_info.rss")
 
   expect_mapequal(
     tbl(tessiflow$db2, "performance") %>%
-      collect() %>% as.data.table() %>%
+      collect() %>% 
+      as.data.table() %>%
       select(all_of(test_cols)) %>%
       as.list(),
     performance[test_cols]
