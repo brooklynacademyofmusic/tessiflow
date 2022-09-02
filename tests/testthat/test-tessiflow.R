@@ -10,6 +10,7 @@ run_fun <- function() {
     Sys.sleep(10) # has to be long enough to allow the process to persist between tests
   })
   mockery::stub(tessiflow_run, "performance_main", TRUE)
+  mockery::stub(tessiflow_run, "callr::r_bg", callr::r)
   tessiflow_run()
 }
 
@@ -62,14 +63,6 @@ test_that("tessiflow_run logs to a log file", {
 # tessiflow_stop ----------------------------------------------------------
 
 test_that("tessiflow_stop kills all running jobs", {
-  run_fun <- function() {
-    local_log_dir(envir = new.env())
-    mockery::stub(tessiflow_run, "flows_main", function() {
-      callr::r(Sys.sleep, list(10))
-    })
-    tessiflow_run()
-  }
-
   p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
   consume_output_lines(p1)
 

@@ -33,8 +33,6 @@ tessiflow_run <- function() {
 
   callr::r(function() {
     performance_logger <- callr::r_bg(performance_main, package = TRUE, poll_connection = TRUE)
-    # Wait for process to start up
-    performance_logger$poll_io(10000)
     cat("Starting tessiflow scheduler ...\n")
     flows_main()
   }, show = TRUE, callback = log_callback, package = TRUE, stderr = "2>&1")
