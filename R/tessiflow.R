@@ -28,14 +28,19 @@ tessiflow_run <- function() {
   local_envvar("tessiflow-daemon" = "YES")
 
   log_callback <- function(line) {
-    job_log_write("tessiflow-daemon", lines = line, console = TRUE)
+    # Only log if it's not already being logged
+    if(!grepl("^\\[ [\\d\\-]{10} ",line,perl=TRUE)) {
+      job_log_write("tessiflow-daemon", lines = line, console = TRUE)
+    } else {
+      cat(line, sep = "\n")
+    }
   }
 
   callr::r(function() {
     performance_logger <- callr::r_bg(performance_main, package = TRUE, poll_connection = TRUE)
     cat("Starting tessiflow scheduler ...\n")
     flows_main()
-  }, show = TRUE, callback = log_callback, package = TRUE, stderr = "2>&1")
+  }, callback = log_callback, package = TRUE, stderr = "2>&1")
 
   invisible()
 }
