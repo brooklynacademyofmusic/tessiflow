@@ -152,9 +152,11 @@ job_make_remote_expr <- function(env_vars = NULL, if_expr = NULL, run_expr = NUL
     if_expr <- "TRUE"
   }
 
-  if (length(shell) != 0 && shell != "callr") {
+  run_expr <- if (length(shell) != 0 && shell != "callr") {
     if (!grepl("{0}", shell, fixed = TRUE)) shell <- paste(shell, "{0}")
-    run_expr <- deparse(rlang::expr(system(!!gsub("{0}", shQuote(run_expr), shell, fixed = TRUE), intern = TRUE)))
+    rlang::expr(system(!!gsub("{0}", shQuote(run_expr), shell, fixed = TRUE), intern = TRUE))
+  } else {
+    rlang::parse_exprs(run_expr)
   }
 
   rlang::expr(withr::with_envvar(!!env_vars, {
@@ -162,7 +164,7 @@ job_make_remote_expr <- function(env_vars = NULL, if_expr = NULL, run_expr = NUL
       message("'if' expression is not true, skipping")
       return(invisible(NULL))
     } else {
-      !!as.call(c(`{`, rlang::parse_exprs(run_expr)))
+      !!as.call(c(`{`, run_expr))
     }
   }))
 }
