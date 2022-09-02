@@ -10,7 +10,7 @@ coverage](https://codecov.io/gh/skysyzygy/tessiflow/branch/master/graph/badge.sv
 
 `tessiflow` is a workflow runner that handles scheduling R scripts and other
 commands on a given schedule, and with conditional and dependency
-checks. The syntax is based on a simplified version of Github actions
+checks. The syntax is based on a simplified version of Github Actions
 yml files. Each workflow is run in a separate `callr` subprocess so that all 
 jobs/steps have access to the previous results. The motivation is to allow 
 complex workflow dependencies while maintaining transparency and to encourage 
@@ -19,8 +19,8 @@ modular, testable code, because steps are by default, just R function calls.
 *Why not use Airflow or a similar existing workflow tool?*
 
 - Because this is an R-native workflow tool there will be less disk i/o required between steps 
-because data can remain in memory. It is also more straightforward to collect rich error information 
-and back-traces and will even allow the possibility of remote debugging. Also, orchestrators are complicated 
+because data can remain in memory. It is also more straightforward to collect rich error and trace 
+information and offers the possibility of remote debugging. Also, orchestrators are complicated 
 and this is designed to be very very simple!
 
 ## Installation
@@ -55,12 +55,16 @@ library(tessiflow)
 flows_parse() 
 # returns a data.table of jobs parsed from the tessiflow.d yml files
 
-job_start(flow name,job name)
-# starts the job with the given flow and job name 
-
-tessiflow_start()
-# ... runs a bunch of tasks
+tessiflow_run()
+# ... starts the scheduler
 tessiflow_stop()
+# ... stops the scheduler
+
+tessiflow_job_start(flow name,job name)
+# immediately starts the job with the given flow and job name 
+
+tessiflow_job_start(flow name,job name)
+# immediately stops the job with the given flow and job name 
 
 tessiflow_enable()
 # enables a scheduled task for the tessiflow scheduler using schtasks.exe on Windows or cron on *nix/Mac
