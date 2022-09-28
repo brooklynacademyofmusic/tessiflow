@@ -39,16 +39,16 @@ Run the job in a \code{callr} process
 }
 \section{Functions}{
 \itemize{
-\item \code{job_step}: Run the next step in a job
+\item \code{job_step()}: Run the next step in a job
 
-\item \code{job_on_error}: Updates flows table and database, writes to log, and finalizes running session on error
+\item \code{job_on_error()}: Updates flows table and database, writes to log, and finalizes running session on error
 
-\item \code{job_poll}: Read \code{stdout} and \code{stderr} from the process and write to log. When ready, call job_step
+\item \code{job_poll()}: Read \code{stdout} and \code{stderr} from the process and write to log. When ready, call job_step
 
-\item \code{job_finalize}: Closes R session, writes to log, console and database, and updates \code{retval}.
+\item \code{job_finalize()}: Closes R session, writes to log, console and database, and updates \code{retval}.
 
-\item \code{job_reset}: Resets job for next run, updates flows table but NOT database, writes to log
+\item \code{job_reset()}: Resets job for next run, updates flows table but NOT database, writes to log
 
-\item \code{job_stop}: Stops job, updates flows table and database, writes to log
+\item \code{job_stop()}: Stops job, updates flows table and database, writes to log
+
 }}
-

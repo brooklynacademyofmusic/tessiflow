@@ -17,9 +17,9 @@ Schedule a keep-alive job that runs tessiflow_run.
 }
 \section{Functions}{
 \itemize{
-\item \code{tessiflow_disable}: Unschedule the tessiflow job that runs tessiflow_run.
-}}
+\item \code{tessiflow_disable()}: Unschedule the tessiflow job that runs tessiflow_run.
 
+}}
 \examples{
 \dontrun{
 tessiflow::tessiflow_enable()

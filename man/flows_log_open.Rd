@@ -32,14 +32,14 @@ opens the jobs database connection
 }
 \section{Functions}{
 \itemize{
-\item \code{flows_log_close}: closes the jobs database connection
+\item \code{flows_log_close()}: closes the jobs database connection
 
-\item \code{flows_log_create}: Create the SQLite log table
+\item \code{flows_log_create()}: Create the SQLite log table
 
-\item \code{performance_log_open}: opens the performance database connection
+\item \code{performance_log_open()}: opens the performance database connection
 
-\item \code{performance_log_close}: closes the performance database connection
+\item \code{performance_log_close()}: closes the performance database connection
 
-\item \code{performance_log_create}: Create the SQLite performance log table
+\item \code{performance_log_create()}: Create the SQLite performance log table
+
 }}
-

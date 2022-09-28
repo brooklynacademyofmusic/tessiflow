@@ -25,12 +25,12 @@ functions for handling errors
 }
 \section{Functions}{
 \itemize{
-\item \code{error_handler}: selects error handler to use
+\item \code{error_handler()}: selects error handler to use
 
-\item \code{error_print}: prints an error message to the console
+\item \code{error_print()}: prints an error message to the console
 
-\item \code{error_email}: sends an error message to an email address
+\item \code{error_email()}: sends an error message to an email address
 
-\item \code{error_handler_factory}: wrap a function in an error handler
+\item \code{error_handler_factory()}: wrap a function in an error handler
+
 }}
-

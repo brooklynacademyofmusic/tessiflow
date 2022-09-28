@@ -25,8 +25,8 @@ creates a job named \code{taskname} that runs every minute using Windows \code{s
 }
 \section{Functions}{
 \itemize{
-\item \code{unschedule_schtasks}: deletes a job with the name \code{taskname} using Windows \code{schtasks.exe}
+\item \code{unschedule_schtasks()}: deletes a job with the name \code{taskname} using Windows \code{schtasks.exe}
 
-\item \code{unschedule_crontab}: deletes a job named \code{taskname} using *nix \code{crontab}
+\item \code{unschedule_crontab()}: deletes a job named \code{taskname} using *nix \code{crontab}
+
 }}
-

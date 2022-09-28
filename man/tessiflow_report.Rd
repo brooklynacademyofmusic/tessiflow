@@ -20,8 +20,8 @@ tessiflow_report
 }
 \section{Functions}{
 \itemize{
-\item \code{tessiflow_report_load}: Pull process data from the SQLite database from the last 24hours.
+\item \code{tessiflow_report_load()}: Pull process data from the SQLite database from the last 24hours.
 
-\item \code{tessiflow_report_send}: Style and send the flows report in the body of an HTML email
+\item \code{tessiflow_report_send()}: Style and send the flows report in the body of an HTML email
+
 }}
-

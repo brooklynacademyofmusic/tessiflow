@@ -27,11 +27,11 @@ Starts a tessiflow job identified by \code{flow_name} and \code{job_name}
 }
 \section{Functions}{
 \itemize{
-\item \code{tessiflow_job_stop}: Stops a tessiflow job identified by \code{flow_name} and \code{job_name}
+\item \code{tessiflow_job_stop()}: Stops a tessiflow job identified by \code{flow_name} and \code{job_name}
 
-\item \code{tessiflow_run_command}: Template function for executing commands on the main tessiflow instance
+\item \code{tessiflow_run_command()}: Template function for executing commands on the main tessiflow instance
+
 }}
-
 \examples{
 \dontrun{
 tessiflow::tessiflow_job_start("Workflow A", "Job 1")
