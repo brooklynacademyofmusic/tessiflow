@@ -2,17 +2,41 @@ withr::local_package("mockery")
 withr::local_package("devtools")
 local_config_file()
 
+
+# tessiflow_pid_lock/unlock -----------------------------------------------
+
+test_that("tessiflow_pid_lock creates a pid file",{
+  tessiflow_pid_lock(tempdir())
+  expect_equal(readLines(file.path(tempdir(),"tessiflow.pid")),as.character(Sys.getpid()))
+})
+test_that("tessiflow_pid_lock refuses to create a pid file if one already exists",{
+  expect_error(tessiflow_pid_lock(tempdir()),"Found running tessiflow")
+})
+test_that("tessiflow_pid_unlock refuses to delete a mismatched pid file",{
+  stub(tessiflow_pid_unlock,"Sys.getpid",-1)
+  expect_error(tessiflow_pid_unlock(tempdir()),"pid does not match")
+  expect_true(file.exists(file.path(tempdir(),"tessiflow.pid")))
+})
+test_that("tessiflow_pid_unlock deletes a matching pid file",{
+  tessiflow_pid_unlock(tempdir())
+  expect_false(file.exists(file.path(tempdir(),"tessiflow.pid")))
+})
+
 # tessiflow_run ---------------------------------------------------------
 
-run_fun <- function() {
-  local_log_dir(envir = new.env())
-  mockery::stub(tessiflow_run, "flows_main", function() {
-    Sys.sleep(10) # has to be long enough to allow the process to persist between tests
-  })
-  mockery::stub(tessiflow_run, "performance_main", TRUE)
-  mockery::stub(tessiflow_run, "callr::r_bg", callr::r)
-  tessiflow_run()
-}
+run_fun = function() {}
+body(run_fun) <- 
+  rlang::expr({
+    local_log_dir(envir = new.env())
+    mockery::stub(tessiflow_run, "flows_main", function() {
+      Sys.sleep(10) # has to be long enough to allow the process to persist between tests
+    })
+    mockery::stub(tessiflow_run, "performance_main", TRUE)
+    mockery::stub(tessiflow_run, "callr::r_bg", callr::r)
+    mockery::stub(tessiflow_run, "config::get", !!config::get("tessiflow.log"))
+    tessiflow_run()
+}) 
+
 
 consume_output_lines <- function(process) {
   # consume the rest of the output lines
@@ -63,6 +87,7 @@ test_that("tessiflow_run logs to a log file", {
 # tessiflow_stop ----------------------------------------------------------
 
 test_that("tessiflow_stop kills all running jobs", {
+  local_log_dir()
   p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
   consume_output_lines(p1)
 
