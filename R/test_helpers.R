@@ -45,9 +45,3 @@ local_flows_data_table <- function(envir = parent.frame()) {
   )
 }
 
-local_config_file <- function(envir = parent.frame()) {
-  withr::local_envvar(
-    R_CONFIG_FILE = rprojroot::find_testthat_root_file("config-tessiflow.yml"),
-    .local_envir = envir
-  )
-}
