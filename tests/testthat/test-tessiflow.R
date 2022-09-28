@@ -52,7 +52,7 @@ test_that("tessiflow_run logs to a log file", {
     message("Running performance_main()")
   })
 
-  suppressMessages(expect_output(tessiflow_run(), "Running flows_main", all = FALSE))
+  suppressMessages(expect_message(tessiflow_run(), "Running flows_main", all = FALSE))
 
   logdata <- readLines(file.path(config::get("tessiflow.log"), "tessiflow-daemon.log"))
   expect_match(logdata, "Starting tessiflow", all = FALSE)
