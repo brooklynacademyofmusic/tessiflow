@@ -11,7 +11,7 @@ flows_main <- function() {
 
   tessiflow$flows <- flows_parse()
 
-  server <- serverSocket(ceiling(runif(1, 2^10, 2^16)))
+  server <- serverSocket(config::get("tessiflow.port"))
 
   while (!all(tessiflow$flows$status == "Finished")) {
     if ("Waiting" %in% tessiflow$flows$status) {

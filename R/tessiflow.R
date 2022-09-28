@@ -124,13 +124,16 @@ tessiflow_job_stop <- function(flow_name, job_name) {
 #' @importFrom stats na.omit
 tessiflow_run_command <- function(flow_name, job_name, command) {
   assert_flow_job_name(flow_name, job_name)
+  
+  if(!file.exists(file.path(config::get("tessiflow.log"),"tessiflow.pid")))
+      stop(paste("Tessiflow process does not appear to be running,",
+                 file.path(config::get("tessiflow.log"),"tessiflow.pid"),"is missing."))
 
-  conns <- rbindlist(lapply(ps::ps_find_tree("tessiflow-daemon"), ps::ps_connections))
-  if (is.null(na.omit(conns$lport))) {
-    stop("No running tessiflow process found, can't start job")
-  }
-
-  socket <- socketConnection(port = na.omit(conns$lport))
+  port <- config::get("tessiflow.port")
+  
+  tryCatch(socket <- socketConnection(port = port),
+           error = function(e) {rlang::cnd_message(e)
+             stop(paste("Can't connect to tessiflow instance at port",port))})
 
   writeLines(deparse(rlang::call2(command, flow_name = flow_name, job_name = job_name)), socket)
 
