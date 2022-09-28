@@ -18,7 +18,7 @@ job_log_write <- function(flow_name, job_name = NA, lines, console = FALSE) {
   filename <- file.path(config::get("tessiflow.log"), paste0(flow_name, ".log"))
   log_rotate(filename)
 
-  write(lines, filename, sep = "\r\n", append = TRUE)
+  write(cli::ansi_strip(lines), filename, sep = "\r\n", append = TRUE)
 
   if (console) invisible(lapply(lines, message))
 
