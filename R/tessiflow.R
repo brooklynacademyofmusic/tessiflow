@@ -2,10 +2,10 @@ tessiflow <- new.env()
 
 #' tessiflow_run
 #'
-#' Wraps flows_main with some logging and environment variables
+#' Wraps `flows_main()` with logging to `tessiflow-daemon` and environment variable `tessiflow-daemon` and a separate 
+#' `performance_main()` process.
 #' @importFrom withr local_envvar local_dir
 #' @return nothing, invisibly
-#' @export
 tessiflow_run <- function() {
   flows_log_dir <- config::get("tessiflow.log")
   if (is.null(flows_log_dir) || !dir.exists(flows_log_dir)) {
@@ -43,6 +43,13 @@ tessiflow_run <- function() {
   invisible()
 }
 
+#' @describeIn tessiflow_run Call tessiflow_run from the `R_HOME` directory
+#' @export
+tessiflow_start <- function() {
+  local_dir(Sys.getenv("R_USER"))
+  tessiflow_run()
+}
+
 #' tessiflow_stop
 #'
 #' @importFrom ps ps_kill_tree
@@ -70,10 +77,7 @@ tessiflow_enable <- function() {
   }
 
   schedule(
-    script_expr({
-      setwd(!!Sys.getenv("R_USER"))
-      tessiflow::tessiflow_run()
-    }), "tessiflow"
+    script_expr(tessiflow::tessiflow_start()), "tessiflow"
   )
 
   invisible()

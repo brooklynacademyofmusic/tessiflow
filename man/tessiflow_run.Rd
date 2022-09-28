@@ -2,13 +2,22 @@
 % Please edit documentation in R/tessiflow.R
 \name{tessiflow_run}
 \alias{tessiflow_run}
+\alias{tessiflow_start}
 \title{tessiflow_run}
 \usage{
 tessiflow_run()
+
+tessiflow_start()
 }
 \value{
 nothing, invisibly
 }
 \description{
-Wraps flows_main with some logging and environment variables
+Wraps \code{flows_main()} with logging to \code{tessiflow-daemon} and environment variable \code{tessiflow-daemon} and a separate
+\code{performance_main()} process.
 }
+\section{Functions}{
+\itemize{
+\item \code{tessiflow_start()}: Call tessiflow_run from the \code{R_HOME} directory
+
+}}

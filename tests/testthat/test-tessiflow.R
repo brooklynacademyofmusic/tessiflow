@@ -1,8 +1,6 @@
 withr::local_package("mockery")
 withr::local_package("devtools")
 
-
-
 # tessiflow_pid_lock/unlock -----------------------------------------------
 
 test_that("tessiflow_pid_lock creates a pid file",{
@@ -116,32 +114,36 @@ test_that("tessiflow_enable schedules tessiflow", {
   assign(".Platform", Platform, envir = environment(tessiflow_enable))
   tessiflow_enable()
 
-  expect_match(as.character(mock_args(schedule_schtasks)[[1]][[1]]), "tessiflow::tessiflow_run\\(\\)", all = FALSE)
-  expect_match(as.character(mock_args(schedule_crontab)[[1]][[1]]), "tessiflow::tessiflow_run\\(\\)", all = FALSE)
+  expect_match(as.character(mock_args(schedule_schtasks)[[1]][[1]]), "tessiflow::tessiflow_start\\(\\)", all = FALSE)
+  expect_match(as.character(mock_args(schedule_crontab)[[1]][[1]]), "tessiflow::tessiflow_start\\(\\)", all = FALSE)
 })
 
 test_that("tessiflow_enable schedules a runnable script", {
   local_log_dir()
   schedule_schtasks <- mock()
   Platform <- .Platform
-  stub(tessiflow_enable, "Sys.getenv", getwd())
   stub(tessiflow_enable, "schedule_schtasks", schedule_schtasks)
 
   Platform$OS.type <- "windows"
   assign(".Platform", Platform, envir = environment(tessiflow_enable))
   tessiflow_enable()
+  
+  local_dir(rprojroot::find_testthat_root_file())
 
   # create a config.yml file to mimic what happens in a normal install
   withr::local_file(list("config.yml" = yaml::write_yaml(
     list(default = list(
       tessiflow.log = config::get("tessiflow.log"),
-      tessiflow.d = config::get("tessiflow.d")
+      tessiflow.d = config::get("tessiflow.d"),
+      tessiflow.port = 0
     )),
     "config.yml"
   )))
-
+  
   p <- callr::r_bg(system, list(mock_args(schedule_schtasks)[[1]][[1]]),
-    env = c(R_CONFIG_FILE = "config.yml"), stderr = "2>&1"
+    env = c(R_CONFIG_FILE = "config.yml",
+            R_USER = getwd()), stderr = "2>&1",
+    user_profile = FALSE
   )
 
   p_output <- consume_output_lines(p)
