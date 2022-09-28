@@ -24,6 +24,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: rcmdcheck
+          cache-version: 2
 
       - uses: actions/setup-python@v4
         with:
