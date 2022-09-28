@@ -142,7 +142,7 @@ test_that("performance_log_update updates the performance db table", {
 
   expect_mapequal(
     tbl(tessiflow$db2, "performance") %>%
-      collect() %>% 
+      collect() %>%
       as.data.table() %>%
       select(all_of(test_cols)) %>%
       as.list(),

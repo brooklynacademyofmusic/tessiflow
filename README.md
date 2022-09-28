@@ -39,6 +39,7 @@ machine configuration:
     # tessiflow settings
       tessiflow.d: path to directory of yml files
       tessiflow.log: path to directory for log files
+      tessiflow.port: port to use for communicating with the main tessiflow instance
       tessiflow.email: email address where errors will be sent 
                        (first email address will also be the sender)
       tessiflow.smtp: 

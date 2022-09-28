@@ -2,7 +2,7 @@ tessiflow <- new.env()
 
 #' tessiflow_run
 #'
-#' Wraps `flows_main()` with logging to `tessiflow-daemon` and environment variable `tessiflow-daemon` and a separate 
+#' Wraps `flows_main()` with logging to `tessiflow-daemon` and environment variable `tessiflow-daemon` and a separate
 #' `performance_main()` process.
 #' @importFrom withr local_envvar local_dir
 #' @return nothing, invisibly
@@ -11,7 +11,7 @@ tessiflow_run <- function() {
   if (is.null(flows_log_dir) || !dir.exists(flows_log_dir)) {
     stop("Please set the tessiflow.log configuration option to a directory where log files will be stored")
   }
-  
+
   # called for error-checking side-effects
   flows_parse()
 
@@ -23,16 +23,16 @@ tessiflow_run <- function() {
   log_rotate(logfile)
 
   flows_log_cleanup()
-  
+
   log_callback <- function(line) {
     # Only log if it's not already being logged
-    if(!grepl("^\\[ [\\d\\-]{10} ",line,perl=TRUE)) {
+    if (!grepl("^\\[ [\\d\\-]{10} ", line, perl = TRUE)) {
       job_log_write("tessiflow-daemon", lines = line, console = TRUE)
     } else {
       cat(line, sep = "\n")
     }
   }
-  
+
   local_envvar("tessiflow-daemon" = "YES")
   callr::r(function() {
     performance_logger <- callr::r_bg(performance_main, package = TRUE, poll_connection = TRUE)
@@ -128,16 +128,22 @@ tessiflow_job_stop <- function(flow_name, job_name) {
 #' @importFrom stats na.omit
 tessiflow_run_command <- function(flow_name, job_name, command) {
   assert_flow_job_name(flow_name, job_name)
-  
-  if(!file.exists(file.path(config::get("tessiflow.log"),"tessiflow.pid")))
-      stop(paste("Tessiflow process does not appear to be running,",
-                 file.path(config::get("tessiflow.log"),"tessiflow.pid"),"is missing."))
+
+  if (!file.exists(file.path(config::get("tessiflow.log"), "tessiflow.pid"))) {
+    stop(paste(
+      "Tessiflow process does not appear to be running,",
+      file.path(config::get("tessiflow.log"), "tessiflow.pid"), "is missing."
+    ))
+  }
 
   port <- config::get("tessiflow.port")
-  
+
   tryCatch(socket <- socketConnection(port = port),
-           error = function(e) {rlang::cnd_message(e)
-             stop(paste("Can't connect to tessiflow instance at port",port))})
+    error = function(e) {
+      rlang::cnd_message(e)
+      stop(paste("Can't connect to tessiflow instance at port", port))
+    }
+  )
 
   writeLines(deparse(rlang::call2(command, flow_name = flow_name, job_name = job_name)), socket)
 
@@ -147,7 +153,7 @@ tessiflow_run_command <- function(flow_name, job_name, command) {
 }
 
 #' tessiflow_pid_lock/unlock
-#' 
+#'
 #' Files to manage `tessiflow.pid` file to ensure only one process is running at a time
 #'
 #' @param flows_log_dir character directory name
@@ -155,23 +161,26 @@ tessiflow_run_command <- function(flow_name, job_name, command) {
 #' @return nothing invisibly
 #' @describeIn tessiflow_pid_lockunlock Create `tessiflow.pid` file
 tessiflow_pid_lock <- function(flows_log_dir) {
-  pid_file = file.path(flows_log_dir,"tessiflow.pid")
-  if(file.exists(pid_file))
+  pid_file <- file.path(flows_log_dir, "tessiflow.pid")
+  if (file.exists(pid_file)) {
     stop("Found running tessiflow process, cowardly refusing to start another.")
-  
-  write(Sys.getpid(),pid_file)
+  }
+
+  write(Sys.getpid(), pid_file)
 }
 
 #' @describeIn tessiflow_pid_lockunlock Remove `tessiflow.pid` file
 tessiflow_pid_unlock <- function(flows_log_dir) {
-  pid_file = file.path(flows_log_dir,"tessiflow.pid")
-  if(!file.exists(pid_file))
+  pid_file <- file.path(flows_log_dir, "tessiflow.pid")
+  if (!file.exists(pid_file)) {
     return(invisible())
-  
+  }
+
   pid <- readLines(pid_file)
-  if(Sys.getpid() !=pid)
+  if (Sys.getpid() != pid) {
     stop("tessiflow.pid does not match current pid, cowardly refusing to delete old lock file")
-  
-  file.remove(pid_file) 
+  }
+
+  file.remove(pid_file)
   invisible()
 }

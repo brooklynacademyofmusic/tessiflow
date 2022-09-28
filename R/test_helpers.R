@@ -44,4 +44,3 @@ local_flows_data_table <- function(envir = parent.frame()) {
     envir = envir
   )
 }
-

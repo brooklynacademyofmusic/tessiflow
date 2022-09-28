@@ -68,7 +68,8 @@ parse_cron <- function(cron_string) {
     c(0, 7)
   ), parse_cron_part)
 
-  cron$year <- year(now()) %>% {
+  cron$year <- year(now()) %>%
+    {
       seq(. - 1, . + 1)
     }
 

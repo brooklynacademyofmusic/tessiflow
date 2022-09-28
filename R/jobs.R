@@ -204,16 +204,18 @@ job_poll <- function(flow_name, job_name) {
     if (!"ready" %in% io_state) {
       break
     }
-    
+
     io_names <- names(which(io_state == "ready"))
-    io_funs <- c(output = quote(read_output_lines()),
-                 error = quote(read_error_lines()),
-                 process = quote(read()))[io_names]
-    
+    io_funs <- c(
+      output = quote(read_output_lines()),
+      error = quote(read_error_lines()),
+      process = quote(read())
+    )[io_names]
+
     output <- purrr::discard(lapply(io_funs, eval, envir = job$r_session[[1]]), ~ length(.) == 0)
     if (length(output)) {
-      output_str <- lapply(output, purrr::imap, ~paste(.y,":",.x))
-      output_str <- purrr::imap(output_str, ~paste("[",toupper(.y),"]",.x)) %>% purrr::flatten_chr()
+      output_str <- lapply(output, purrr::imap, ~ paste(.y, ":", .x))
+      output_str <- purrr::imap(output_str, ~ paste("[", toupper(.y), "]", .x)) %>% purrr::flatten_chr()
       job_log_write(flow_name, job_name, output_str)
     }
     if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {

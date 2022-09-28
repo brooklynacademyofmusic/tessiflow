@@ -3,27 +3,27 @@ withr::local_package("devtools")
 
 # tessiflow_pid_lock/unlock -----------------------------------------------
 
-test_that("tessiflow_pid_lock creates a pid file",{
+test_that("tessiflow_pid_lock creates a pid file", {
   tessiflow_pid_lock(tempdir())
-  expect_equal(readLines(file.path(tempdir(),"tessiflow.pid")),as.character(Sys.getpid()))
+  expect_equal(readLines(file.path(tempdir(), "tessiflow.pid")), as.character(Sys.getpid()))
 })
-test_that("tessiflow_pid_lock refuses to create a pid file if one already exists",{
-  expect_error(tessiflow_pid_lock(tempdir()),"Found running tessiflow")
+test_that("tessiflow_pid_lock refuses to create a pid file if one already exists", {
+  expect_error(tessiflow_pid_lock(tempdir()), "Found running tessiflow")
 })
-test_that("tessiflow_pid_unlock refuses to delete a mismatched pid file",{
-  stub(tessiflow_pid_unlock,"Sys.getpid",-1)
-  expect_error(tessiflow_pid_unlock(tempdir()),"pid does not match")
-  expect_true(file.exists(file.path(tempdir(),"tessiflow.pid")))
+test_that("tessiflow_pid_unlock refuses to delete a mismatched pid file", {
+  stub(tessiflow_pid_unlock, "Sys.getpid", -1)
+  expect_error(tessiflow_pid_unlock(tempdir()), "pid does not match")
+  expect_true(file.exists(file.path(tempdir(), "tessiflow.pid")))
 })
-test_that("tessiflow_pid_unlock deletes a matching pid file",{
+test_that("tessiflow_pid_unlock deletes a matching pid file", {
   tessiflow_pid_unlock(tempdir())
-  expect_false(file.exists(file.path(tempdir(),"tessiflow.pid")))
+  expect_false(file.exists(file.path(tempdir(), "tessiflow.pid")))
 })
 
 # tessiflow_run ---------------------------------------------------------
 
-run_fun = function() {}
-body(run_fun) <- 
+run_fun <- function() {}
+body(run_fun) <-
   rlang::expr({
     local_log_dir(envir = new.env())
     mockery::stub(tessiflow_run, "flows_main", function() {
@@ -33,7 +33,7 @@ body(run_fun) <-
     mockery::stub(tessiflow_run, "callr::r_bg", callr::r)
     mockery::stub(tessiflow_run, "config::get", !!config::get("tessiflow.log"))
     tessiflow_run()
-}) 
+  })
 
 
 consume_output_lines <- function(process) {
@@ -127,7 +127,7 @@ test_that("tessiflow_enable schedules a runnable script", {
   Platform$OS.type <- "windows"
   assign(".Platform", Platform, envir = environment(tessiflow_enable))
   tessiflow_enable()
-  
+
   local_dir(rprojroot::find_testthat_root_file())
 
   # create a config.yml file to mimic what happens in a normal install
@@ -139,10 +139,12 @@ test_that("tessiflow_enable schedules a runnable script", {
     )),
     "config.yml"
   )))
-  
+
   p <- callr::r_bg(system, list(mock_args(schedule_schtasks)[[1]][[1]]),
-    env = c(R_CONFIG_FILE = "config.yml",
-            R_USER = getwd()), stderr = "2>&1",
+    env = c(
+      R_CONFIG_FILE = "config.yml",
+      R_USER = getwd()
+    ), stderr = "2>&1",
     user_profile = FALSE
   )
 
@@ -194,7 +196,7 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
     print("Starting flows_main")
     flows_main()
   })
-  
+
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
 
   p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
@@ -206,12 +208,14 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
   p1_output <- consume_output_lines(p1)
 
   expect_match(p1_output, "this_is_a_function(.+Dummy workflow.+Job 1.+)")
-  
-  stub(tessiflow_run_command,"config::get",mock(config::get("tessiflow.log"),99999))
+
+  stub(tessiflow_run_command, "config::get", mock(config::get("tessiflow.log"), 99999))
   expect_warning(
     expect_error(
       tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function"),
-               "Can't connect to tessiflow instance"),"99999")
-  
+      "Can't connect to tessiflow instance"
+    ), "99999"
+  )
+
   p1$kill_tree()
 })

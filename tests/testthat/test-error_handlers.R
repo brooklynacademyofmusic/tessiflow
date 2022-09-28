@@ -84,13 +84,14 @@ test_that("error_email reads flow_name and job_name from error_handler_factory",
 })
 
 test_that("error_email returns formatted error and trace information", {
-  withr::local_options(cli.num_colors=255)
-  
-  stub(error_email, "send_email", function(body,...) return(body))
+  withr::local_options(cli.num_colors = 255)
 
-  body <- tryCatch(sqrt(sum(1,"a")),error=rlang::cnd_entrace) %>% error_email() 
-  
-  expect_match(body,"<span[^>]+ansi[^<]+Error")
-  expect_match(body,"<span[^>]+ansi[^<]+tessiflow</span>:::error_email(.)")
-  
+  stub(error_email, "send_email", function(body, ...) {
+    return(body)
+  })
+
+  body <- tryCatch(sqrt(sum(1, "a")), error = rlang::cnd_entrace) %>% error_email()
+
+  expect_match(body, "<span[^>]+ansi[^<]+Error")
+  expect_match(body, "<span[^>]+ansi[^<]+tessiflow</span>:::error_email(.)")
 })
