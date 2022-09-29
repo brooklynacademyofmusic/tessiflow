@@ -28,6 +28,8 @@ error_print <- function(error) {
 #' @importFrom cli ansi_html_style ansi_html
 error_email <- function(error) {
   process_name <- "tessiflow"
+  
+  withr::local_options(cli.num_colors = 255)
 
   if ("flow_name" %in% names(error) || "job_name" %in% names(error)) {
     process_name <- paste(process_name, ":", error$flow_name, "/", error$job_name)
