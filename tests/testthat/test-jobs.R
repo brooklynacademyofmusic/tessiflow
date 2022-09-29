@@ -394,25 +394,24 @@ test_that("job_reset updates the flows data.table", {
   old_flows <- copy(tessiflow$flows)
   old_flows[, `:=`(
     step = NA_integer_, pid = NA_integer_, r_session = list(NULL),
-    scheduled_runs = lapply(`on.schedule`[[1]], lapply, parse_cron)
+    scheduled_runs = lapply(`on.schedule`, lapply, parse_cron)
   )]
-  tessiflow$flows[1:2, `:=`(
+  tessiflow$flows[, `:=`(
     start_time = now(),
     step = 1,
     status = "Running",
     pid = 123,
     r_session = list("process")
   )]
-  job_reset(flow_name, job_name)
-  expect_equal(tessiflow$flows[1, ], old_flows[1, ])
-  expect_equal(tessiflow$flows[2, status], "Running")
+  tessiflow$flows[,Vectorize(job_reset)(flow_name, job_name)]
+  expect_equal(tessiflow$flows, old_flows)
 })
 
 test_that("job_finalize writes to the log file and console", {
   job_reset(flow_name, job_name)
-  expect_length(mock_args(job_log_write), 2)
-  expect_match(mock_args(job_log_write)[[2]][[3]], "Resetting job")
-  expect_equal(unlist(mock_args(job_log_write)[[2]])[4], c(console = "TRUE"))
+  expect_length(mock_args(job_log_write), 7)
+  expect_match(mock_args(job_log_write)[[7]][[3]], "Resetting job")
+  expect_equal(unlist(mock_args(job_log_write)[[7]])[4], c(console = "TRUE"))
 })
 
 # job_stop ----------------------------------------------------------------

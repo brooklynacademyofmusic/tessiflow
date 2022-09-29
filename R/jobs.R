@@ -276,7 +276,7 @@ job_reset <- function(flow_name, job_name) {
       r_session = list(NULL),
       pid = NA_integer_,
       step = NA_integer_,
-      scheduled_runs = lapply(job$on.schedule, lapply, parse_cron),
+      scheduled_runs = lapply(on.schedule, lapply, parse_cron),
       start_time = as.POSIXct(NA),
       end_time = as.POSIXct(NA)
     )
