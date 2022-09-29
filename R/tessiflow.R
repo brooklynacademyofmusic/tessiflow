@@ -113,6 +113,9 @@ tessiflow_disable <- function() {
 #' tessiflow::tessiflow_job_stop("Workflow A", "Job 1")
 #' }
 tessiflow_job_start <- function(flow_name, job_name) {
+  last_run <- flows_log_get_last_run(flow_name, job_name)
+  if(last_run$status[[1]] == "Running") 
+    warning(paste0(flow_name,"/",job_name,"is already running."))
   tessiflow_run_command(flow_name, job_name, "job_start")
 }
 

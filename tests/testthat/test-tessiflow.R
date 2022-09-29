@@ -219,3 +219,14 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
 
   p1$kill_tree()
 })
+
+# tessiflow_job_start -----------------------------------------------------
+
+test_that("tessiflow_job_start warns if the job is already running", {
+  flow_name = "Dummy workflow"
+  job_name = "Job 1"
+  stub(tessiflow_job_start,"tessiflow_run_command",TRUE)
+  flows_update_job(flow_name,job_name,list(status="Running"))
+  expect_warning(tessiflow_job_start(flow_name,job_name))
+})
+
