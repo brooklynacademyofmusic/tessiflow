@@ -43,7 +43,7 @@ tessiflow_run <- function() {
   invisible()
 }
 
-#' @describeIn tessiflow_run Call tessiflow_run from the `R_HOME` directory
+#' @describeIn tessiflow_run Call tessiflow_run from the `R_HOME` directory, and pause on error
 #' @export
 tessiflow_start <- function() {
 

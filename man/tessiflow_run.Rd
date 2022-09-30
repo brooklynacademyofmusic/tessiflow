@@ -18,6 +18,6 @@ Wraps \code{flows_main()} with logging to \code{tessiflow-daemon} and environmen
 }
 \section{Functions}{
 \itemize{
-\item \code{tessiflow_start()}: Call tessiflow_run from the \code{R_HOME} directory
+\item \code{tessiflow_start()}: Call tessiflow_run from the \code{R_HOME} directory, and pause on error
 
 }}
