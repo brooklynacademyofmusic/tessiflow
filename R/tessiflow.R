@@ -52,7 +52,7 @@ tessiflow_start <- function() {
     tessiflow_run()
     },
     error = function(e) {
-      error_handler(e)
+      error_print(e)
       countdown(30)
     }
   )
@@ -65,6 +65,7 @@ countdown <- function(sec) {
     Sys.sleep(1)
   }
 }
+
 #' tessiflow_stop
 #'
 #' @importFrom ps ps_kill_tree
