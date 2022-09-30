@@ -89,7 +89,7 @@ test_that("tessiflow_start sets the working directory",{
   stub(tessiflow_start,"tessiflow_run",getwd)
   stub(tessiflow_start,"Sys.getenv",tempdir())
   expect_silent(tessiflow_start())
-  expect_equal(tessiflow_start(),)
+  expect_equal(tessiflow_start(),tools::file_path_as_absolute(tempdir()))
 })
 
 test_that("tessiflow_start pauses to show errors to humans",{
