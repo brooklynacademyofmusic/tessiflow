@@ -222,6 +222,10 @@ job_poll <- function(flow_name, job_name) {
       job_on_error(flow_name, job_name, output[["process"]]$error$parent)
       break
     }
+    if(!job$r_session[[1]]$is_alive()) {
+      job_finalize(flow_name,job_name)
+      break
+    }
   }
 
   if (job$r_session[[1]]$get_state() == "idle") {
