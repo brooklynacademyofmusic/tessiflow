@@ -82,6 +82,23 @@ test_that("tessiflow_run logs to a log file", {
   expect_equal(length(logdata), 2)
 })
 
+
+# tessiflow_start ---------------------------------------------------------
+
+test_that("tessiflow_start sets the working directory to R_USER",{
+  stub(tessiflow_start,"tessiflow_run",getwd)
+  expect_silent(tessiflow_start())
+  expect_equal(tessiflow_start(),Sys.getenv("R_USER"))
+})
+
+test_that("tessiflow_start pauses to show errors to humans",{
+  countdown = mock(TRUE)
+  stub(tessiflow_start,"countdown",countdown)
+  stub(tessiflow_start,"tessiflow_run",function() stop("I am a really bad error"))
+  expect_output(tessiflow_start(),"I am a really bad error")
+  expect_equal(mock_args(countdown)[[1]][[1]],30)
+})
+
 # tessiflow_stop ----------------------------------------------------------
 
 test_that("tessiflow_stop kills all running jobs", {

@@ -46,10 +46,25 @@ tessiflow_run <- function() {
 #' @describeIn tessiflow_run Call tessiflow_run from the `R_HOME` directory
 #' @export
 tessiflow_start <- function() {
-  local_dir(Sys.getenv("R_USER"))
-  tessiflow_run()
+
+  tryCatch({
+    local_dir(Sys.getenv("R_USER"))
+    tessiflow_run()
+    },
+    error = function(e) {
+      error_handler(e)
+      countdown(30)
+    }
+  )
 }
 
+countdown <- function(sec) {
+  while(sec>0) {
+    cat(paste0("Pausing for ",sec," seconds...\r"))
+    sec <- sec - 1
+    Sys.sleep(1)
+  }
+}
 #' tessiflow_stop
 #'
 #' @importFrom ps ps_kill_tree
