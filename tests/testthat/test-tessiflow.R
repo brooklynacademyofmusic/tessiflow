@@ -223,6 +223,7 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
 # tessiflow_job_start -----------------------------------------------------
 
 test_that("tessiflow_job_start warns if the job is already running", {
+  local_log_dir()
   flow_name = "Dummy workflow"
   job_name = "Job 1"
   stub(tessiflow_job_start,"tessiflow_run_command",TRUE)
