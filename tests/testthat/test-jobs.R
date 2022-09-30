@@ -310,7 +310,7 @@ test_that("job_poll calls job_finalize if the job dies", {
   job_finalize <- mock()
   stub(job_poll, "job_finalize", job_finalize)
   r_session$.call(eval,list(quote({for(i in seq(1:1e3)) print(i);q()})))
-  Sys.sleep(1)
+  Sys.sleep(3)
   job_poll(flow_name, job_name)
   expect_length(mock_args(job_finalize), 1)
 })
