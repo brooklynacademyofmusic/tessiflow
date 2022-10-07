@@ -30,6 +30,13 @@ R:
 
     install.packages("remotes")
     remotes::install github("skysyzygy/tessiflow")
+    
+Install miniconda using the helpers in the reticulate package:
+
+    reticulate::install_miniconda(PATH_TO_INSTALL)
+
+If miniconda is installed in a non-default location, set an environment variable `RETICULATE_MINICONDA_PATH`
+to the location of the install. 
 
 Create a yml file in your R_USER directory called `config.yml` and add
 the following keys to it, filling in information for your particular

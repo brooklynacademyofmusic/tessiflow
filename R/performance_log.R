@@ -99,9 +99,18 @@ performance_log_update <- function(pids = sapply(
 #' Main performance logger loop. Calls `performance_log_update` every 30 seconds
 #'
 #' @return never
+#' @importFrom reticulate conda_create use_miniconda miniconda_path py_available conda_list
 performance_main <- function() {
-  performance_log_open()
+  if(!dir.exists(miniconda_path()))
+    stop("Python is not available, please run reticulate::install_miniconda()")
+  
+  if(!"tessiflow" %in% conda_list()$name) {
+    conda_create("tessiflow","psutil")
+  }
+  use_miniconda("tessiflow",TRUE)
 
+  performance_log_open()
+  
   while (TRUE) {
     try(performance_log_update())
     Sys.sleep(10)
