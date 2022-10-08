@@ -15,6 +15,29 @@ performance_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
   invisible()
 }
 
+#' @describeIn flows_log_open Create the SQLite performance log table
+performance_log_create <- function() {
+  
+  if (DBI::dbExistsTable(tessiflow$db2, "performance")) {
+    return(invisible())
+  }
+  
+  performance_poll_fields <- performance_poll(Sys.getpid())
+  performance_poll_fields[] <- "double"
+  
+  DBI::dbCreateTable(tessiflow$db2, "performance", fields = c(
+    flow_name = "character",
+    job_name = "character",
+    timestamp = "double",
+    step = "integer",
+    performance_poll_fields
+  ))
+  
+  DBI::dbExecute(tessiflow$db2, "CREATE UNIQUE INDEX performance_index ON performance(pid,timestamp)")
+  
+  invisible()
+}
+
 #' @describeIn flows_log_open closes the performance database connection
 performance_log_close <- function() {
   if (!is.null(tessiflow$db2)) {
@@ -101,14 +124,7 @@ performance_log_update <- function(pids = sapply(
 #' @return never
 #' @importFrom reticulate conda_create use_miniconda miniconda_path py_available conda_list
 performance_main <- function() {
-  if(!dir.exists(miniconda_path()))
-    stop("Python is not available, please run reticulate::install_miniconda()")
-  
-  if(!"tessiflow" %in% conda_list()$name) {
-    conda_create("tessiflow","psutil")
-  }
-  use_miniconda("tessiflow",TRUE)
-
+  performance_python_setup()
   performance_log_open()
   
   while (TRUE) {
@@ -117,26 +133,16 @@ performance_main <- function() {
   }
 }
 
-#' @describeIn flows_log_open Create the SQLite performance log table
-performance_log_create <- function() {
-  flows_log_open()
-
-  if (DBI::dbExistsTable(tessiflow$db2, "performance")) {
-    return(invisible())
+performance_python_setup <- function() {
+  if(!dir.exists(miniconda_path()))
+    stop("Python is not available, please run reticulate::install_miniconda()")
+  
+  if(!reticulate::py_available()) {
+    tryCatch(use_miniconda("tessiflow",TRUE),
+             error = function(e) {
+               conda_create("tessiflow","psutil",python_version = 3.6)
+               use_miniconda("tessiflow",TRUE)
+             })
   }
-
-  performance_poll_fields <- performance_poll(Sys.getpid())
-  performance_poll_fields[] <- "double"
-
-  DBI::dbCreateTable(tessiflow$db2, "performance", fields = c(
-    flow_name = "character",
-    job_name = "character",
-    timestamp = "double",
-    step = "integer",
-    performance_poll_fields
-  ))
-
-  DBI::dbExecute(tessiflow$db2, "CREATE UNIQUE INDEX performance_index ON performance(pid,timestamp)")
-
-  invisible()
+  
 }

@@ -2,18 +2,8 @@ withr::local_package("mockery")
 withr::local_package("checkmate")
 local_log_dir()
 withr::defer(performance_log_close())
-performance_log_open()
-
-test_that("performance_log_create creates a new database table", {
-  stub(performance_log_open, "performance_log_create", TRUE)
-  performance_log_create()
-  expect_true("performance" %in% DBI::dbListTables(tessiflow$db))
-})
-
-test_that("performance_log_create creates an index on the table", {
-  expect_equal(DBI::dbGetQuery(tessiflow$db, "pragma index_list(performance);") %>% nrow(), 1)
-})
-
+stub(performance_log_open,"performance_log_create",TRUE)
+performance_python_setup()
 
 # performance_log_open ----------------------------------------------------------
 
@@ -26,6 +16,17 @@ test_that("performance_log_open errors when the configuration option isn't set o
 test_that("performance_log_open opens a database connection", {
   performance_log_open()
   expect_class(tessiflow$db2, "SQLiteConnection")
+})
+
+# performance_log_create --------------------------------------------------
+
+test_that("performance_log_create creates a new database table", {
+  performance_log_create()
+  expect_true("performance" %in% DBI::dbListTables(tessiflow$db2))
+})
+
+test_that("performance_log_create creates an index on the table", {
+  expect_equal(DBI::dbGetQuery(tessiflow$db2, "pragma index_list(performance);") %>% nrow(), 1)
 })
 
 # performance_poll --------------------------------------------------------
@@ -134,6 +135,7 @@ jobs <- readRDS(test_path("jobs.Rds"))
 jobs[1, "status"] <- "Running"
 jobs[1, "pid"] <- performance$pid
 stub(performance_log_update, "performance_poll", performance)
+flows_log_open()
 
 test_that("performance_log_update updates the performance db table", {
   performance_log_update(performance$pid)
