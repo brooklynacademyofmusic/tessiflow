@@ -250,3 +250,38 @@ test_that("tessiflow_job_start warns if the job is already running", {
   expect_warning(tessiflow_job_start(flow_name,job_name))
 })
 
+# tessiflow_refresh -------------------------------------------------------
+
+test_that("tessiflow_refresh updates job info", {
+  local_log_dir()
+  body(run_fun) <- rlang::expr({
+    local_log_dir()
+    mockery::stub(flows_main, "flows_parse", !!flows_parse()[1])
+    mockery::stub(flows_main_read_server, "flows_refresh", 
+                  function(...){
+                    print(nrow(tessiflow$flows))
+                    flows_refresh();
+                    print(nrow(tessiflow$flows))
+                  })
+    mockery::stub(flows_main, "flows_main_read_server", flows_main_read_server)
+    tessiflow_pid_lock(!!config::get("tessiflow.log"))
+    print("Starting flows_main")
+    flows_main()
+  })
+  
+  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
+  
+  p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
+  p1_output <- consume_output_lines(p1)
+  expect_match(p1_output, "Starting flows_main")
+  
+  tessiflow_refresh()
+  Sys.sleep(1)
+  p1_output <- consume_output_lines(p1)
+  
+  # the tessiflow process originally only loads 1 row and then on refresh should have 6
+  expect_match(p1_output[1], "\\[1\\] 1")
+  expect_match(p1_output[2], "\\[1\\] 6")
+  
+  p1$kill_tree()
+})

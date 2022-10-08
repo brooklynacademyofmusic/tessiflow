@@ -58,6 +58,8 @@ tessiflow_start <- function() {
   )
 }
 
+
+
 countdown <- function(sec) {
   while(sec>0) {
     cat(paste0("Pausing for ",sec," seconds...\r"))
@@ -142,11 +144,19 @@ tessiflow_job_stop <- function(flow_name, job_name) {
   tessiflow_run_command(flow_name, job_name, "job_stop")
 }
 
+#' @describeIn tessiflow_job_start Refreshes the tessiflow flows configuration from local yml files
+#' @export
+tessiflow_refresh <- function() {
+  flows_refresh() #update the local flows configuration too
+  tessiflow_run_command(command="flows_refresh")
+}
+
 #' @describeIn tessiflow_job_start Template function for executing commands on the main tessiflow instance
 #' @param command string function to be called with `flow_name` and `job_name` as parameters
 #' @importFrom stats na.omit
-tessiflow_run_command <- function(flow_name, job_name, command) {
-  assert_flow_job_name(flow_name, job_name)
+tessiflow_run_command <- function(flow_name=NULL, job_name=NULL, command) {
+  if(!is.null(flow_name) && !is.null(job_name))
+    assert_flow_job_name(flow_name, job_name)
 
   if (!file.exists(file.path(config::get("tessiflow.log"), "tessiflow.pid"))) {
     stop(paste(

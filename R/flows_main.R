@@ -51,7 +51,7 @@ flows_main <- function() {
 #'
 #' @return result of call
 flows_main_read_server <- function(server) {
-  allowed_calls <- c("job_start", "job_stop")
+  allowed_calls <- c("job_start", "job_stop", "flows_refresh")
 
   socket <- try(socketAccept(server, timeout = 1), silent = TRUE)
   if (!"try-error" %in% class(socket)) {
@@ -79,6 +79,29 @@ flows_main_read_server <- function(server) {
       )
     }
   }
+}
+
+#' flows_refresh
+#' 
+#' Update flows data.table with new data from yml flows
+#'
+#' @param ... ignored
+#'
+#' @return updated data.table
+#' @importFrom dplyr inner_join anti_join
+flows_refresh <- function(...) {
+  flows <- flows_parse()
+  
+  matching_flows <- inner_join(tessiflow$flows,flows,by=c("flow_name","job_name"))
+  new_flows <- anti_join(flows,tessiflow$flows,by=c("flow_name","job_name"))
+  
+  updatable_columns <- c("env","on.schedule","runs-on","steps","needs","if","scheduled_runs")
+
+  tessiflow$flows <- rbind(
+    tessiflow$flows[matching_flows,(updatable_columns):=mget(paste0(updatable_columns,".y")),
+                  on=c("flow_name","job_name")],
+    new_flows)
+
 }
 
 #' flows_get_job

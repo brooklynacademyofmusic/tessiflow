@@ -113,6 +113,39 @@ test_that("flows_main_read_server doesn't execute other commands", {
   close(server)
 })
 
+# flows_refresh -----------------------------------------------------------
+
+test_that("flows_refresh updates the tessiflow data that doesn't involve run state",{
+  local_flows_data_table()
+  run_state_cols <- c("status","retval","start_time","end_time")
+  other_cols <- setdiff(colnames(tessiflow$flows),run_state_cols)
+  
+  tessiflow$flows[,(run_state_cols):=1]
+  
+  new_data <- flows_parse()[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")]
+  old_data <- copy(tessiflow$flows)
+  stub(flows_refresh,"flows_parse",new_data)
+  flows_refresh()
+  
+  expect_equal(tessiflow$flows[c(1,3,4,5)],old_data[c(1,3,4,5)])
+  expect_equal(tessiflow$flows[c(2,6),..other_cols],new_data[c(1,2),..other_cols])
+})
+
+test_that("flows_refresh updates the tessiflow data that doesn't involve run state",{
+  local_flows_data_table()
+  run_state_cols <- c("status","retval","start_time","end_time")
+  other_cols <- setdiff(colnames(tessiflow$flows),run_state_cols)
+  
+  tessiflow$flows[,(run_state_cols):=1]
+  
+  new_data <- flows_parse()[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")]
+  old_data <- copy(tessiflow$flows)
+  stub(flows_refresh,"flows_parse",new_data)
+  flows_refresh()
+  
+  expect_equal(tessiflow$flows[7],new_data[3])
+})
+
 
 # flows_get_job -----------------------------------------------------------
 
