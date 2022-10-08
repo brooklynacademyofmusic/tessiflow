@@ -309,7 +309,7 @@ test_that("job_poll calls job_step if it's ready to advance", {
 test_that("job_poll calls job_finalize if the job dies", {
   job_finalize <- mock()
   stub(job_poll, "job_finalize", job_finalize)
-  r_session$.call(eval,list(quote({for(i in seq(1:1e3)) print(i);q()})))
+  r_session$.call(eval,list(quote({print("here");q()})))
   while(r_session$is_alive())
     Sys.sleep(1)
   job_poll(flow_name, job_name)
