@@ -5,8 +5,8 @@
 \alias{flows_log_close}
 \alias{flows_log_create}
 \alias{performance_log_open}
-\alias{performance_log_close}
 \alias{performance_log_create}
+\alias{performance_log_close}
 \title{flows_log_open}
 \usage{
 flows_log_open(flows_log_dir = config::get("tessiflow.log"))
@@ -17,9 +17,9 @@ flows_log_create()
 
 performance_log_open(flows_log_dir = config::get("tessiflow.log"))
 
-performance_log_close()
-
 performance_log_create()
+
+performance_log_close()
 }
 \arguments{
 \item{flows_log_dir}{directory where the SQLite database is stored}
@@ -38,8 +38,8 @@ opens the jobs database connection
 
 \item \code{performance_log_open()}: opens the performance database connection
 
-\item \code{performance_log_close()}: closes the performance database connection
-
 \item \code{performance_log_create()}: Create the SQLite performance log table
+
+\item \code{performance_log_close()}: closes the performance database connection
 
 }}

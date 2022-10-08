@@ -122,7 +122,6 @@ performance_log_update <- function(pids = sapply(
 #' Main performance logger loop. Calls `performance_log_update` every 30 seconds
 #'
 #' @return never
-#' @importFrom reticulate conda_create use_miniconda miniconda_path py_available conda_list
 performance_main <- function() {
   performance_python_setup()
   performance_log_open()
@@ -133,16 +132,20 @@ performance_main <- function() {
   }
 }
 
+#' performance_python_setup
+#' 
+#' Set up python tessiflow environment
+#'
+#' @importFrom reticulate conda_exe use_condaenv conda_create
 performance_python_setup <- function() {
-  if(!dir.exists(miniconda_path()))
-    stop("Python is not available, please run reticulate::install_miniconda()")
-  
-  if(!reticulate::py_available()) {
-    tryCatch(use_miniconda("tessiflow",TRUE),
-             error = function(e) {
-               conda_create("tessiflow","psutil",python_version = 3.6)
-               use_miniconda("tessiflow",TRUE)
-             })
-  }
-  
+  tryCatch(conda_exe(),
+           error = function(e) 
+             stop("Conda environment is not available or cannot be found, please run reticulate::install_miniconda()")
+  )
+
+  tryCatch(use_condaenv("tessiflow",required=T),
+           error = function(e) {
+             conda_create("tessiflow","psutil",python_version = 3.6)
+             use_condaenv("tessiflow",required=T)
+           })
 }
