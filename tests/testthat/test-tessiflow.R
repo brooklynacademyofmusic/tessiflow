@@ -200,7 +200,7 @@ test_that("tessiflow_disable unschedules tessiflow", {
 
 test_that("tessiflow_run_command errors if there's no running tessiflow process", {
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
-  expect_error(tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function"), "Tessiflow process.+not.+running")
+  expect_error(tessiflow_run_command("this_is_a_function"), "Tessiflow process.+not.+running")
 })
 
 test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
@@ -223,7 +223,7 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
   expect_match(p1_output, "Starting flows_main")
 
   Sys.sleep(1)
-  tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function")
+  tessiflow_run_command("this_is_a_function", flow_name = "Dummy workflow", job_name = "Job 1")
   p1_output <- consume_output_lines(p1)
 
   expect_match(p1_output, "this_is_a_function(.+Dummy workflow.+Job 1.+)")
@@ -276,12 +276,12 @@ test_that("tessiflow_refresh updates job info", {
   expect_match(p1_output, "Starting flows_main")
   
   tessiflow_refresh()
-  Sys.sleep(1)
+  Sys.sleep(3)
   p1_output <- consume_output_lines(p1)
   
   # the tessiflow process originally only loads 1 row and then on refresh should have 6
-  expect_match(p1_output[1], "\\[1\\] 1")
-  expect_match(p1_output[2], "\\[1\\] 6")
+  expect_match(p1_output[[1]], "\\[1\\] 1")
+  expect_match(p1_output[[2]], "\\[1\\] 6")
   
   p1$kill_tree()
 })

@@ -3,6 +3,7 @@
 \name{tessiflow_job_start}
 \alias{tessiflow_job_start}
 \alias{tessiflow_job_stop}
+\alias{tessiflow_refresh}
 \alias{tessiflow_run_command}
 \title{tessiflow_job_start}
 \usage{
@@ -10,14 +11,18 @@ tessiflow_job_start(flow_name, job_name)
 
 tessiflow_job_stop(flow_name, job_name)
 
-tessiflow_run_command(flow_name, job_name, command)
+tessiflow_refresh()
+
+tessiflow_run_command(command, ...)
 }
 \arguments{
 \item{flow_name}{string flow name}
 
 \item{job_name}{sting job name}
 
-\item{command}{string function to be called with \code{flow_name} and \code{job_name} as parameters}
+\item{command}{string function to be called with arguments \code{...}}
+
+\item{...}{<\code{\link[rlang:dyn-dots]{dynamic-dots}}> arguments passed on to the tessiflow daemon}
 }
 \value{
 invisibly
@@ -28,6 +33,8 @@ Starts a tessiflow job identified by \code{flow_name} and \code{job_name}
 \section{Functions}{
 \itemize{
 \item \code{tessiflow_job_stop()}: Stops a tessiflow job identified by \code{flow_name} and \code{job_name}
+
+\item \code{tessiflow_refresh()}: Refreshes the tessiflow flows configuration from local yml files
 
 \item \code{tessiflow_run_command()}: Template function for executing commands on the main tessiflow instance
 

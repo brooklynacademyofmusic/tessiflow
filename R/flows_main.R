@@ -85,11 +85,9 @@ flows_main_read_server <- function(server) {
 #' 
 #' Update flows data.table with new data from yml flows
 #'
-#' @param ... ignored
-#'
 #' @return updated data.table
 #' @importFrom dplyr inner_join anti_join
-flows_refresh <- function(...) {
+flows_refresh <- function() {
   flows <- flows_parse()
   
   matching_flows <- inner_join(tessiflow$flows,flows,by=c("flow_name","job_name"))

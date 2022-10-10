@@ -121,6 +121,7 @@ tessiflow_disable <- function() {
 #'
 #' @param flow_name string flow name
 #' @param job_name sting job name
+#' @param ... <[`dynamic-dots`][rlang::dyn-dots]> arguments passed on to the tessiflow daemon 
 #'
 #' @return invisibly
 #' @export
@@ -134,14 +135,14 @@ tessiflow_job_start <- function(flow_name, job_name) {
   last_run <- flows_log_get_last_run(flow_name, job_name)
   if(last_run$status[[1]] == "Running") 
     warning(paste0(flow_name,"/",job_name,"is already running."))
-  tessiflow_run_command(flow_name, job_name, "job_start")
+  tessiflow_run_command("job_start", !!!c(flow_name = flow_name, job_name = job_name))
 }
 
 
 #' @describeIn tessiflow_job_start Stops a tessiflow job identified by `flow_name` and `job_name`
 #' @export
 tessiflow_job_stop <- function(flow_name, job_name) {
-  tessiflow_run_command(flow_name, job_name, "job_stop")
+  tessiflow_run_command("job_start", !!!c(flow_name = flow_name, job_name = job_name))
 }
 
 #' @describeIn tessiflow_job_start Refreshes the tessiflow flows configuration from local yml files
@@ -152,11 +153,13 @@ tessiflow_refresh <- function() {
 }
 
 #' @describeIn tessiflow_job_start Template function for executing commands on the main tessiflow instance
-#' @param command string function to be called with `flow_name` and `job_name` as parameters
-#' @importFrom stats na.omit
-tessiflow_run_command <- function(flow_name=NULL, job_name=NULL, command) {
-  if(!is.null(flow_name) && !is.null(job_name))
-    assert_flow_job_name(flow_name, job_name)
+#' @param command string function to be called with arguments `...` 
+#' @importFrom rlang list2
+tessiflow_run_command <- function(command, ...) {
+  args <- list2(...)
+  
+  if(!is.null(args$flow_name) || !is.null(args$job_name))
+    assert_flow_job_name(args$flow_name, args$job_name)
 
   if (!file.exists(file.path(config::get("tessiflow.log"), "tessiflow.pid"))) {
     stop(paste(
@@ -174,7 +177,7 @@ tessiflow_run_command <- function(flow_name=NULL, job_name=NULL, command) {
     }
   )
 
-  writeLines(deparse(rlang::call2(command, flow_name = flow_name, job_name = job_name)), socket)
+  writeLines(deparse(rlang::call2(command, !!!args)), socket)
 
   close(socket)
 
