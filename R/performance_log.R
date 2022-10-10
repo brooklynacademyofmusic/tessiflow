@@ -145,7 +145,10 @@ performance_python_setup <- function() {
 
   tryCatch(use_condaenv("tessiflow",required=T),
            error = function(e) {
-             conda_create("tessiflow","psutil",python_version = 3.6)
-             use_condaenv("tessiflow",required=T)
+             message("Setting up conda environment for the first time...")
+             suppressMessages({
+               conda_create("tessiflow","psutil")
+               use_condaenv("tessiflow",required=T)
+             })
            })
 }

@@ -4,7 +4,6 @@ withr::local_package("mockery")
 
 temp <- tempfile()
 expr <- rlang::expr({
-  print("Here I am!")
   writeLines("hello world!", !!temp)
 })
 
@@ -19,7 +18,7 @@ if (.Platform$OS.type != "windows") {
 
 test_that("script_expr creates a runnable string", {
   withr::local_file(list(temp = file.create(temp)))
-  expect_match(system(script_expr(expr), intern = TRUE), "Here I am!")
+  system(script_expr(expr), intern = TRUE)
   expect_equal(readLines(temp), "hello world!")
 })
 
@@ -72,3 +71,4 @@ test_that("unschedule_crontab removes the task from crontab", {
   crontab <- readLines(filename)
   expect_length(crontab, 1)
 })
+
