@@ -250,6 +250,31 @@ test_that("tessiflow_job_start warns if the job is already running", {
   expect_warning(tessiflow_job_start(flow_name,job_name))
 })
 
+test_that("tessiflow_job_start calls job_start", {
+  local_log_dir()
+  # oooh fancy, replace list with list2 to use mock with tidy dots!
+  stub(mock,"list",list2)
+  tessiflow_run_command <- mock()
+  stub(tessiflow_job_start, "tessiflow_run_command", tessiflow_run_command)
+  stub(tessiflow_job_start, "flows_log_get_last_run", list(status="Waiting"))
+  tessiflow_job_start("Dummy workflow","Job 1")
+  expect_equal(mock_args(tessiflow_run_command)[[1]][[1]],"job_start")
+  expect_equal(mock_args(tessiflow_run_command)[[1]][-1],list(flow_name = "Dummy workflow", job_name = "Job 1"))
+})
+
+# tessiflow_job_stop ------------------------------------------------------
+
+test_that("tessiflow_job_stop calls job_stop", {
+  local_log_dir()
+  # oooh fancy, replace list with list2 to use mock with tidy dots!
+  stub(mock,"list",list2)
+  tessiflow_run_command <- mock()
+  stub(tessiflow_job_stop, "tessiflow_run_command", tessiflow_run_command)
+  tessiflow_job_stop("Dummy workflow","Job 1")
+  expect_equal(mock_args(tessiflow_run_command)[[1]][[1]],"job_stop")
+  expect_equal(mock_args(tessiflow_run_command)[[1]][-1],list(flow_name = "Dummy workflow", job_name = "Job 1"))
+})
+
 # tessiflow_refresh -------------------------------------------------------
 
 test_that("tessiflow_refresh updates job info", {
