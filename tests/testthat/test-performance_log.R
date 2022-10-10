@@ -51,7 +51,7 @@ test_that("performance_poll gets cpu information on process", {
   expect_lte(performance_poll(pid)$cpu_times.system, 1)
   expect_lte(performance_poll(pid)$cpu_times.user, 1)
   r_session$run(eval, list(quote({
-    runif(2^26)
+    runif(2^27)
     1
   })))
   expect_lte(performance_poll(pid)$cpu_times.system, 1)
