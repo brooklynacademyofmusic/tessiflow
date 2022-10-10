@@ -142,7 +142,7 @@ tessiflow_job_start <- function(flow_name, job_name) {
 #' @describeIn tessiflow_job_start Stops a tessiflow job identified by `flow_name` and `job_name`
 #' @export
 tessiflow_job_stop <- function(flow_name, job_name) {
-  tessiflow_run_command("job_start", !!!c(flow_name = flow_name, job_name = job_name))
+  tessiflow_run_command("job_stop", !!!c(flow_name = flow_name, job_name = job_name))
 }
 
 #' @describeIn tessiflow_job_start Refreshes the tessiflow flows configuration from local yml files
