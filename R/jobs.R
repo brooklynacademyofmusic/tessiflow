@@ -222,8 +222,8 @@ job_poll <- function(flow_name, job_name) {
       job_on_error(flow_name, job_name, output[["process"]]$error$parent)
       break
     }
-    if(!job$r_session[[1]]$is_alive()) {
-      job_finalize(flow_name,job_name)
+    if (!job$r_session[[1]]$is_alive()) {
+      job_finalize(flow_name, job_name)
       break
     }
   }
@@ -268,9 +268,8 @@ job_finalize <- function(flow_name, job_name) {
 
 #' @describeIn job_start Resets job for next run, updates flows table but NOT database, writes to log
 job_reset <- function(flow_name, job_name) {
+  on.schedule <- NULL
   assert_flow_job_name(flow_name, job_name)
-
-  job <- flows_get_job(flow_name, job_name)
 
   tessiflow$flows[
     eval(rlang::expr(flow_name == !!flow_name & job_name == !!job_name)),

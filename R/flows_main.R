@@ -82,26 +82,29 @@ flows_main_read_server <- function(server) {
 }
 
 #' flows_refresh
-#' 
+#'
 #' Update flows data.table with new data from yml flows
 #'
 #' @return updated data.table
 #' @importFrom dplyr anti_join
 flows_refresh <- function() {
   flows <- flows_parse()
-  
-  new_flows <- anti_join(flows,tessiflow$flows,by=c("flow_name","job_name"))
-  
+
+  new_flows <- anti_join(flows, tessiflow$flows, by = c("flow_name", "job_name"))
+
   update_columns <- intersect(
-    c("env","on.schedule","runs-on","steps","needs","if","scheduled_runs"),
-    colnames(flows))
+    c("env", "on.schedule", "runs-on", "steps", "needs", "if", "scheduled_runs"),
+    colnames(flows)
+  )
 
   tessiflow$flows <- rbindlist(list(
-    tessiflow$flows[flows,(update_columns):=mget(paste0("i.",update_columns)),
-                  on=c("flow_name","job_name")],
-    new_flows),
-    fill = TRUE)
-
+    tessiflow$flows[flows, (update_columns) := mget(paste0("i.", update_columns)),
+      on = c("flow_name", "job_name")
+    ],
+    new_flows
+  ),
+  fill = TRUE
+  )
 }
 
 #' flows_get_job

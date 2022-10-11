@@ -85,20 +85,20 @@ test_that("tessiflow_run logs to a log file", {
 
 # tessiflow_start ---------------------------------------------------------
 
-test_that("tessiflow_start sets the working directory",{
-  stub(tessiflow_start,"tessiflow_run",getwd)
-  stub(tessiflow_start,"Sys.getenv",tempdir())
+test_that("tessiflow_start sets the working directory", {
+  stub(tessiflow_start, "tessiflow_run", getwd)
+  stub(tessiflow_start, "Sys.getenv", tempdir())
   expect_silent(tessiflow_start())
-  expect_equal(tessiflow_start(),tools::file_path_as_absolute(tempdir()))
+  expect_equal(tessiflow_start(), tools::file_path_as_absolute(tempdir()))
 })
 
-test_that("tessiflow_start pauses to show errors to humans",{
-  countdown = mock(TRUE)
-  stub(tessiflow_start,"countdown",countdown)
-  stub(tessiflow_start,"tessiflow_run",function() stop("I am a really bad error"))
-  stub(tessiflow_start,"Sys.getenv",tempdir())
-  expect_output(tessiflow_start(),"I am a really bad error")
-  expect_equal(mock_args(countdown)[[1]][[1]],30)
+test_that("tessiflow_start pauses to show errors to humans", {
+  countdown <- mock(TRUE)
+  stub(tessiflow_start, "countdown", countdown)
+  stub(tessiflow_start, "tessiflow_run", function() stop("I am a really bad error"))
+  stub(tessiflow_start, "Sys.getenv", tempdir())
+  expect_output(tessiflow_start(), "I am a really bad error")
+  expect_equal(mock_args(countdown)[[1]][[1]], 30)
 })
 
 # tessiflow_stop ----------------------------------------------------------
@@ -243,23 +243,23 @@ test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
 
 test_that("tessiflow_job_start warns if the job is already running", {
   local_log_dir()
-  flow_name = "Dummy workflow"
-  job_name = "Job 1"
-  stub(tessiflow_job_start,"tessiflow_run_command",TRUE)
-  flows_update_job(flow_name,job_name,list(status="Running"))
-  expect_warning(tessiflow_job_start(flow_name,job_name))
+  flow_name <- "Dummy workflow"
+  job_name <- "Job 1"
+  stub(tessiflow_job_start, "tessiflow_run_command", TRUE)
+  flows_update_job(flow_name, job_name, list(status = "Running"))
+  expect_warning(tessiflow_job_start(flow_name, job_name))
 })
 
 test_that("tessiflow_job_start calls job_start", {
   local_log_dir()
   # oooh fancy, replace list with list2 to use mock with tidy dots!
-  stub(mock,"list",list2)
+  stub(mock, "list", list2)
   tessiflow_run_command <- mock()
   stub(tessiflow_job_start, "tessiflow_run_command", tessiflow_run_command)
-  stub(tessiflow_job_start, "flows_log_get_last_run", list(status="Waiting"))
-  tessiflow_job_start("Dummy workflow","Job 1")
-  expect_equal(mock_args(tessiflow_run_command)[[1]][[1]],"job_start")
-  expect_equal(mock_args(tessiflow_run_command)[[1]][-1],list(flow_name = "Dummy workflow", job_name = "Job 1"))
+  stub(tessiflow_job_start, "flows_log_get_last_run", list(status = "Waiting"))
+  tessiflow_job_start("Dummy workflow", "Job 1")
+  expect_equal(mock_args(tessiflow_run_command)[[1]][[1]], "job_start")
+  expect_equal(mock_args(tessiflow_run_command)[[1]][-1], list(flow_name = "Dummy workflow", job_name = "Job 1"))
 })
 
 # tessiflow_job_stop ------------------------------------------------------
@@ -267,12 +267,12 @@ test_that("tessiflow_job_start calls job_start", {
 test_that("tessiflow_job_stop calls job_stop", {
   local_log_dir()
   # oooh fancy, replace list with list2 to use mock with tidy dots!
-  stub(mock,"list",list2)
+  stub(mock, "list", list2)
   tessiflow_run_command <- mock()
   stub(tessiflow_job_stop, "tessiflow_run_command", tessiflow_run_command)
-  tessiflow_job_stop("Dummy workflow","Job 1")
-  expect_equal(mock_args(tessiflow_run_command)[[1]][[1]],"job_stop")
-  expect_equal(mock_args(tessiflow_run_command)[[1]][-1],list(flow_name = "Dummy workflow", job_name = "Job 1"))
+  tessiflow_job_stop("Dummy workflow", "Job 1")
+  expect_equal(mock_args(tessiflow_run_command)[[1]][[1]], "job_stop")
+  expect_equal(mock_args(tessiflow_run_command)[[1]][-1], list(flow_name = "Dummy workflow", job_name = "Job 1"))
 })
 
 # tessiflow_refresh -------------------------------------------------------
@@ -282,31 +282,33 @@ test_that("tessiflow_refresh updates job info", {
   body(run_fun) <- rlang::expr({
     local_log_dir()
     mockery::stub(flows_main, "flows_parse", !!flows_parse()[1])
-    mockery::stub(flows_main_read_server, "flows_refresh", 
-                  function(...){
-                    print(nrow(tessiflow$flows))
-                    flows_refresh();
-                    print(nrow(tessiflow$flows))
-                  })
+    mockery::stub(
+      flows_main_read_server, "flows_refresh",
+      function(...) {
+        print(nrow(tessiflow$flows))
+        flows_refresh()
+        print(nrow(tessiflow$flows))
+      }
+    )
     mockery::stub(flows_main, "flows_main_read_server", flows_main_read_server)
     tessiflow_pid_lock(!!config::get("tessiflow.log"))
     print("Starting flows_main")
     flows_main()
   })
-  
+
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
-  
+
   p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
   p1_output <- consume_output_lines(p1)
   expect_match(p1_output, "Starting flows_main")
-  
+
   tessiflow_refresh()
   Sys.sleep(3)
   p1_output <- consume_output_lines(p1)
-  
+
   # the tessiflow process originally only loads 1 row and then on refresh should have 6
   expect_match(p1_output[[1]], "\\[1\\] 1")
   expect_match(p1_output[[2]], "\\[1\\] 6")
-  
+
   p1$kill_tree()
 })

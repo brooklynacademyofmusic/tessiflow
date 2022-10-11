@@ -201,7 +201,7 @@ test_that("job_start writes to the log file and console", {
 # job_step ----------------------------------------------------------------
 
 local_flows_data_table()
-job_start(flow_name,job_name)
+job_start(flow_name, job_name)
 job <- flows_get_job(flow_name, job_name)
 r_session <- job$r_session[[1]]
 # stub r_session$call and r_session$close
@@ -309,9 +309,13 @@ test_that("job_poll calls job_step if it's ready to advance", {
 test_that("job_poll calls job_finalize if the job dies", {
   job_finalize <- mock()
   stub(job_poll, "job_finalize", job_finalize)
-  r_session$.call(eval,list(quote({print("here");q()})))
-  while(r_session$is_alive())
+  r_session$.call(eval, list(quote({
+    print("here")
+    q()
+  })))
+  while (r_session$is_alive()) {
     Sys.sleep(1)
+  }
   job_poll(flow_name, job_name)
   expect_length(mock_args(job_finalize), 1)
 })
@@ -319,7 +323,7 @@ test_that("job_poll calls job_finalize if the job dies", {
 # job_on_error ------------------------------------------------------------
 
 local_flows_data_table()
-suppressMessages(tessiflow:::job_start(flow_name,job_name))
+suppressMessages(tessiflow:::job_start(flow_name, job_name))
 job <- flows_get_job(flow_name, job_name)
 r_session <- job$r_session[[1]]
 # stub r_session$close
@@ -397,11 +401,11 @@ test_that("job_finalize writes to the log file and console", {
 r_session$close <- r_session$.close
 test_that("job_finalize closes the session and all subprocesses", {
   expect_equal(job$r_session[[1]]$get_state(), "idle")
-  job$r_session[[1]]$run(callr::r_bg,list(Sys.sleep,list(10)),package=T)
+  job$r_session[[1]]$run(callr::r_bg, list(Sys.sleep, list(10)), package = TRUE)
   children <- ps::ps_children(job$r_session[[1]]$as_ps_handle())
   job_finalize(flow_name, job_name)
   expect_equal(job$r_session[[1]]$get_state(), "finished")
-  expect_equal(sapply(children,ps::ps_is_running),rep(FALSE,length(children)))
+  expect_equal(sapply(children, ps::ps_is_running), rep(FALSE, length(children)))
 })
 
 test_that("job_finalize warns if there's no session to close", {
@@ -429,7 +433,7 @@ test_that("job_reset updates the flows data.table", {
     pid = 123,
     r_session = list("process")
   )]
-  tessiflow$flows[,Vectorize(job_reset)(flow_name, job_name)]
+  tessiflow$flows[, Vectorize(job_reset)(flow_name, job_name)]
   expect_equal(tessiflow$flows, old_flows)
 })
 

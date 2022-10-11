@@ -71,4 +71,3 @@ test_that("unschedule_crontab removes the task from crontab", {
   crontab <- readLines(filename)
   expect_length(crontab, 1)
 })
-

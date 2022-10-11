@@ -46,10 +46,10 @@ tessiflow_run <- function() {
 #' @describeIn tessiflow_run Call tessiflow_run from the `R_HOME` directory, and pause on error
 #' @export
 tessiflow_start <- function() {
-
-  tryCatch({
-    local_dir(Sys.getenv("R_USER"))
-    tessiflow_run()
+  tryCatch(
+    {
+      local_dir(Sys.getenv("R_USER"))
+      tessiflow_run()
     },
     error = function(e) {
       error_print(e)
@@ -61,8 +61,8 @@ tessiflow_start <- function() {
 
 
 countdown <- function(sec) {
-  while(sec>0) {
-    cat(paste0("Pausing for ",sec," seconds...\r"))
+  while (sec > 0) {
+    cat(paste0("Pausing for ", sec, " seconds...\r"))
     sec <- sec - 1
     Sys.sleep(1)
   }
@@ -121,7 +121,7 @@ tessiflow_disable <- function() {
 #'
 #' @param flow_name string flow name
 #' @param job_name sting job name
-#' @param ... <[`dynamic-dots`][rlang::dyn-dots]> arguments passed on to the tessiflow daemon 
+#' @param ... <[`dynamic-dots`][rlang::dyn-dots]> arguments passed on to the tessiflow daemon
 #'
 #' @return invisibly
 #' @export
@@ -133,8 +133,9 @@ tessiflow_disable <- function() {
 #' }
 tessiflow_job_start <- function(flow_name, job_name) {
   last_run <- flows_log_get_last_run(flow_name, job_name)
-  if(last_run$status[[1]] == "Running") 
-    warning(paste0(flow_name,"/",job_name,"is already running."))
+  if (last_run$status[[1]] == "Running") {
+    warning(paste0(flow_name, "/", job_name, "is already running."))
+  }
   tessiflow_run_command("job_start", !!!c(flow_name = flow_name, job_name = job_name))
 }
 
@@ -148,18 +149,19 @@ tessiflow_job_stop <- function(flow_name, job_name) {
 #' @describeIn tessiflow_job_start Refreshes the tessiflow flows configuration from local yml files
 #' @export
 tessiflow_refresh <- function() {
-  flows_refresh() #update the local flows configuration too
-  tessiflow_run_command(command="flows_refresh")
+  flows_refresh() # update the local flows configuration too
+  tessiflow_run_command(command = "flows_refresh")
 }
 
 #' @describeIn tessiflow_job_start Template function for executing commands on the main tessiflow instance
-#' @param command string function to be called with arguments `...` 
+#' @param command string function to be called with arguments `...`
 #' @importFrom rlang list2
 tessiflow_run_command <- function(command, ...) {
   args <- list2(...)
-  
-  if(!is.null(args$flow_name) || !is.null(args$job_name))
+
+  if (!is.null(args$flow_name) || !is.null(args$job_name)) {
     assert_flow_job_name(args$flow_name, args$job_name)
+  }
 
   if (!file.exists(file.path(config::get("tessiflow.log"), "tessiflow.pid"))) {
     stop(paste(

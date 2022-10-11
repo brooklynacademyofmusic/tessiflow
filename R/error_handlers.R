@@ -28,7 +28,7 @@ error_print <- function(error) {
 #' @importFrom cli ansi_html_style ansi_html
 error_email <- function(error) {
   process_name <- "tessiflow"
-  
+
   withr::local_options(cli.num_colors = 255)
 
   if ("flow_name" %in% names(error) || "job_name" %in% names(error)) {
@@ -41,7 +41,7 @@ error_email <- function(error) {
     format(cli::ansi_html_style()),
     "</style><p>",
     process_name, "reported the following error:<p><pre>",
-    cli::ansi_html(rlang::cnd_message(error, prefix = T)), "<br>",
+    cli::ansi_html(rlang::cnd_message(error, prefix = TRUE)), "<br>",
     paste(cli::ansi_html(format(error$trace)), collapse = "<br>")
   ), collapse = " ")
 

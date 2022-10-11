@@ -17,14 +17,13 @@ performance_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
 
 #' @describeIn flows_log_open Create the SQLite performance log table
 performance_log_create <- function() {
-  
   if (DBI::dbExistsTable(tessiflow$db2, "performance")) {
     return(invisible())
   }
-  
+
   performance_poll_fields <- performance_poll(Sys.getpid())
   performance_poll_fields[] <- "double"
-  
+
   DBI::dbCreateTable(tessiflow$db2, "performance", fields = c(
     flow_name = "character",
     job_name = "character",
@@ -32,9 +31,9 @@ performance_log_create <- function() {
     step = "integer",
     performance_poll_fields
   ))
-  
+
   DBI::dbExecute(tessiflow$db2, "CREATE UNIQUE INDEX performance_index ON performance(pid,timestamp)")
-  
+
   invisible()
 }
 
@@ -112,7 +111,7 @@ performance_log_update <- function(pids = sapply(
     select(flow_name, job_name, step, pid)
 
   sqlite_upsert("performance",
-    merge(performance_data, flows_data, by = "pid", all.x = T),
+    merge(performance_data, flows_data, by = "pid", all.x = TRUE),
     con = tessiflow$db2
   )
 }
@@ -125,7 +124,7 @@ performance_log_update <- function(pids = sapply(
 performance_main <- function() {
   performance_python_setup()
   performance_log_open()
-  
+
   while (TRUE) {
     try(performance_log_update())
     Sys.sleep(10)
@@ -133,22 +132,24 @@ performance_main <- function() {
 }
 
 #' performance_python_setup
-#' 
+#'
 #' Set up python tessiflow environment
 #'
 #' @importFrom reticulate conda_exe use_condaenv conda_create
 performance_python_setup <- function() {
   tryCatch(conda_exe(),
-           error = function(e) 
-             stop("Conda environment is not available or cannot be found, please run reticulate::install_miniconda()")
+    error = function(e) {
+      stop("Conda environment is not available or cannot be found, please run reticulate::install_miniconda()")
+    }
   )
 
-  tryCatch(use_condaenv("tessiflow",required=T),
-           error = function(e) {
-             message("Setting up conda environment for the first time...")
-             suppressMessages({
-               conda_create("tessiflow","psutil")
-               use_condaenv("tessiflow",required=T)
-             })
-           })
+  tryCatch(use_condaenv("tessiflow", required = TRUE),
+    error = function(e) {
+      message("Setting up conda environment for the first time...")
+      suppressMessages({
+        conda_create("tessiflow", "psutil")
+        use_condaenv("tessiflow", required = TRUE)
+      })
+    }
+  )
 }

@@ -2,7 +2,7 @@ withr::local_package("mockery")
 withr::local_package("checkmate")
 local_log_dir()
 withr::defer(performance_log_close())
-stub(performance_log_open,"performance_log_create",TRUE)
+stub(performance_log_open, "performance_log_create", TRUE)
 performance_python_setup()
 
 # performance_log_open ----------------------------------------------------------
@@ -113,8 +113,10 @@ test_that("performance_poll gets disk information on process", {
     1
   })))
   expect_true(max(performance_poll(pid)$io_counters.read_bytes,
-                  performance_poll(pid)$io_counters.read_chars,
-                  performance_poll(pid)$io_counters.read_count,na.rm=T) >= 2^25)
+    performance_poll(pid)$io_counters.read_chars,
+    performance_poll(pid)$io_counters.read_count,
+    na.rm = TRUE
+  ) >= 2^25)
   expect_gte(performance_poll(pid)$io_counters.write_bytes, 2^25)
   # ...and disk i/o impacts system times
   expect_gte(performance_poll(pid)$cpu_times.system, system_time)

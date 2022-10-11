@@ -43,7 +43,7 @@ test_that("log_rotate rotates a log file when it's over size=size", {
   filename <- tempfile()
   zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", today(), ".zip")
 
-  write(c("these", "are", "lines"), filename, append = T, sep = "\n")
+  write(c("these", "are", "lines"), filename, append = TRUE, sep = "\n")
 
   log_rotate(filename, size = file.info(filename)$size)
   expect_length(readLines(filename), 3)

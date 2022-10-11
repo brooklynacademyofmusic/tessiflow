@@ -115,51 +115,51 @@ test_that("flows_main_read_server doesn't execute other commands", {
 
 # flows_refresh -----------------------------------------------------------
 
-test_that("flows_refresh updates the tessiflow data that doesn't involve run state",{
+test_that("flows_refresh updates the tessiflow data that doesn't involve run state", {
   local_flows_data_table()
-  run_state_cols <- c("status","retval","start_time","end_time")
-  other_cols <- setdiff(colnames(tessiflow$flows),run_state_cols)
-  
-  tessiflow$flows[,(run_state_cols):=list(1:.N,1:.N,now()+1:.N,now()+1:.N)]
-  
-  new_data <- tessiflow$flows[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")]
+  run_state_cols <- c("status", "retval", "start_time", "end_time")
+  other_cols <- setdiff(colnames(tessiflow$flows), run_state_cols)
+
+  tessiflow$flows[, (run_state_cols) := list(seq_len(.N), seq_len(.N), now() + seq_len(.N), now() + seq_len(.N))]
+
+  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")]
   old_data <- copy(tessiflow$flows)
-  stub(flows_refresh,"flows_parse",new_data)
+  stub(flows_refresh, "flows_parse", new_data)
   flows_refresh()
-  
-  expect_equal(tessiflow$flows[c(1,3,4,5)],old_data[c(1,3,4,5)])
-  expect_equal(tessiflow$flows[c(2,6),..other_cols],new_data[c(1,2),..other_cols])
+
+  expect_equal(tessiflow$flows[c(1, 3, 4, 5)], old_data[c(1, 3, 4, 5)])
+  expect_equal(tessiflow$flows[c(2, 6), ..other_cols], new_data[c(1, 2), ..other_cols])
 })
 
-test_that("flows_refresh adds additional flow data",{
+test_that("flows_refresh adds additional flow data", {
   local_flows_data_table()
 
-  new_data <- tessiflow$flows[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")]
-  stub(flows_refresh,"flows_parse",new_data)
+  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")]
+  stub(flows_refresh, "flows_parse", new_data)
   flows_refresh()
-  
-  expect_equal(tessiflow$flows[7],new_data[3])
+
+  expect_equal(tessiflow$flows[7], new_data[3])
 })
 
-test_that("flows_refresh adds new columns",{
+test_that("flows_refresh adds new columns", {
   local_flows_data_table()
-  
-  new_data <- tessiflow$flows[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")][,new_column := 1]
-  stub(flows_refresh,"flows_parse",new_data)
+
+  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")][, new_column := 1]
+  stub(flows_refresh, "flows_parse", new_data)
   flows_refresh()
-  
-  expect_equal(tessiflow$flows[,new_column],c(rep(NA,6),1))
+
+  expect_equal(tessiflow$flows[, new_column], c(rep(NA, 6), 1))
 })
 
-test_that("flows_refresh works when columns missing",{
+test_that("flows_refresh works when columns missing", {
   local_flows_data_table()
 
-  new_data <- tessiflow$flows[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")][,env := NULL]
+  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")][, env := NULL]
   old_data <- copy(tessiflow$flows)
-  stub(flows_refresh,"flows_parse",new_data)
+  stub(flows_refresh, "flows_parse", new_data)
   flows_refresh()
-  
-  expect_equal(tessiflow$flows$env,c(old_data$env,list(NULL)))
+
+  expect_equal(tessiflow$flows$env, c(old_data$env, list(NULL)))
 })
 
 
