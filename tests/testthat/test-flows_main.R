@@ -120,9 +120,9 @@ test_that("flows_refresh updates the tessiflow data that doesn't involve run sta
   run_state_cols <- c("status","retval","start_time","end_time")
   other_cols <- setdiff(colnames(tessiflow$flows),run_state_cols)
   
-  tessiflow$flows[,(run_state_cols):=1]
+  tessiflow$flows[,(run_state_cols):=list(1:.N,1:.N,now()+1:.N,now()+1:.N)]
   
-  new_data <- flows_parse()[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")]
+  new_data <- tessiflow$flows[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")]
   old_data <- copy(tessiflow$flows)
   stub(flows_refresh,"flows_parse",new_data)
   flows_refresh()
@@ -131,19 +131,35 @@ test_that("flows_refresh updates the tessiflow data that doesn't involve run sta
   expect_equal(tessiflow$flows[c(2,6),..other_cols],new_data[c(1,2),..other_cols])
 })
 
-test_that("flows_refresh updates the tessiflow data that doesn't involve run state",{
+test_that("flows_refresh adds additional flow data",{
   local_flows_data_table()
-  run_state_cols <- c("status","retval","start_time","end_time")
-  other_cols <- setdiff(colnames(tessiflow$flows),run_state_cols)
-  
-  tessiflow$flows[,(run_state_cols):=1]
-  
-  new_data <- flows_parse()[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")]
-  old_data <- copy(tessiflow$flows)
+
+  new_data <- tessiflow$flows[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")]
   stub(flows_refresh,"flows_parse",new_data)
   flows_refresh()
   
   expect_equal(tessiflow$flows[7],new_data[3])
+})
+
+test_that("flows_refresh adds new columns",{
+  local_flows_data_table()
+  
+  new_data <- tessiflow$flows[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")][,new_column := 1]
+  stub(flows_refresh,"flows_parse",new_data)
+  flows_refresh()
+  
+  expect_equal(tessiflow$flows[,new_column],c(rep(NA,6),1))
+})
+
+test_that("flows_refresh works when columns missing",{
+  local_flows_data_table()
+
+  new_data <- tessiflow$flows[c(1,4,6)][,job_name:=c("Job 2","Job 3","New job")][,env := NULL]
+  old_data <- copy(tessiflow$flows)
+  stub(flows_refresh,"flows_parse",new_data)
+  flows_refresh()
+  
+  expect_equal(tessiflow$flows$env,c(old_data$env,list(NULL)))
 })
 
 
