@@ -52,6 +52,7 @@ tessiflow_start <- function() {
       tessiflow_run()
     },
     error = function(e) {
+      e <- rlang::cnd_entrace(e)
       error_print(e)
       countdown(30)
     }

@@ -4,7 +4,9 @@
 #'
 #' @describeIn error_handler selects error handler to use
 #' @param error error condition
+#' @importFrom rlang cnd_entrace
 error_handler <- function(error) {
+  error <- cnd_entrace(error)
   if (!interactive()) {
     if (!is.null(config::get("tessiflow.email")) && !is.null(config::get("tessiflow.smtp"))) {
       error_email(error)
