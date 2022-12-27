@@ -71,7 +71,7 @@ job_start <- function(flow_name, job_name) {
       stdout = "|",
       stderr = "|",
       env = unlist(job$env) %||% callr::rcmd_safe_env()
-    ), wait = TRUE)
+    ), wait = TRUE, wait_timeout = 30000)
 
     flows_update_job(
       flow_name, job_name,
@@ -104,6 +104,13 @@ job_step <- function(flow_name, job_name) {
 
   step <- job$step + 1
   current_step <- job$steps[[job$step + 1]]
+
+  job$r_session[[1]]$call(eval, list(job_make_remote_expr(c(current_step$env, job$env),
+                                                          as.character(current_step$`if`),
+                                                          as.character(current_step$run),
+                                                          shell = current_step$shell %||% "callr"
+  )))
+  
   flows_update_job(
     flow_name, job_name,
     list(step = step)
@@ -115,12 +122,6 @@ job_step <- function(flow_name, job_name) {
   } else {
     job_log_write(flow_name, job_name, paste("Beginning step", step, ":", current_step$name), console = TRUE)
 
-
-    job$r_session[[1]]$call(eval, list(job_make_remote_expr(c(current_step$env, job$env),
-      as.character(current_step$`if`),
-      as.character(current_step$run),
-      shell = current_step$shell %||% "callr"
-    )))
   }
 
   return(invisible())
@@ -177,11 +178,12 @@ job_on_error <- function(flow_name, job_name, error) {
   assert_class(error, "error")
   assert_flow_job_name(flow_name, job_name)
 
+  job_finalize(flow_name, job_name)
+  
   flows_update_job(flow_name, job_name, list(retval = 1))
   job_log_write(flow_name, job_name, error$message, console = TRUE)
   job_log_write(flow_name, job_name, cli::ansi_strip(format(error$trace)))
-  job_finalize(flow_name, job_name)
-
+  
   error$flow_name <- flow_name
   error$job_name <- job_name
   error_handler(error)
@@ -247,6 +249,12 @@ job_finalize <- function(flow_name, job_name) {
     job$retval <- 0
   }
 
+  if (is.null(r_session) || r_session[[1]]$get_state() == "finished") {
+    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
+  } else {
+    job$r_session[[1]]$close()
+  }
+  
   flows_update_job(
     flow_name, job_name,
     list(
@@ -256,14 +264,8 @@ job_finalize <- function(flow_name, job_name) {
       status = "Finished"
     )
   )
-
+  
   job_log_write(flow_name, job_name, paste("Finalizing job, pid:", job$pid), console = TRUE)
-
-  if (is.null(r_session) || r_session[[1]]$get_state() == "finished") {
-    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
-  } else {
-    job$r_session[[1]]$close()
-  }
 }
 
 #' @describeIn job_start Resets job for next run, updates flows table but NOT database, writes to log
@@ -294,8 +296,6 @@ job_stop <- function(flow_name, job_name) {
 
   job <- flows_get_job(flow_name, job_name)
 
-  job_log_write(flow_name, job_name, paste("Stopping job, pid:", job$pid), console = TRUE)
-
   job_finalize(flow_name, job_name)
 
   flows_update_job(
@@ -304,6 +304,9 @@ job_stop <- function(flow_name, job_name) {
       status = "Stopped"
     )
   )
+  
+  job_log_write(flow_name, job_name, paste("Stopping job, pid:", job$pid), console = TRUE)
+  
 }
 
 job_maybe_start_resilient <- error_handler_factory(job_maybe_start)

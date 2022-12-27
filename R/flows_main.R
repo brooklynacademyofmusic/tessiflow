@@ -145,12 +145,14 @@ flows_update_job <- function(.flow_name, .job_name, data) {
   assert_flow_job_name(.flow_name, .job_name)
 
   assert_list(data)
+  
+  local_job <- tessiflow$flows[flow_name == .flow_name &
+                           job_name == .job_name, ][,(names(data)) := data]
+
+  sqlite_upsert("jobs", local_job)
 
   tessiflow$flows[flow_name == .flow_name &
     job_name == .job_name, (names(data)) := data]
-
-  sqlite_upsert("jobs", tessiflow$flows[flow_name == .flow_name &
-    job_name == .job_name, ])
 
   invisible()
 }
