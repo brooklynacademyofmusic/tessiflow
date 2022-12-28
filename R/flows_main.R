@@ -7,6 +7,8 @@
 #'
 #' @return NULL, never!
 flows_main <- function() {
+  data.table::setDTthreads(1) # Don't multithread this loop to avoid database/process locks
+  
   status <- on.schedule <- NULL
 
   tessiflow$flows <- flows_parse()
