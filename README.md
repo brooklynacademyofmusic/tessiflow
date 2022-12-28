@@ -4,7 +4,7 @@
 
 [![R-CMD-check](https://github.com/skysyzygy/tessiflow/workflows/R-CMD-check/badge.svg)](https://github.com/skysyzygy/tessiflow/actions)
 [![Codecov test
-coverage](https://codecov.io/gh/skysyzygy/tessiflow/branch/master/graph/badge.svg)](https://codecov.io/gh/skysyzygy/tessiflow?branch=master)
+coverage](https://codecov.io/gh/skysyzygy/tessiflow/branch/master/graph/badge.svg?token=KDSM648X28)](https://codecov.io/gh/skysyzygy/tessiflow?branch=master)
 
 <!-- badges: end -->
 
