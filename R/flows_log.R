@@ -70,10 +70,9 @@ flows_log_get_last_run <- function(flows, jobs) {
   query_tbl <- data.frame(flow_name = flows, job_name = jobs)
 
   tbl(tessiflow$db, "jobs") %>%
-    inner_join(query_tbl, by = c("flow_name", "job_name"), copy = TRUE) %>%
     group_by(flow_name, job_name) %>%
     slice_max(start_time, 1) %>%
-    collect()
+    collect() %>% inner_join(query_tbl, by = c("flow_name", "job_name"))
 }
 
 #' flows_log_get_create_time
