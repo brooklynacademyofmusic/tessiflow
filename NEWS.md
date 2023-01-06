@@ -1,3 +1,9 @@
+# tessiflow 0.1.2
+
+* Updates to avoid database locking
+- single thread the flows_main process to avoid database write collisions
+- don't write to the database on flows_log_get_last_run -- this is a lot of unnecessary writes and greatly increases the risk of write collision
+
 # tessiflow 0.1.1
 
 * Updates to improve failure resistance
