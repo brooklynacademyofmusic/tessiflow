@@ -13,6 +13,8 @@ flows_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
 
   if (is.null(tessiflow$db)) {
     tessiflow$db <- DBI::dbConnect(RSQLite::SQLite(), file.path(flows_log_dir, "tessiflow.sqlite"))
+    # Set sqlite timeout to 5 seconds
+    RSQLite::sqliteSetBusyHandler(tessiflow$db,5000) 
   }
 
   if (!DBI::dbExistsTable(tessiflow$db, "jobs")) {
