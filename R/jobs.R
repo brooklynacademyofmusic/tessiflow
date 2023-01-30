@@ -201,11 +201,11 @@ job_poll <- function(flow_name, job_name) {
     return(invisible())
   }
 
-  while (TRUE) {
+#  while (TRUE) {
     io_state <- job$r_session[[1]]$poll_io(1)
-    if (!"ready" %in% io_state) {
-      break
-    }
+    # if (!"ready" %in% io_state) {
+    #   break
+    # }
 
     io_names <- names(which(io_state == "ready"))
     io_funs <- c(
@@ -222,13 +222,13 @@ job_poll <- function(flow_name, job_name) {
     }
     if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {
       job_on_error(flow_name, job_name, output[["process"]]$error$parent)
-      break
+      # break
     }
     if (!job$r_session[[1]]$is_alive()) {
       job_finalize(flow_name, job_name)
-      break
+      # break
     }
-  }
+  # }
 
   if (job$r_session[[1]]$get_state() == "idle") {
     job_step(flow_name, job_name)

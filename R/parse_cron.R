@@ -47,7 +47,7 @@
 #' @return last and next runtime
 #' @importFrom checkmate assert_string
 #' @importFrom lubridate make_date hours minutes now force_tz ceiling_date
-#'
+#' @importFrom stats na.omit
 parse_cron <- function(cron_string) {
   . <- datetime <- NULL
 

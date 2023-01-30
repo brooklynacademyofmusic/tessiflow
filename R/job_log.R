@@ -9,7 +9,7 @@
 #' @importFrom checkmate assert_character
 #' @importFrom lubridate today
 #' @importFrom utils zip
-#'
+#' @importFrom stats na.omit
 job_log_write <- function(flow_name, job_name = NA, lines, console = FALSE) {
   assert_character(lines)
 

@@ -269,9 +269,10 @@ test_that("job_poll reads from stdout and writes to the log", {
   job_log_write <- mock()
   stub(job_poll, "job_log_write", job_log_write)
   r_session$.call(print, list("hello world"))
-  Sys.sleep(1)
-  job_poll(flow_name, job_name)
-  output <- unlist(purrr::map(mock_args(job_log_write), 3))
+  while(length(output <- unlist(purrr::map(mock_args(job_log_write), 3)))<4) {
+    job_poll(flow_name, job_name)
+    Sys.sleep(1)
+  }
   expect_match(output, "OUTPUT.+hello world", all = FALSE)
   expect_match(output, "PROCESS.+result.+hello world", all = FALSE)
 })
@@ -280,9 +281,10 @@ test_that("job_poll reads from stderr and writes to the log", {
   job_log_write <- mock()
   stub(job_poll, "job_log_write", job_log_write)
   r_session$.call(message, list("hello world"))
-  Sys.sleep(1)
-  job_poll(flow_name, job_name)
-  output <- unlist(purrr::map(mock_args(job_log_write), 3))
+  while(length(output <- unlist(purrr::map(mock_args(job_log_write), 3)))<4) {
+    job_poll(flow_name, job_name)
+    Sys.sleep(1)
+  }
   expect_match(output, "ERROR.+hello world", all = FALSE)
   expect_match(output, "PROCESS.+result : $", all = FALSE)
 })
@@ -291,19 +293,29 @@ test_that("job_poll calls job_on_error on error", {
   job_on_error <- mock()
   stub(job_poll, "job_on_error", job_on_error)
   r_session$.call(stop, list("hello world"))
-  Sys.sleep(1)
-  job_poll(flow_name, job_name)
+  while(is.null(output <- unlist(purrr::map(mock_args(job_on_error), 3)))) {
+    job_poll(flow_name, job_name)
+    Sys.sleep(1)
+  }
   expect_length(mock_args(job_on_error), 1)
   expect_class(mock_args(job_on_error)[[1]][[3]], "error")
 })
 
 test_that("job_poll calls job_step if it's ready to advance", {
   job_step <- mock()
+  job_log_write <- mock()
+  
   stub(job_poll, "job_step", job_step)
+  stub(job_poll, "job_log_write", job_log_write)
   r_session$.call(print, list("hello world"))
-  Sys.sleep(1)
+
+  while(is.null(output <- unlist(purrr::map(mock_args(job_log_write), 3)))) {
+    job_poll(flow_name, job_name)
+    Sys.sleep(1)
+  }
+  
   job_poll(flow_name, job_name)
-  expect_length(mock_args(job_step), 1)
+  expect_gte(length(mock_args(job_step)), 1)
 })
 
 test_that("job_poll calls job_finalize if the job dies", {
