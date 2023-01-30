@@ -73,7 +73,7 @@ flows_log_get_last_run <- function(flows, jobs) {
 
   tbl(tessiflow$db, "jobs") %>%
     group_by(flow_name, job_name) %>%
-    slice_max(start_time, 1) %>%
+    slice_max(start_time, n = 1) %>%
     collect() %>% inner_join(query_tbl, by = c("flow_name", "job_name"))
 }
 

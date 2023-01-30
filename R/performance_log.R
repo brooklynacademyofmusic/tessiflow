@@ -109,7 +109,7 @@ performance_log_update <- function(pids = sapply(
   flows_data <- tbl(tessiflow$db2, "jobs") %>%
     filter(pid %in% pids & status == "Running") %>%
     group_by(pid) %>%
-    slice_max(start_time, 1) %>%
+    slice_max(start_time, n = 1) %>%
     select(flow_name, job_name, step, pid)
 
   sqlite_upsert("performance",
