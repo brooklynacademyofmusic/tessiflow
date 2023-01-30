@@ -1,3 +1,9 @@
+# tessiflow 0.1.3
+
+* Update to avoid main loop lock
+- don't infinite loop in job_poll on output, just poll once per loop and see what's there
+- database lock resolved by setting timeout on SQLite database driver, needed for multithreading
+
 # tessiflow 0.1.2
 
 * Updates to avoid database locking

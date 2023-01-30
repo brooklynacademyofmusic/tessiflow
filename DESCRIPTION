@@ -1,6 +1,6 @@
 Package: tessiflow
 Title: Workflow runner for Tessiract
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: 
     person(given = "Sky",
            family = "Syzygy",
