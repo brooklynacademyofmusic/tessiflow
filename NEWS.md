@@ -1,3 +1,7 @@
+# tessiflow 0.1.4
+
+* fix bugs related to dependencies when they haven't run yet, or there are multiple
+
 # tessiflow 0.1.3
 
 * Update to avoid main loop lock
