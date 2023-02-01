@@ -15,7 +15,7 @@ job_true$scheduled_runs <- list(
 )
 job_true$`if` <- "1 == 1"
 job_true$`runs-on` <- Sys.info()["nodename"]
-job_true$needs <- list("Job 2")
+job_true$needs <- list("Job 2", "Job 3")
 
 job_false <- list()
 job_false$scheduled_runs <- list(
@@ -64,7 +64,7 @@ jobs[, `:=`(
   retval = 0
 )]
 last_run_times <- function(flow, job) {
-  jobs[flow_name == flow & job_name == job, ]
+  jobs[flow_name == flow & job_name %in% job, ]
 }
 stub(job_maybe_start, "flows_log_get_last_run", last_run_times)
 
@@ -74,7 +74,7 @@ test_that("job_maybe_start runs jobs when needs are met and retval is 0", {
   stub(job_maybe_start, "job_start", job_start)
 
   tessiflow$flows[1, needs := list(job_false$needs)]
-
+  
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
 
@@ -82,9 +82,19 @@ test_that("job_maybe_start runs jobs when needs are met and retval is 0", {
 
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
+  
+  jobs[job_name %in% c("Job 2","Job 3"), `:=`(end_time = NA)]
 
+  job_maybe_start(flow_name, job_name)
+  expect_length(mock_args(job_start), 0)
+  
   jobs[job_name == "Job 2", `:=`(end_time = now())]
 
+  job_maybe_start(flow_name, job_name)
+  expect_length(mock_args(job_start), 0)
+  
+  jobs[job_name == "Job 3", `:=`(end_time = now())]
+  
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 1)
 })
@@ -102,6 +112,14 @@ test_that("job_maybe_start runs jobs when needs are met and retval <> 0, but onl
 
   tessiflow$flows[1, `if` := job_true$`if`]
 
+  jobs[job_name %in% c("Job 2","Job 3"), `:=`(end_time = NA)]
+  
+  job_maybe_start(flow_name, job_name)
+  expect_length(mock_args(job_start), 0)
+
+  tessiflow$flows[1, needs := list(job_true$needs)]
+  jobs[job_name %in% c("Job 2","Job 3"), `:=`(end_time = now(), retval = 1)]
+  
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 1)
 })

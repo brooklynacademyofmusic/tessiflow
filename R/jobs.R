@@ -29,12 +29,13 @@ job_maybe_start <- function(flow_name, job_name) {
   # check if
   check_if <- eval(rlang::parse_expr(as.character(job$`if` %||% NA))) # T/F/NA
   # check needs
-  dependencies <- flows_log_get_last_run(job$flow_name, job$needs[[1]] %||% "")
-  if (nrow(dependencies) == 0) dependencies <- NULL
+  dependencies <- flows_log_get_last_run(job$flow_name, job$needs %||% "")
 
-  check_needs <- all(dependencies$end_time > last_run$end_time) &&
+  check_needs <- !any(is.na(dependencies$end_time)) && 
+    all(dependencies$end_time > last_run$end_time) &&
     (all(dependencies$retval == 0) || !is.na(check_if) && check_if) &&
-    nrow(dependencies) == length(job$needs[[1]])
+    nrow(dependencies) == length(job$needs)
+  
   # check schedule
   check_schedule <- any(job$scheduled_runs[[1]] %>% unlist() %>% purrr::keep(~ . < now()) %||% NA >
     last_run$end_time) # T/F/NA
