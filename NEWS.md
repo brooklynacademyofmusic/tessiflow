@@ -1,3 +1,7 @@
+# tessiflow 0.1.5
+
+* add rich rlang error information to error output
+
 # tessiflow 0.1.4
 
 * fix bugs related to dependencies when they haven't run yet, or there are multiple
