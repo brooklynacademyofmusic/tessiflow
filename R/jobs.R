@@ -73,7 +73,7 @@ job_start <- function(flow_name, job_name) {
       stderr = "|",
       env = unlist(job$env) %||% callr::rcmd_safe_env()
     ), wait = TRUE, wait_timeout = 30000)
-
+    
     flows_update_job(
       flow_name, job_name,
       list(
@@ -166,7 +166,10 @@ job_make_remote_expr <- function(env_vars = NULL, if_expr = NULL, run_expr = NUL
       message("'if' expression is not true, skipping")
       return(invisible(NULL))
     } else {
-      !!as.call(c(`{`, run_expr))
+      tryCatch(
+        !!as.call(c(`{`, run_expr)),
+        error = rlang::entrace
+      )
     }
   }))
 }
@@ -202,11 +205,7 @@ job_poll <- function(flow_name, job_name) {
     return(invisible())
   }
 
-#  while (TRUE) {
     io_state <- job$r_session[[1]]$poll_io(1)
-    # if (!"ready" %in% io_state) {
-    #   break
-    # }
 
     io_names <- names(which(io_state == "ready"))
     io_funs <- c(
@@ -222,14 +221,12 @@ job_poll <- function(flow_name, job_name) {
       job_log_write(flow_name, job_name, output_str)
     }
     if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {
-      job_on_error(flow_name, job_name, output[["process"]]$error$parent)
-      # break
+      e <- job$r_session[[1]]$run(rlang::last_error,package=T)
+      job_on_error(flow_name, job_name, e)
     }
     if (!job$r_session[[1]]$is_alive()) {
       job_finalize(flow_name, job_name)
-      # break
     }
-  # }
 
   if (job$r_session[[1]]$get_state() == "idle") {
     job_step(flow_name, job_name)
