@@ -106,7 +106,7 @@ job_step <- function(flow_name, job_name) {
   step <- job$step + 1
   current_step <- job$steps[[job$step + 1]]
 
-  job$r_session[[1]]$call(job_make_remote_expr(c(current_step$env, job$env),
+  job$r_session[[1]]$call(job_make_remote_fun(c(current_step$env, job$env),
                                                           as.character(current_step$`if`),
                                                           as.character(current_step$run),
                                                           shell = current_step$shell %||% "callr"
@@ -128,9 +128,9 @@ job_step <- function(flow_name, job_name) {
   return(invisible())
 }
 
-#' job_make_remote_expr
+#' job_make_remote_fun
 #'
-#' Creates an expression object that has local environment variables `env`, does nothing if `if_expr` evaluates
+#' Creates an function that sets local environment variables `env`, does nothing if `if_expr` evaluates
 #' to false and otherwise evaluates `run_expr` transparently. If shell is not `callr` then the `run_expr` gets
 #' wrapped in a `system()` command to execute the shell.
 #'
@@ -139,8 +139,8 @@ job_step <- function(flow_name, job_name) {
 #' @param run_expr deparsed run expression
 #' @param shell string setting the shell, default is `callr`
 #'
-#' @return R expression
-job_make_remote_expr <- function(env_vars = list(), if_expr = NULL, run_expr = NULL, shell = "callr") {
+#' @return function
+job_make_remote_fun <- function(env_vars = list(), if_expr = NULL, run_expr = NULL, shell = "callr") {
   assert_character(if_expr, max.len = 1, null.ok = TRUE)
   assert_character(run_expr, max.len = 1, null.ok = TRUE)
   assert_character(shell, max.len = 1, null.ok = TRUE)

@@ -141,31 +141,31 @@ test_that("job_maybe_start runs jobs when they are scheduled", {
 })
 
 
-# job_make_remote_expr ----------------------------------------------------
+# job_make_remote_fun ----------------------------------------------------
 
-test_that("job_make_remote_expr runs code", {
-  expect_error(job_make_remote_expr(run_expr = "stop(\"Hello world\")")(), "Hello world")
+test_that("job_make_remote_fun runs code", {
+  expect_error(job_make_remote_fun(run_expr = "stop(\"Hello world\")")(), "Hello world")
 })
 
-test_that("job_make_remote_expr only runs if `if` true", {
-  expect_error(job_make_remote_expr(NULL, "TRUE", "stop(\"Hello world\")")(), "Hello world")
-  expect_message(job_make_remote_expr(NULL, "FALSE", "stop(\"Hello world\")")(), "skipping")
+test_that("job_make_remote_fun only runs if `if` true", {
+  expect_error(job_make_remote_fun(NULL, "TRUE", "stop(\"Hello world\")")(), "Hello world")
+  expect_message(job_make_remote_fun(NULL, "FALSE", "stop(\"Hello world\")")(), "skipping")
 })
 
-test_that("job_make_remote_expr has local environment variables", {
-  expect_equal(job_make_remote_expr(
+test_that("job_make_remote_fun has local environment variables", {
+  expect_equal(job_make_remote_fun(
     list(environment = "variable"), NULL,
     "Sys.getenv(\"environment\")"
   )(), "variable")
 })
 
-test_that("job_make_remote_expr works with other shells", {
-  expect_equal(job_make_remote_expr(list(environment = "variable"), NULL,
+test_that("job_make_remote_fun works with other shells", {
+  expect_equal(job_make_remote_fun(list(environment = "variable"), NULL,
     "echo $environment",
     shell = "bash -c"
   )(), "variable")
   if (.Platform$OS.type == "windows") {
-    expect_equal(job_make_remote_expr(list(environment = "variable"), NULL,
+    expect_equal(job_make_remote_fun(list(environment = "variable"), NULL,
       "echo %environment%",
       shell = "cmd /c {0}"
     )(), "variable")
@@ -264,11 +264,11 @@ test_that("job_step writes to the log file and console", {
 
 flows_update_job(flow_name, job_name, list(step = 0))
 test_that("job_step passed on the flow and step environment variables", {
-  job_make_remote_expr <- mock(TRUE)
-  stub(job_step, "job_make_remote_expr", job_make_remote_expr)
+  job_make_remote_fun <- mock(TRUE)
+  stub(job_step, "job_make_remote_fun", job_make_remote_fun)
   job_step(flow_name, job_name)
-  expect_length(mock_args(job_make_remote_expr), 1)
-  expect_mapequal(mock_args(job_make_remote_expr)[[1]][[1]], c(job$env, job$steps[[1]]$env))
+  expect_length(mock_args(job_make_remote_fun), 1)
+  expect_mapequal(mock_args(job_make_remote_fun)[[1]][[1]], c(job$env, job$steps[[1]]$env))
 })
 
 test_that("job_step calls job_finalize when all steps are exhausted", {
@@ -311,7 +311,7 @@ test_that("job_poll reads from stderr and writes to the log", {
 test_that("job_poll calls job_on_error on error", {
   job_on_error <- mock()
   stub(job_poll, "job_on_error", job_on_error)
-  r_session$.call(job_make_remote_expr(run_expr="stop('hello world')"))
+  r_session$.call(job_make_remote_fun(run_expr="stop('hello world')"))
   while(is.null(output <- unlist(purrr::map(mock_args(job_on_error), 3)))) {
     job_poll(flow_name, job_name)
     Sys.sleep(1)
@@ -323,7 +323,7 @@ test_that("job_poll calls job_on_error on error", {
 test_that("job_poll gets rich rlang error information", {
   job_on_error <- mock()
   stub(job_poll, "job_on_error", job_on_error)
-  r_session$.call(job_make_remote_expr(run_expr="checkmate::assert_character(1)"))
+  r_session$.call(job_make_remote_fun(run_expr="checkmate::assert_character(1)"))
   while(is.null(output <- unlist(purrr::map(mock_args(job_on_error), 3)))) {
     job_poll(flow_name, job_name)
     Sys.sleep(1)

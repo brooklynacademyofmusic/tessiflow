@@ -174,7 +174,7 @@ test_parse_run <- function(step) {
     return(TRUE)
   }
 
-  ret <- tryCatch(job_make_remote_expr(
+  ret <- tryCatch(job_make_remote_fun(
     run_expr = as.character(step$run),
     env_vars = step$env,
     if_expr = as.character(step$`if`),
