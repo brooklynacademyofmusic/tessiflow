@@ -1,3 +1,7 @@
+# tessiflow 0.1.6
+
+* add even richer rlang error information to error output
+
 # tessiflow 0.1.5
 
 * add rich rlang error information to error output
