@@ -106,11 +106,11 @@ job_step <- function(flow_name, job_name) {
   step <- job$step + 1
   current_step <- job$steps[[job$step + 1]]
 
-  job$r_session[[1]]$call(eval, list(job_make_remote_expr(c(current_step$env, job$env),
+  job$r_session[[1]]$call(job_make_remote_expr(c(current_step$env, job$env),
                                                           as.character(current_step$`if`),
                                                           as.character(current_step$run),
                                                           shell = current_step$shell %||% "callr"
-  )))
+  ))
   
   flows_update_job(
     flow_name, job_name,
@@ -140,7 +140,7 @@ job_step <- function(flow_name, job_name) {
 #' @param shell string setting the shell, default is `callr`
 #'
 #' @return R expression
-job_make_remote_expr <- function(env_vars = NULL, if_expr = NULL, run_expr = NULL, shell = "callr") {
+job_make_remote_expr <- function(env_vars = list(), if_expr = NULL, run_expr = NULL, shell = "callr") {
   assert_character(if_expr, max.len = 1, null.ok = TRUE)
   assert_character(run_expr, max.len = 1, null.ok = TRUE)
   assert_character(shell, max.len = 1, null.ok = TRUE)
@@ -161,17 +161,21 @@ job_make_remote_expr <- function(env_vars = NULL, if_expr = NULL, run_expr = NUL
     rlang::parse_exprs(run_expr)
   }
 
-  rlang::expr(withr::with_envvar(!!env_vars, {
-    if (!(!!rlang::parse_expr(if_expr))) {
-      message("'if' expression is not true, skipping")
-      return(invisible(NULL))
-    } else {
-      tryCatch(
-        !!as.call(c(`{`, run_expr)),
-        error = rlang::entrace
-      )
-    }
-  }))
+  as.function(list(rlang::expr(
+    withCallingHandlers(
+      withr::with_envvar(!!env_vars,{
+        if (!(!!rlang::parse_expr(if_expr))) {
+          message("'if' expression is not true, skipping")
+          return(invisible(NULL))
+        } else {
+          !!!run_expr
+        }
+      }),
+      error=rlang::entrace,
+      warning=rlang::entrace,
+      message=rlang::entrace
+  ))))
+
 }
 
 #' @param error error condition object
