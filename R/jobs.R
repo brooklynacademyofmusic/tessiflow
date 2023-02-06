@@ -74,12 +74,15 @@ job_start <- function(flow_name, job_name) {
       env = unlist(job$env) %||% callr::rcmd_safe_env()
     ), wait = TRUE, wait_timeout = 30000)
     
+    tempdir <- r_session$run(tempdir)
+    
     flows_update_job(
       flow_name, job_name,
       list(
         r_session = list(r_session),
         pid = r_session$get_pid(),
         step = 0,
+        tempdir = tempdir,
         start_time = now(),
         status = "Running"
       )
@@ -209,28 +212,28 @@ job_poll <- function(flow_name, job_name) {
     return(invisible())
   }
 
-    io_state <- job$r_session[[1]]$poll_io(1)
-
-    io_names <- names(which(io_state == "ready"))
-    io_funs <- c(
-      output = quote(read_output_lines()),
-      error = quote(read_error_lines()),
-      process = quote(read())
-    )[io_names]
-
-    output <- purrr::discard(lapply(io_funs, eval, envir = job$r_session[[1]]), ~ length(.) == 0)
-    if (length(output)) {
-      output_str <- lapply(output, purrr::imap, ~ paste(.y, ":", .x))
-      output_str <- purrr::imap(output_str, ~ paste("[", toupper(.y), "]", .x)) %>% purrr::flatten_chr()
-      job_log_write(flow_name, job_name, output_str)
-    }
-    if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {
-      e <- job$r_session[[1]]$run(rlang::last_error,package=T)
-      job_on_error(flow_name, job_name, e)
-    }
-    if (!job$r_session[[1]]$is_alive()) {
-      job_finalize(flow_name, job_name)
-    }
+  io_state <- job$r_session[[1]]$poll_io(1)
+  
+  io_names <- names(which(io_state == "ready"))
+  io_funs <- c(
+    output = quote(read_output_lines()),
+    error = quote(read_error_lines()),
+    process = quote(read())
+  )[io_names]
+  
+  output <- purrr::discard(lapply(io_funs, eval, envir = job$r_session[[1]]), ~ length(.) == 0)
+  if (length(output)) {
+    output_str <- lapply(output, purrr::imap, ~ paste(.y, ":", .x))
+    output_str <- purrr::imap(output_str, ~ paste("[", toupper(.y), "]", .x)) %>% purrr::flatten_chr()
+    job_log_write(flow_name, job_name, output_str)
+  }
+  if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {
+    e <- job$r_session[[1]]$run(rlang::last_error,package=T)
+    job_on_error(flow_name, job_name, e)
+  }
+  if (!job$r_session[[1]]$is_alive()) {
+    job_finalize(flow_name, job_name)
+  }
 
   if (job$r_session[[1]]$get_state() == "idle") {
     job_step(flow_name, job_name)
@@ -256,6 +259,9 @@ job_finalize <- function(flow_name, job_name) {
   } else {
     job$r_session[[1]]$close()
   }
+  
+  if(dir.exists(job$tempdir))
+    file.remove(job$tempdir, recursive = TRUE)
   
   flows_update_job(
     flow_name, job_name,

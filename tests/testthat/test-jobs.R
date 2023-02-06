@@ -202,7 +202,7 @@ test_that("job_start updates the flows data.table and database", {
   job_start(flow_name, job_name)
   expect_length(mock_args(flows_update_job), 1)
   expect_names(names(unlist(mock_args(flows_update_job))[-c(1, 2)]),
-    permutation.of = c("r_session", "pid", "status", "start_time", "step")
+    permutation.of = c("r_session", "pid", "status", "start_time", "step", "tempdir")
   )
 })
 
@@ -214,6 +214,12 @@ test_that("job_start writes to the log file and console", {
   expect_length(mock_args(job_log_write), 1)
   expect_match(mock_args(job_log_write)[[1]][[3]], "Starting job")
   expect_equal(unlist(mock_args(job_log_write)[[1]])[4], c(console = "TRUE"))
+})
+
+test_that("job_start gets tempdir info from the process", {
+  local_flows_data_table()
+  job_start(flow_name, job_name)
+  expect_true(dir.exists(tessiflow$flows$tempdir[[1]]))
 })
 
 # job_step ----------------------------------------------------------------
@@ -420,10 +426,11 @@ test_that("job_on_error calls error_handler with flow and job info", {
 # job_finalize ------------------------------------------------------------
 
 local_flows_data_table()
-flows_update_job(flow_name, job_name, list(r_session = list(r_session)))
+flows_update_job(flow_name, job_name, list(r_session = list(r_session), tempdir=r_session$run(tempdir)))
 flows_update_job <- mock(TRUE, cycle = TRUE)
 stub(job_finalize, "flows_update_job", flows_update_job)
 stub(job_finalize, "job_log_write", TRUE)
+stub(job_finalize, "file.remove", TRUE)
 
 test_that("job_finalize updates the flows data.table and database", {
   job_finalize(flow_name, job_name)
@@ -445,6 +452,8 @@ test_that("job_finalize writes to the log file and console", {
 # unstub close
 r_session$close <- r_session$.close
 test_that("job_finalize closes the session and all subprocesses", {
+  # unstub file.remove
+  stub(job_finalize,"file.remove",base::file.remove)
   expect_equal(job$r_session[[1]]$get_state(), "idle")
   job$r_session[[1]]$run(callr::r_bg, list(Sys.sleep, list(10)), package = TRUE)
   children <- ps::ps_children(job$r_session[[1]]$as_ps_handle())
@@ -454,10 +463,18 @@ test_that("job_finalize closes the session and all subprocesses", {
 })
 
 test_that("job_finalize warns if there's no session to close", {
-  local_flows_data_table()
   expect_warning(job_finalize(flow_name, job_name), "no running R session")
 })
 
+# unstub job_start
+rm(job_start)
+test_that("job_finalize cleans up the tempdir", {
+  suppressMessages(job_start(flow_name, job_name))
+  expect_true(any(dir.exists(tessiflow$flows$tempdir)))
+  tessiflow$flows$r_session[[1]]$call(q)
+  job_finalize(flow_name, job_name)
+  expect_false(any(dir.exists(tessiflow$flows$tempdir)))
+})
 
 # job_reset ------------------------------------------------------------
 
