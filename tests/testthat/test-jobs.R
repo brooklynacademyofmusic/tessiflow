@@ -430,7 +430,7 @@ flows_update_job(flow_name, job_name, list(r_session = list(r_session), tempdir=
 flows_update_job <- mock(TRUE, cycle = TRUE)
 stub(job_finalize, "flows_update_job", flows_update_job)
 stub(job_finalize, "job_log_write", TRUE)
-stub(job_finalize, "file.remove", TRUE)
+stub(job_finalize, "unlink", TRUE)
 
 test_that("job_finalize updates the flows data.table and database", {
   job_finalize(flow_name, job_name)
@@ -453,7 +453,7 @@ test_that("job_finalize writes to the log file and console", {
 r_session$close <- r_session$.close
 test_that("job_finalize closes the session and all subprocesses", {
   # unstub file.remove
-  stub(job_finalize,"file.remove",base::file.remove)
+  stub(job_finalize,"unlink",base::unlink)
   expect_equal(job$r_session[[1]]$get_state(), "idle")
   job$r_session[[1]]$run(callr::r_bg, list(Sys.sleep, list(10)), package = TRUE)
   children <- ps::ps_children(job$r_session[[1]]$as_ps_handle())
