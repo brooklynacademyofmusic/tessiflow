@@ -261,7 +261,7 @@ job_finalize <- function(flow_name, job_name) {
   }
   
   if(dir.exists(job$tempdir))
-    file.remove(job$tempdir, recursive = TRUE)
+    unlink(job$tempdir, recursive = TRUE, force = TRUE)
   
   flows_update_job(
     flow_name, job_name,
