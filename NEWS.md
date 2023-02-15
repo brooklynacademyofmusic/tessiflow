@@ -1,3 +1,7 @@
+# tessiflow 0.1.7
+
+* remove tempdir for subprocesses after run in case of failure
+
 # tessiflow 0.1.6
 
 * add even richer rlang error information to error output
