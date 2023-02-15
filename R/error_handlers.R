@@ -7,6 +7,9 @@
 #' @importFrom rlang cnd_entrace
 error_handler <- function(error) {
   error <- cnd_entrace(error)
+  
+  error$trace$error_frame = TRUE
+  
   if (!interactive()) {
     if (!is.null(config::get("tessiflow.email")) && !is.null(config::get("tessiflow.smtp"))) {
       error_email(error)
