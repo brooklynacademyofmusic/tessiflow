@@ -171,13 +171,14 @@ job_make_remote_fun <- function(env_vars = list(), if_expr = NULL, run_expr = NU
           message("'if' expression is not true, skipping")
           return(invisible(NULL))
         } else {
-          !!!run_expr
+          local({
+            options("rlang_trace_top_env" = rlang::current_env())
+            !!!run_expr
+          })
           invisible(NULL)
         }
       }),
-      error=rlang::entrace,
-      warning=rlang::entrace,
-      message=rlang::entrace
+      condition = rlang::entrace
   ))))
 
 }

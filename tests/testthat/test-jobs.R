@@ -341,7 +341,7 @@ test_that("job_poll gets rich rlang error information", {
   expect_length(mock_args(job_on_error), 1)
   error <- mock_args(job_on_error)[[1]][[3]]
   expect_class(error, "rlang_error")
-  expect_true(any(error$trace$call=="checkmate::assert_character(1)"))
+  expect_true(error$trace$call[[1]]=="checkmate::assert_character(1)")
 })
 
 test_that("job_poll calls job_step if it's ready to advance", {
