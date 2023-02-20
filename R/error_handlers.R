@@ -7,9 +7,7 @@
 #' @importFrom rlang cnd_entrace
 error_handler <- function(error) {
   error <- cnd_entrace(error)
-  
-  error$trace$error_frame = TRUE
-  
+
   if (!interactive()) {
     if (!is.null(config::get("tessiflow.email")) && !is.null(config::get("tessiflow.smtp"))) {
       error_email(error)
@@ -26,6 +24,7 @@ error_handler <- function(error) {
 error_print <- function(error) {
   cli::cat_line(rlang::cnd_message(error, prefix = TRUE))
   print(error$trace)
+  print(error$trace$call)
 }
 
 #' @describeIn error_handler sends an error message to an email address
@@ -46,8 +45,9 @@ error_email <- function(error) {
     format(cli::ansi_html_style()),
     "</style><p>",
     process_name, "reported the following error:<p><pre>",
-    cli::ansi_html(rlang::cnd_message(error, prefix = TRUE)), "<br>",
-    paste(cli::ansi_html(format(error$trace)), collapse = "<br>")
+    cli::ansi_html(rlang::cnd_message(error, prefix = TRUE)), "<br/>",
+    paste(cli::ansi_html(format(error$trace)), collapse = "<br/>"), "</p><p>",
+    paste(gsub("\\n","<br/>",error$trace$call), collapse = "<br/>"), "</p>"
   ), collapse = " ")
 
   send_email(subject = subject, body = body)
