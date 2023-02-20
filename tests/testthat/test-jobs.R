@@ -152,20 +152,24 @@ test_that("job_make_remote_fun only runs if `if` true", {
   expect_message(job_make_remote_fun(NULL, "FALSE", "stop(\"Hello world\")")(), "skipping")
 })
 
+test_that("job_make_remote_fun returns NULL", {
+  expect_equal(job_make_remote_fun(run_expr = "1")(),NULL)
+})
+
 test_that("job_make_remote_fun has local environment variables", {
-  expect_equal(job_make_remote_fun(
+  expect_output(job_make_remote_fun(
     list(environment = "variable"), NULL,
-    "Sys.getenv(\"environment\")"
+    "cat(Sys.getenv(\"environment\"))"
   )(), "variable")
 })
 
 test_that("job_make_remote_fun works with other shells", {
-  expect_equal(job_make_remote_fun(list(environment = "variable"), NULL,
+  expect_output(job_make_remote_fun(list(environment = "variable"), NULL,
     "echo $environment",
     shell = "bash -c"
   )(), "variable")
   if (.Platform$OS.type == "windows") {
-    expect_equal(job_make_remote_fun(list(environment = "variable"), NULL,
+    expect_output(job_make_remote_fun(list(environment = "variable"), NULL,
       "echo %environment%",
       shell = "cmd /c {0}"
     )(), "variable")
