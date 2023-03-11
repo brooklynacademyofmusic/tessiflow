@@ -5,6 +5,7 @@
 \alias{job_step}
 \alias{job_on_error}
 \alias{job_poll}
+\alias{job_read}
 \alias{job_finalize}
 \alias{job_reset}
 \alias{job_stop}
@@ -18,6 +19,8 @@ job_on_error(flow_name, job_name, error)
 
 job_poll(flow_name, job_name)
 
+job_read(flow_name, job_name, all = FALSE)
+
 job_finalize(flow_name, job_name)
 
 job_reset(flow_name, job_name)
@@ -30,9 +33,13 @@ job_stop(flow_name, job_name)
 \item{job_name}{string job name}
 
 \item{error}{error condition object}
+
+\item{all}{boolean whether to wait for the process to finish and return all output. (Most useful when process has already finished.)}
 }
 \value{
 invisibly
+
+character vector of output from process. Names are one or more of \code{output}, \code{error} and \code{process} and match the names from \code{processx::poll_io}
 }
 \description{
 Run the job in a \code{callr} process
@@ -43,7 +50,9 @@ Run the job in a \code{callr} process
 
 \item \code{job_on_error()}: Updates flows table and database, writes to log, and finalizes running session on error
 
-\item \code{job_poll()}: Read \code{stdout} and \code{stderr} from the process and write to log. When ready, call job_step
+\item \code{job_poll()}: poll the process \code{stdout} and \code{stderr} streams and call job_step when ready.
+
+\item \code{job_read()}: Read \code{stdout} and \code{stderr} from the process and write to log. When ready, call job_step
 
 \item \code{job_finalize()}: Closes R session, writes to log, console and database, and updates \code{retval}.
 

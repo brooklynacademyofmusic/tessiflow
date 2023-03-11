@@ -290,33 +290,35 @@ test_that("job_step calls job_finalize when all steps are exhausted", {
   expect_length(mock_args(job_finalize), 1)
 })
 
-# job_poll ----------------------------------------------------------------
+# job_read ----------------------------------------------------------------
 
-stub(job_poll, "job_step", TRUE)
-
-test_that("job_poll reads from stdout and writes to the log", {
+test_that("job_read reads from stdout and writes to the log", {
   job_log_write <- mock()
-  stub(job_poll, "job_log_write", job_log_write)
+  stub(job_read, "job_log_write", job_log_write)
   r_session$.call(print, list("hello world"))
   while(length(output <- unlist(purrr::map(mock_args(job_log_write), 3)))<4) {
-    job_poll(flow_name, job_name)
+    job_read(flow_name, job_name)
     Sys.sleep(1)
   }
   expect_match(output, "OUTPUT.+hello world", all = FALSE)
   expect_match(output, "PROCESS.+result.+hello world", all = FALSE)
 })
 
-test_that("job_poll reads from stderr and writes to the log", {
+test_that("job_read reads from stderr and writes to the log", {
   job_log_write <- mock()
-  stub(job_poll, "job_log_write", job_log_write)
+  stub(job_read, "job_log_write", job_log_write)
   r_session$.call(message, list("hello world"))
   while(length(output <- unlist(purrr::map(mock_args(job_log_write), 3)))<4) {
-    job_poll(flow_name, job_name)
+    job_read(flow_name, job_name)
     Sys.sleep(1)
   }
   expect_match(output, "ERROR.+hello world", all = FALSE)
   expect_match(output, "PROCESS.+result : $", all = FALSE)
 })
+
+# job_poll ----------------------------------------------------------------
+
+stub(job_poll, "job_step", TRUE)
 
 test_that("job_poll calls job_on_error on error", {
   job_on_error <- mock()
@@ -346,14 +348,11 @@ test_that("job_poll gets rich rlang error information", {
 
 test_that("job_poll calls job_step if it's ready to advance", {
   job_step <- mock()
-  job_log_write <- mock()
-  
+
   stub(job_poll, "job_step", job_step)
-  stub(job_poll, "job_log_write", job_log_write)
   r_session$.call(print, list("hello world"))
 
-  while(is.null(output <- unlist(purrr::map(mock_args(job_log_write), 3)))) {
-    job_poll(flow_name, job_name)
+  while(length(output <- job_read(flow_name, job_name)) == 0) {
     Sys.sleep(1)
   }
   
@@ -365,7 +364,7 @@ test_that("job_poll calls job_finalize if the job dies", {
   job_finalize <- mock()
   stub(job_poll, "job_finalize", job_finalize)
   r_session$.call(eval, list(quote({
-    print("here")
+    print("hello world")
     q()
   })))
   while (r_session$is_alive()) {
@@ -373,6 +372,11 @@ test_that("job_poll calls job_finalize if the job dies", {
   }
   job_poll(flow_name, job_name)
   expect_length(mock_args(job_finalize), 1)
+})
+
+test_that("job_read all = TRUE on finished process returns all output", {
+  expect_false(r_session$is_alive())
+  expect_equal(job_read(flow_name, job_name, all = TRUE)$output,"[1] \"hello world\"")
 })
 
 # job_on_error ------------------------------------------------------------
@@ -451,6 +455,14 @@ test_that("job_finalize writes to the log file and console", {
   expect_length(mock_args(job_log_write), 1)
   expect_match(mock_args(job_log_write)[[1]][[3]], "Finalizing job")
   expect_equal(unlist(mock_args(job_log_write)[[1]])[4], c(console = "TRUE"))
+})
+
+test_that("job_finalize reads all remaining output from the process", {
+  job_read <- mock(TRUE)
+  stub(job_finalize, "job_read", job_read)
+  job_finalize(flow_name, job_name)
+  expect_length(mock_args(job_read), 1)
+  expect_true(mock_args(job_read)[[1]][["all"]])
 })
 
 # unstub close

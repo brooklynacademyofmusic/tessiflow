@@ -203,7 +203,7 @@ job_on_error <- function(flow_name, job_name, error) {
   invisible()
 }
 
-#' @describeIn job_start Read `stdout` and `stderr` from the process and write to log. When ready, call job_step
+#' @describeIn job_start poll the process `stdout` and `stderr` streams and call job_step when ready.
 job_poll <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
@@ -213,22 +213,9 @@ job_poll <- function(flow_name, job_name) {
     warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
     return(invisible())
   }
-
-  io_state <- job$r_session[[1]]$poll_io(1)
   
-  io_names <- names(which(io_state == "ready"))
-  io_funs <- c(
-    output = quote(read_output_lines()),
-    error = quote(read_error_lines()),
-    process = quote(read())
-  )[io_names]
+  output <- job_read(flow_name,job_name)
   
-  output <- purrr::discard(lapply(io_funs, eval, envir = job$r_session[[1]]), ~ length(.) == 0)
-  if (length(output)) {
-    output_str <- lapply(output, purrr::imap, ~ paste(.y, ":", .x))
-    output_str <- purrr::imap(output_str, ~ paste("[", toupper(.y), "]", .x)) %>% purrr::flatten_chr()
-    job_log_write(flow_name, job_name, output_str)
-  }
   if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {
     e <- job$r_session[[1]]$run(rlang::last_error,package=T)
     job_on_error(flow_name, job_name, e)
@@ -241,6 +228,39 @@ job_poll <- function(flow_name, job_name) {
     job_step(flow_name, job_name)
   }
 }
+
+#' @describeIn job_start Read `stdout` and `stderr` from the process and write to log. When ready, call job_step
+#' @param all boolean whether to wait for the process to finish and return all output. (Most useful when process has already finished.)
+#' @return character vector of output from process. Names are one or more of `output`, `error` and `process` and match the names from `processx::poll_io`
+#' @importFrom rlang exprs
+job_read <- function( flow_name, job_name, all = FALSE) {
+  assert_flow_job_name(flow_name, job_name)
+  
+  job <- flows_get_job(flow_name, job_name)
+  
+  io_state <- job$r_session[[1]]$poll_io(1)
+  io_names <- names(which(io_state == "ready"))
+  io_funs <- exprs(process = read())
+  
+  io_funs <- append(io_funs,
+  if(all) {
+    exprs(output = read_all_output_lines(),
+          error = read_all_error_lines())
+  } else {
+    exprs(output = read_output_lines(),
+          error = read_error_lines())
+  })
+
+  output <- purrr::discard(lapply(io_funs[io_names], eval, envir = job$r_session[[1]]), ~ length(.) == 0)
+  if (length(output)) {
+    output_str <- lapply(output, purrr::imap, ~ paste(.y, ":", .x))
+    output_str <- purrr::imap(output_str, ~ paste("[", toupper(.y), "]", .x)) %>% purrr::flatten_chr()
+    job_log_write(flow_name, job_name, output_str)
+  }
+  
+  output
+}
+
 
 #' @describeIn job_start Closes R session, writes to log, console and database, and updates `retval`.
 job_finalize <- function(flow_name, job_name) {
@@ -261,7 +281,10 @@ job_finalize <- function(flow_name, job_name) {
   } else {
     job$r_session[[1]]$close()
   }
-  
+
+  # Flush remaining output  
+  job_read(flow_name, job_name, all = TRUE)
+
   if(dir.exists(job$tempdir))
     unlink(job$tempdir, recursive = TRUE, force = TRUE)
   
