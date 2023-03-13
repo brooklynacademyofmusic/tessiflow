@@ -1,5 +1,6 @@
 withr::local_package("mockery")
 withr::local_package("devtools")
+withr::defer(tessiflow_pid_unlock(config::get("tessiflow.log")))
 
 # tessiflow_pid_lock/unlock -----------------------------------------------
 
