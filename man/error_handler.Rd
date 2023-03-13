@@ -4,7 +4,7 @@
 \alias{error_handler}
 \alias{error_print}
 \alias{error_email}
-\alias{error_handler_factory}
+\alias{error_calling_handler}
 \title{error_handler}
 \usage{
 error_handler(error)
@@ -13,12 +13,10 @@ error_print(error)
 
 error_email(error)
 
-error_handler_factory(fun)
+error_calling_handler(error)
 }
 \arguments{
-\item{error}{error condition}
-
-\item{fun}{function to wrap}
+\item{error}{error caught}
 }
 \description{
 functions for handling errors
@@ -31,6 +29,7 @@ functions for handling errors
 
 \item \code{error_email()}: sends an error message to an email address
 
-\item \code{error_handler_factory()}: wrap a function in an error handler
+\item \code{error_calling_handler()}: global error condition handler, intended to be used with \code{rlang::try_fetch} because it both adds trace information (as a calling handler)
+and does error logging (as an error handler)
 
 }}

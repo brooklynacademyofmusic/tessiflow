@@ -6,17 +6,18 @@
 #' @param error error condition
 #' @importFrom rlang cnd_entrace
 error_handler <- function(error) {
-  error <- cnd_entrace(error)
-
-  if (!interactive()) {
+  error = cnd_entrace(error)
+  
+  try(if (!interactive()) {
     if (!is.null(config::get("tessiflow.email")) && !is.null(config::get("tessiflow.smtp"))) {
       error_email(error)
     } else {
       rlang::warn("Set tessiflow.email and tessiflow.smtp to allow emailing of messages")
     }
-  }
+  })
   # in any case, print to the console
   error_print(error)
+  
 }
 
 #' @describeIn error_handler prints an error message to the console
@@ -53,25 +54,30 @@ error_email <- function(error) {
   send_email(subject = subject, body = body)
 }
 
-#' @param fun function to wrap
-#' @describeIn error_handler wrap a function in an error handler
+#' @param error error caught
+#' @describeIn error_handler global error condition handler, intended to be used with `rlang::try_fetch` because it both adds trace information (as a calling handler)
+#' and does error logging (as an error handler)
 #' @importFrom rlang cnd_entrace env_parent call_match call_args
-error_handler_factory <- function(fun) {
-  function(...) {
-    tryCatch(
-      fun(...),
-      error = function(e) {
-        e <- cnd_entrace(e, bottom = env_parent())
-        args <- call_args(call_match(quote(fun(...)), fun, dots_env = env_parent()))
-        e$flow_name <- eval(args$flow_name)
-        e$job_name <- eval(args$job_name)
-
-        if (!is.null(e$flow_name) && !is.null(e$job_name)) {
-          job_on_error(e$flow_name, e$job_name, e)
-        } else {
-          error_handler(e)
-        }
+error_calling_handler <- function(error) {
+    rlang::try_fetch({
+      e <- cnd_entrace(error)
+      error <- cnd_entrace(error,top = globalenv())
+      call_stack <- error$trace$call %>% purrr::imap(~rlang::call_match(.x,sys.function(.y)))
+      call_args <- purrr::map(call_stack,call_args)
+      call_match <- purrr::detect_index(call_args, ~all(c("job_name","flow_name") %in% names(.)))
+      if(call_match>0) {
+        e$flow_name <- call_args[[call_match]]$flow_name
+        e$job_name <- call_args[[call_match]]$job_name
       }
-    )
-  }
+  
+      if (!is.null(e$flow_name) && !is.null(e$job_name)) {
+        job_on_error(e$flow_name, e$job_name, e)
+      } else {
+        error_handler(e)
+      }
+    }, error = function(e) {
+      # minimal fallback
+      e <- cnd_entrace(error)
+      error_handler(e)
+    })
 }

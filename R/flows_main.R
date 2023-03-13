@@ -2,44 +2,43 @@
 #'
 #' main flows loop
 #'
-#' @importFrom stats runif
+#' @importFrom rlang try_fetch
 #' @export
 #'
 #' @return NULL, never!
 flows_main <- function() {
   data.table::setDTthreads(1) # Don't multithread this loop to avoid database/process locks
-  
   status <- on.schedule <- NULL
-
   tessiflow$flows <- flows_parse()
-
   server <- serverSocket(config::get("tessiflow.port"))
 
   while (!all(tessiflow$flows$status == "Finished")) {
-    if ("Waiting" %in% tessiflow$flows$status) {
-      tessiflow$flows[status == "Waiting", apply(.SD, 1, function(.) {
-        job_maybe_start_resilient(.$flow_name, .$job_name)
-      })]
-    }
-
-    if ("Running" %in% tessiflow$flows$status) {
-      tessiflow$flows[status == "Running", apply(.SD, 1, function(.) {
-        job_poll_resilient(.$flow_name, .$job_name)
-      })]
-    }
-
-    if ("Finished" %in% tessiflow$flows$status) {
-      tessiflow$flows[
-        status == "Finished" & sapply(on.schedule, length) > 0,
-        apply(.SD, 1, function(.) {
-          job_reset_resilient(.$flow_name, .$job_name)
-        })
-      ]
-    }
-
-    flows_main_read_server(server)
-
-    Sys.sleep(1)
+    try_fetch({
+      if ("Waiting" %in% tessiflow$flows$status) {
+        tessiflow$flows[status == "Waiting", apply(.SD, 1, function(.) {
+          job_maybe_start(.$flow_name, .$job_name)
+        })]
+      }
+  
+      if ("Running" %in% tessiflow$flows$status) {
+        tessiflow$flows[status == "Running", apply(.SD, 1, function(.) {
+          job_poll(.$flow_name, .$job_name)
+        })]
+      }
+  
+      if ("Finished" %in% tessiflow$flows$status) {
+        tessiflow$flows[
+          status == "Finished" & sapply(on.schedule, length) > 0,
+          apply(.SD, 1, function(.) {
+            job_reset(.$flow_name, .$job_name)
+          })
+        ]
+      }
+  
+      flows_main_read_server(server)
+  
+      Sys.sleep(1)
+    }, error = error_calling_handler)
   }
 
   close(server)

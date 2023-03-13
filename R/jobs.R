@@ -234,6 +234,8 @@ job_poll <- function(flow_name, job_name) {
 #' @return character vector of output from process. Names are one or more of `output`, `error` and `process` and match the names from `processx::poll_io`
 #' @importFrom rlang exprs
 job_read <- function( flow_name, job_name, all = FALSE) {
+  read_all_output_lines <- read_output_lines <- read_all_error_lines <- read_error_lines <- NULL
+  
   assert_flow_job_name(flow_name, job_name)
   
   job <- flows_get_job(flow_name, job_name)
@@ -341,7 +343,3 @@ job_stop <- function(flow_name, job_name) {
   job_log_write(flow_name, job_name, paste("Stopping job, pid:", job$pid), console = TRUE)
   
 }
-
-job_maybe_start_resilient <- error_handler_factory(job_maybe_start)
-job_poll_resilient <- error_handler_factory(job_poll)
-job_reset_resilient <- error_handler_factory(job_reset)
