@@ -38,8 +38,8 @@ jobs:
       
       - uses: conda-incubator/setup-miniconda@v2
       
-      # - name: Setup upterm session
-      #   uses: lhotari/action-upterm@v1
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
 
       - uses: r-lib/actions/check-r-package@v1
 
