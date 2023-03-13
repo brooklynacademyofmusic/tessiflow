@@ -31,11 +31,11 @@ job_maybe_start <- function(flow_name, job_name) {
   # check needs
   dependencies <- flows_log_get_last_run(job$flow_name, job$needs %||% "")
 
-  check_needs <- !any(is.na(dependencies$end_time)) && 
+  check_needs <- !any(is.na(dependencies$end_time)) &&
     all(dependencies$end_time > last_run$end_time) &&
     (all(dependencies$retval == 0) || !is.na(check_if) && check_if) &&
     nrow(dependencies) == length(job$needs)
-  
+
   # check schedule
   check_schedule <- any(job$scheduled_runs[[1]] %>% unlist() %>% purrr::keep(~ . < now()) %||% NA >
     last_run$end_time) # T/F/NA
@@ -73,9 +73,9 @@ job_start <- function(flow_name, job_name) {
       stderr = "|",
       env = unlist(job$env) %||% callr::rcmd_safe_env()
     ), wait = TRUE, wait_timeout = 30000)
-    
+
     tempdir <- r_session$run(tempdir)
-    
+
     flows_update_job(
       flow_name, job_name,
       list(
@@ -110,11 +110,11 @@ job_step <- function(flow_name, job_name) {
   current_step <- job$steps[[job$step + 1]]
 
   job$r_session[[1]]$call(job_make_remote_fun(c(current_step$env, job$env),
-                                                          as.character(current_step$`if`),
-                                                          as.character(current_step$run),
-                                                          shell = current_step$shell %||% "callr"
+    as.character(current_step$`if`),
+    as.character(current_step$run),
+    shell = current_step$shell %||% "callr"
   ))
-  
+
   flows_update_job(
     flow_name, job_name,
     list(step = step)
@@ -125,7 +125,6 @@ job_step <- function(flow_name, job_name) {
     job_log_write(flow_name, job_name, paste("No running R session, skipping", step, ":", current_step$name), console = TRUE)
   } else {
     job_log_write(flow_name, job_name, paste("Beginning step", step, ":", current_step$name), console = TRUE)
-
   }
 
   return(invisible())
@@ -159,14 +158,14 @@ job_make_remote_fun <- function(env_vars = list(), if_expr = NULL, run_expr = NU
 
   run_expr <- if (length(shell) != 0 && shell != "callr") {
     if (!grepl("{0}", shell, fixed = TRUE)) shell <- paste(shell, "{0}")
-    rlang::expr(cat(system(!!gsub("{0}", shQuote(run_expr), shell, fixed = TRUE),intern = TRUE)))
+    rlang::expr(cat(system(!!gsub("{0}", shQuote(run_expr), shell, fixed = TRUE), intern = TRUE)))
   } else {
     rlang::parse_exprs(run_expr)
   }
 
   as.function(list(rlang::expr(
     withCallingHandlers(
-      withr::with_envvar(!!env_vars,{
+      withr::with_envvar(!!env_vars, {
         if (!(!!rlang::parse_expr(if_expr))) {
           message("'if' expression is not true, skipping")
           return(invisible(NULL))
@@ -179,8 +178,8 @@ job_make_remote_fun <- function(env_vars = list(), if_expr = NULL, run_expr = NU
         }
       }),
       condition = rlang::entrace
-  ))))
-
+    )
+  )))
 }
 
 #' @param error error condition object
@@ -192,11 +191,11 @@ job_on_error <- function(flow_name, job_name, error) {
   assert_flow_job_name(flow_name, job_name)
 
   job_finalize(flow_name, job_name)
-  
+
   flows_update_job(flow_name, job_name, list(retval = 1))
   job_log_write(flow_name, job_name, error$message, console = TRUE)
   job_log_write(flow_name, job_name, cli::ansi_strip(format(error$trace)))
-  
+
   error$flow_name <- flow_name
   error$job_name <- job_name
   error_handler(error)
@@ -213,11 +212,11 @@ job_poll <- function(flow_name, job_name) {
     warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
     return(invisible())
   }
-  
-  output <- job_read(flow_name,job_name)
-  
+
+  output <- job_read(flow_name, job_name)
+
   if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {
-    e <- job$r_session[[1]]$run(rlang::last_error,package=T)
+    e <- job$r_session[[1]]$run(rlang::last_error, package = T)
     job_on_error(flow_name, job_name, e)
   }
   if (!job$r_session[[1]]$is_alive()) {
@@ -233,25 +232,31 @@ job_poll <- function(flow_name, job_name) {
 #' @param all boolean whether to wait for the process to finish and return all output. (Most useful when process has already finished.)
 #' @return character vector of output from process. Names are one or more of `output`, `error` and `process` and match the names from `processx::poll_io`
 #' @importFrom rlang exprs
-job_read <- function( flow_name, job_name, all = FALSE) {
-  read_all_output_lines <- read_output_lines <- read_all_error_lines <- read_error_lines <- NULL
-  
+job_read <- function(flow_name, job_name, all = FALSE) {
+  read_all_output_lines <- read_output_lines <- read_all_error_lines <- read_error_lines <- read <- NULL
+
   assert_flow_job_name(flow_name, job_name)
-  
+
   job <- flows_get_job(flow_name, job_name)
-  
+
   io_state <- job$r_session[[1]]$poll_io(1)
   io_names <- names(which(io_state == "ready"))
   io_funs <- exprs(process = read())
-  
-  io_funs <- append(io_funs,
-  if(all) {
-    exprs(output = read_all_output_lines(),
-          error = read_all_error_lines())
-  } else {
-    exprs(output = read_output_lines(),
-          error = read_error_lines())
-  })
+
+  io_funs <- append(
+    io_funs,
+    if (all) {
+      exprs(
+        output = read_all_output_lines(),
+        error = read_all_error_lines()
+      )
+    } else {
+      exprs(
+        output = read_output_lines(),
+        error = read_error_lines()
+      )
+    }
+  )
 
   output <- purrr::discard(lapply(io_funs[io_names], eval, envir = job$r_session[[1]]), ~ length(.) == 0)
   if (length(output)) {
@@ -259,7 +264,7 @@ job_read <- function( flow_name, job_name, all = FALSE) {
     output_str <- purrr::imap(output_str, ~ paste("[", toupper(.y), "]", .x)) %>% purrr::flatten_chr()
     job_log_write(flow_name, job_name, output_str)
   }
-  
+
   output
 }
 
@@ -284,12 +289,13 @@ job_finalize <- function(flow_name, job_name) {
     job$r_session[[1]]$close()
   }
 
-  # Flush remaining output  
+  # Flush remaining output
   job_read(flow_name, job_name, all = TRUE)
 
-  if(dir.exists(job$tempdir))
+  if (dir.exists(job$tempdir)) {
     unlink(job$tempdir, recursive = TRUE, force = TRUE)
-  
+  }
+
   flows_update_job(
     flow_name, job_name,
     list(
@@ -299,7 +305,7 @@ job_finalize <- function(flow_name, job_name) {
       status = "Finished"
     )
   )
-  
+
   job_log_write(flow_name, job_name, paste("Finalizing job, pid:", job$pid), console = TRUE)
 }
 
@@ -339,7 +345,6 @@ job_stop <- function(flow_name, job_name) {
       status = "Stopped"
     )
   )
-  
+
   job_log_write(flow_name, job_name, paste("Stopping job, pid:", job$pid), console = TRUE)
-  
 }
