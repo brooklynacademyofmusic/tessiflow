@@ -28,7 +28,7 @@ flows_main <- function() {
   
       if ("Finished" %in% tessiflow$flows$status) {
         tessiflow$flows[
-          status == "Finished" & sapply(on.schedule, length) > 0,
+          !status %in% c("Waiting","Running") & sapply(on.schedule, length) > 0,
           apply(.SD, 1, function(.) {
             job_reset(.$flow_name, .$job_name)
           })

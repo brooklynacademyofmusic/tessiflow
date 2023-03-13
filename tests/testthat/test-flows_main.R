@@ -50,7 +50,7 @@ test_that("flows_main calls job_poll when tasks are running", {
 })
 
 test_that("flows_main call job_reset when they are done", {
-  flows[, status := rep(c("Finished", "Waiting"), 3)]
+  flows[, status := rep(c("Finished", "Waiting", "Bloopy"), 2)]
   stub(flows_main, "flows_parse", flows)
   m <- mock()
   stub(flows_main, "job_reset", m)
@@ -59,7 +59,7 @@ test_that("flows_main call job_reset when they are done", {
     stop("first loop")
   })
   expect_error(flows_main(), "first loop")
-  expect_equal(length(mock_args(m)), 3)
+  expect_equal(length(mock_args(m)), 4)
 })
 
 
