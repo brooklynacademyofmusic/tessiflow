@@ -40,6 +40,8 @@ jobs:
       
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
+        with: 
+          limit-access-to-actor: true
 
       - uses: r-lib/actions/check-r-package@v1
 
