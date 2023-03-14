@@ -363,6 +363,7 @@ test_that("job_poll calls job_step if it's ready to advance", {
 test_that("job_poll calls job_finalize if the job dies", {
   job_finalize <- mock()
   stub(job_poll, "job_finalize", job_finalize)
+  stub(job_poll, "job_read", TRUE)
   r_session$.call(eval, list(quote({
     print("hello world")
     q()
