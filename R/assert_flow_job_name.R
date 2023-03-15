@@ -2,8 +2,11 @@
 #'
 #' check, assertion, and test for flow and job name: both are characters of length 1 and both exist in flows
 #'
-#' @param flow_name string flow name
-#' @param job_name string job name
+#' @param flow_name `character` flow name
+#' @param job_name `character` job name
+#' 
+#' @param .var.name `character` name of the checked object to print in assertions. Defaults to the heuristic implemented in vname.
+#' @param add	`AssertCollection` collection to store assertion messages. See `AssertCollection.`
 #'
 #' @importFrom checkmate makeAssertCollection reportAssertions assert check_character check_names
 check_flow_job_name <- function(flow_name, job_name) {
