@@ -40,5 +40,6 @@ Imports:
     ps,
     withr,
     htmlTable,
-    reticulate
+    reticulate,
+    plumber
 Language: en-US

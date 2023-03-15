@@ -203,41 +203,7 @@ test_that("tessiflow_run_command errors if there's no running tessiflow process"
   expect_error(tessiflow_run_command("this_is_a_function"), "Tessiflow process.+not.+running")
 })
 
-test_that("tessiflow_run_command writes to the tessiflow input file/socket", {
-  local_log_dir()
-  body(run_fun) <- rlang::expr({
-    local_log_dir()
-    mockery::stub(flows_main_read_server, "rlang::parse_expr", function(...) {
-      return(print(...))
-    })
-    mockery::stub(flows_main, "flows_main_read_server", flows_main_read_server)
-    tessiflow_pid_lock(!!config::get("tessiflow.log"))
-    print("Starting flows_main")
-    flows_main()
-  })
 
-  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
-
-  p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
-  p1_output <- consume_output_lines(p1)
-  expect_match(p1_output, "Starting flows_main")
-
-  Sys.sleep(1)
-  tessiflow_run_command("this_is_a_function", flow_name = "Dummy workflow", job_name = "Job 1")
-  p1_output <- consume_output_lines(p1)
-
-  expect_match(p1_output, "this_is_a_function(.+Dummy workflow.+Job 1.+)")
-
-  stub(tessiflow_run_command, "config::get", mock(config::get("tessiflow.log"), 99999))
-  expect_warning(
-    expect_error(
-      tessiflow_run_command("Dummy workflow", "Job 1", "this_is_a_function"),
-      "Can't connect to tessiflow instance"
-    ), "99999"
-  )
-
-  p1$kill_tree()
-})
 
 # tessiflow_job_start -----------------------------------------------------
 
@@ -275,40 +241,3 @@ test_that("tessiflow_job_stop calls job_stop", {
   expect_equal(mock_args(tessiflow_run_command)[[1]][-1], list(flow_name = "Dummy workflow", job_name = "Job 1"))
 })
 
-# tessiflow_refresh -------------------------------------------------------
-
-test_that("tessiflow_refresh updates job info", {
-  local_log_dir()
-  body(run_fun) <- rlang::expr({
-    local_log_dir()
-    mockery::stub(flows_main, "flows_parse", !!flows_parse()[1])
-    mockery::stub(
-      flows_main_read_server, "flows_refresh",
-      function(...) {
-        print(nrow(tessiflow$flows))
-        flows_refresh()
-        print(nrow(tessiflow$flows))
-      }
-    )
-    mockery::stub(flows_main, "flows_main_read_server", flows_main_read_server)
-    tessiflow_pid_lock(!!config::get("tessiflow.log"))
-    print("Starting flows_main")
-    flows_main()
-  })
-
-  expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
-
-  p1 <- callr::r_bg(run_fun, package = "tessiflow", stderr = "2>&1")
-  p1_output <- consume_output_lines(p1)
-  expect_match(p1_output, "Starting flows_main")
-
-  tessiflow_refresh()
-  Sys.sleep(3)
-  p1_output <- consume_output_lines(p1)
-
-  # the tessiflow process originally only loads 1 row and then on refresh should have 6
-  expect_match(p1_output[[1]], "\\[1\\] 1")
-  expect_match(p1_output[[2]], "\\[1\\] 6")
-
-  p1$kill_tree()
-})

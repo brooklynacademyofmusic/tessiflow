@@ -15,7 +15,7 @@ job_true$scheduled_runs <- list(
 )
 job_true$`if` <- "1 == 1"
 job_true$`runs-on` <- Sys.info()["nodename"]
-job_true$needs <- list("Job 2", "Job 3")
+job_true$needs <- c("Job 2", "Job 3")
 
 job_false <- list()
 job_false$scheduled_runs <- list(
@@ -24,7 +24,7 @@ job_false$scheduled_runs <- list(
 )
 job_false$`if` <- "1 == 0"
 job_false$`runs-on` <- "anothermachine"
-job_false$needs <- list("Job 3", "notajob")
+job_false$needs <- c("Job 3", "notajob")
 
 # job_maybe_start ---------------------------------------------------------
 
@@ -60,13 +60,11 @@ test_that("job_maybe_start runs jobs when if is true", {
 
 jobs <- readRDS(test_path("jobs.Rds"))
 jobs[, `:=`(
+  start_time = now() - lubridate::days(2),
   end_time = now() - lubridate::ddays(1),
   retval = 0
 )]
-last_run_times <- function(flow, job) {
-  jobs[flow_name == flow & job_name %in% job, ]
-}
-stub(job_maybe_start, "flows_log_get_last_run", last_run_times)
+sqlite_upsert("jobs",jobs)
 
 test_that("job_maybe_start runs jobs when needs are met and retval is 0", {
   local_flows_data_table()
@@ -82,18 +80,19 @@ test_that("job_maybe_start runs jobs when needs are met and retval is 0", {
 
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
-  
-  jobs[job_name %in% c("Job 2","Job 3"), `:=`(end_time = NA)]
+
+  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = NA))
+  flows_update_job(flow_name, "Job 3", list(start_time = jobs$start_time[[1]],end_time = NA))
 
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
   
-  jobs[job_name == "Job 2", `:=`(end_time = now())]
-
+  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = now()))
+  
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
   
-  jobs[job_name == "Job 3", `:=`(end_time = now())]
+  flows_update_job(flow_name, "Job 3", list(start_time = jobs$start_time[[1]],end_time = now()))
   
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 1)
@@ -105,21 +104,23 @@ test_that("job_maybe_start runs jobs when needs are met and retval <> 0, but onl
   stub(job_maybe_start, "job_start", job_start)
 
   tessiflow$flows[1, needs := list(job_true$needs)]
-  jobs[job_name == "Job 2", `:=`(end_time = now(), retval = 1)]
-
+  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
+  
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
 
   tessiflow$flows[1, `if` := job_true$`if`]
 
-  jobs[job_name %in% c("Job 2","Job 3"), `:=`(end_time = NA)]
+  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = NA))
+  flows_update_job(flow_name, "Job 3", list(start_time = jobs$start_time[[1]],end_time = NA))
   
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
 
   tessiflow$flows[1, needs := list(job_true$needs)]
-  jobs[job_name %in% c("Job 2","Job 3"), `:=`(end_time = now(), retval = 1)]
-  
+  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
+  flows_update_job(flow_name, "Job 3", list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
+    
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 1)
 })
@@ -140,6 +141,23 @@ test_that("job_maybe_start runs jobs when they are scheduled", {
   expect_length(mock_args(job_start), 1)
 })
 
+test_that("job_maybe_start runs jobs on forced start", {
+  # Only update the database, as this come from the API only
+  job_force_start(flow_name, job_name)
+  local_flows_data_table()
+  job_start <- mock(cycle = TRUE)
+  stub(job_maybe_start, "job_start", job_start)
+
+  tessiflow$flows[1, scheduled_runs := list(job_false$scheduled_runs)]
+
+  job_maybe_start(flow_name, job_name)
+  expect_length(mock_args(job_start), 1)
+  
+  tessiflow$flows[1, scheduled_runs := list(job_true$scheduled_runs)]
+  
+  job_maybe_start(flow_name, job_name)
+  expect_length(mock_args(job_start), 2)
+})
 
 # job_make_remote_fun ----------------------------------------------------
 
@@ -360,6 +378,19 @@ test_that("job_poll calls job_step if it's ready to advance", {
   expect_gte(length(mock_args(job_step)), 1)
 })
 
+test_that("job_poll calls job_finalize on forced stop", {
+  # Only update the database, as this comes from the API only
+  job_force_stop(flow_name, job_name)
+  tessiflow$flows[get("flow_name") == flow_name & get("job_name") == job_name, status:="Running"]
+  
+  job_finalize <- mock()
+  stub(job_poll, "job_finalize", job_finalize)
+  stub(job_poll, "job_read", TRUE)
+
+  job_poll(flow_name, job_name)
+  expect_length(mock_args(job_finalize), 1)
+})
+
 test_that("job_poll calls job_finalize if the job dies", {
   job_finalize <- mock()
   stub(job_poll, "job_finalize", job_finalize)
@@ -523,21 +554,3 @@ test_that("job_finalize writes to the log file and console", {
   expect_equal(unlist(mock_args(job_log_write)[[7]])[4], c(console = "TRUE"))
 })
 
-# job_stop ----------------------------------------------------------------
-
-local_flows_data_table()
-job_log_write <- mock(TRUE, cycle = TRUE)
-stub(job_stop, "job_log_write", job_log_write)
-stub(job_stop, "job_finalize", TRUE)
-
-test_that("job_stop updates the flows data.table and database", {
-  job_stop(flow_name, job_name)
-  expect_equal(flows_get_job(flow_name, job_name)$status, "Stopped")
-})
-
-test_that("job_stop writes to the log file and console", {
-  job_stop(flow_name, job_name)
-  expect_length(mock_args(job_log_write), 2)
-  expect_match(mock_args(job_log_write)[[2]][[3]], "Stopping job")
-  expect_equal(unlist(mock_args(job_log_write)[[2]])[4], c(console = "TRUE"))
-})

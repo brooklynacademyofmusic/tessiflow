@@ -18,9 +18,13 @@ assert_flow_job_name(
 test_flow_job_name(flow_name, job_name)
 }
 \arguments{
-\item{flow_name}{string flow name}
+\item{flow_name}{\code{character} flow name}
 
-\item{job_name}{string job name}
+\item{job_name}{\code{character} job name}
+
+\item{.var.name}{\code{character} name of the checked object to print in assertions. Defaults to the heuristic implemented in vname.}
+
+\item{add}{\code{AssertCollection} collection to store assertion messages. See \code{AssertCollection.}}
 }
 \description{
 check, assertion, and test for flow and job name: both are characters of length 1 and both exist in flows

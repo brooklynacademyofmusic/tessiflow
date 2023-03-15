@@ -129,3 +129,89 @@ test_that("flows_parse errors if a run statement isn't parseable", {
   stub(flows_parse, "yaml::read_yaml", read_yaml)
   expect_error(flows_parse(), "gobbledy gook")
 })
+
+# flows_refresh -----------------------------------------------------------
+
+test_that("flows_refresh updates the tessiflow data that doesn't involve run state", {
+  local_flows_data_table()
+  run_state_cols <- c("status", "retval", "start_time", "end_time")
+  other_cols <- setdiff(colnames(tessiflow$flows), run_state_cols)
+  
+  tessiflow$flows[, (run_state_cols) := list(seq_len(.N), seq_len(.N), now() + seq_len(.N), now() + seq_len(.N))]
+  
+  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")]
+  old_data <- copy(tessiflow$flows)
+  stub(flows_refresh, "flows_parse", new_data)
+  flows_refresh()
+  
+  expect_equal(tessiflow$flows[c(1, 3, 4, 5)], old_data[c(1, 3, 4, 5)])
+  expect_equal(tessiflow$flows[c(2, 6), ..other_cols], new_data[c(1, 2), ..other_cols])
+})
+
+test_that("flows_refresh adds additional flow data", {
+  local_flows_data_table()
+  
+  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")]
+  stub(flows_refresh, "flows_parse", new_data)
+  flows_refresh()
+  
+  expect_equal(tessiflow$flows[7], new_data[3])
+})
+
+test_that("flows_refresh adds new columns", {
+  local_flows_data_table()
+  
+  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")][, new_column := 1]
+  stub(flows_refresh, "flows_parse", new_data)
+  flows_refresh()
+  
+  expect_equal(tessiflow$flows[, new_column], c(rep(NA, 6), 1))
+})
+
+test_that("flows_refresh works when columns missing", {
+  local_flows_data_table()
+  
+  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")][, env := NULL]
+  old_data <- copy(tessiflow$flows)
+  stub(flows_refresh, "flows_parse", new_data)
+  flows_refresh()
+  
+  expect_equal(tessiflow$flows$env, c(old_data$env, list(NULL)))
+})
+
+# flows_auto_refresh ------------------------------------------------------
+
+test_that("flows_auto_refresh loads flows when they haven't been yet", {
+  flows_parse <- mock(NULL,NULL)
+  stub(flows_auto_refresh,"flows_parse",flows_parse)
+  
+  flows_auto_refresh()
+  local_flows_data_table()
+  tessiflow$flows_refresh_time <- NULL
+  
+  flows_auto_refresh()
+  expect_length(mock_args(flows_parse),2)
+  
+  rm(flows_auto_refresh)
+  time <- now()
+  flows_auto_refresh()
+  expect_gte(tessiflow$flows_refresh_time,time)
+})
+
+test_that("flows_auto_refresh only refreshes flows when a yml file has been updated", {
+  local_flows_data_table()
+  tessiflow$flows_refresh_time <- now()
+  
+  flows_refresh <- mock(flows_parse())
+  stub(flows_auto_refresh,"flows_refresh",flows_refresh)
+  
+  flows_auto_refresh()
+  expect_length(mock_args(flows_refresh),0)
+  
+  stub(flows_auto_refresh,"file.mtime",now())
+  
+  flows_auto_refresh()
+  expect_length(mock_args(flows_refresh),1)
+  
+})
+

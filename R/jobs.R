@@ -18,12 +18,14 @@ job_maybe_start <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
   job <- flows_get_job(flow_name, job_name)
-
+  
   last_run <- flows_log_get_last_run(job$flow_name, job$job_name)
   if (nrow(last_run) == 0) {
     last_run <- rbind(last_run, list(end_time = as.double(flows_log_get_create_time())))
   }
-
+  
+  # check forced run
+  check_force <- last_run$status == "Forced start"
   # check runs-on
   check_runs_on <- job$`runs-on` %||% NA == Sys.info()["nodename"] # T/F/NA
   # check if
@@ -40,8 +42,8 @@ job_maybe_start <- function(flow_name, job_name) {
   check_schedule <- any(job$scheduled_runs[[1]] %>% unlist() %>% purrr::keep(~ . < now()) %||% NA >
     last_run$end_time) # T/F/NA
 
-  if (
-    (is.na(check_runs_on) || check_runs_on) &&
+  if (!is.na(check_force) && check_force ||
+      (is.na(check_runs_on) || check_runs_on) &&
       (is.na(check_if) || check_if) &&
       (is.na(check_needs) || check_needs) &&
       (is.na(check_schedule) || check_schedule)) {
@@ -219,7 +221,7 @@ job_poll <- function(flow_name, job_name) {
     e <- job$r_session[[1]]$run(rlang::last_error, package = T)
     job_on_error(flow_name, job_name, e)
   }
-  if (!job$r_session[[1]]$is_alive()) {
+  if (!job$r_session[[1]]$is_alive() || flows_log_get_last_run(flow_name, job_name)$status == "Forced stop") {
     job_finalize(flow_name, job_name)
   }
 
@@ -331,20 +333,3 @@ job_reset <- function(flow_name, job_name) {
   job_log_write(flow_name, job_name, paste("Resetting job"), console = TRUE)
 }
 
-#' @describeIn job_start Stops job, updates flows table and database, writes to log
-job_stop <- function(flow_name, job_name) {
-  assert_flow_job_name(flow_name, job_name)
-
-  job <- flows_get_job(flow_name, job_name)
-
-  job_finalize(flow_name, job_name)
-
-  flows_update_job(
-    flow_name, job_name,
-    list(
-      status = "Stopped"
-    )
-  )
-
-  job_log_write(flow_name, job_name, paste("Stopping job, pid:", job$pid), console = TRUE)
-}

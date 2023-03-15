@@ -14,8 +14,7 @@ stub(flows_main, "try_fetch", function(expr,...){eval(expr)})
 
 test_that("flows_main does nothing when all tasks are finished", {
   flows[, status := "Finished"]
-  stub(flows_main, "flows_parse", flows)
-  stub(flows_main, "flows_main_read_server", close)
+  stub(flows_main, "flows_auto_refresh", flows)
   m <- mock()
   stub(flows_main, "job_maybe_start", m)
   stub(flows_main, "job_poll", m)
@@ -25,11 +24,10 @@ test_that("flows_main does nothing when all tasks are finished", {
 
 test_that("flows_main calls job_maybe_start when tasks are waiting", {
   flows[, status := "Waiting"]
-  stub(flows_main, "flows_parse", flows)
+  stub(flows_main, "flows_auto_refresh", flows)
   m <- mock()
   stub(flows_main, "job_maybe_start", m)
-  stub(flows_main, "flows_main_read_server", function(...) {
-    close(...)
+  stub(flows_main, "Sys.sleep", function(...) {
     stop("first loop")
   })
   expect_error(flows_main(), "first loop")
@@ -38,11 +36,10 @@ test_that("flows_main calls job_maybe_start when tasks are waiting", {
 
 test_that("flows_main calls job_poll when tasks are running", {
   flows[, status := "Running"]
-  stub(flows_main, "flows_parse", flows)
+  stub(flows_main, "flows_auto_refresh", flows)
   m <- mock()
   stub(flows_main, "job_poll", m)
-  stub(flows_main, "flows_main_read_server", function(...) {
-    close(...)
+  stub(flows_main, "Sys.sleep", function(...) {
     stop("first loop")
   })
   expect_error(flows_main(), "first loop")
@@ -51,121 +48,15 @@ test_that("flows_main calls job_poll when tasks are running", {
 
 test_that("flows_main call job_reset when they are done", {
   flows[, status := rep(c("Finished", "Waiting", "Bloopy"), 2)]
-  stub(flows_main, "flows_parse", flows)
+  stub(flows_main, "flows_auto_refresh", flows)
   m <- mock()
   stub(flows_main, "job_reset", m)
-  stub(flows_main, "flows_main_read_server", function(...) {
-    close(...)
+  stub(flows_main, "Sys.sleep", function(...) {
     stop("first loop")
   })
   expect_error(flows_main(), "first loop")
   expect_equal(length(mock_args(m)), 4)
 })
-
-
-# flows_main_read_server --------------------------------------------------
-
-test_that("flows_main_read_server reads from the server port if there is something to read and executes the command", {
-  server <- serverSocket(32768)
-
-  job_start <- mock()
-  stub(flows_main_read_server, "job_start", job_start)
-
-  socket <- socketConnection(port = 32768)
-  cat(deparse(quote(job_start("flow_name", "job_name"))), file = socket, sep = "\n")
-  expect_silent(flows_main_read_server(server))
-  expect_length(mock_args(job_start), 1)
-  close(socket)
-
-  close(server)
-})
-
-
-test_that("flows_main_read_server returns a message if the string isn't a call or isn't allowed", {
-  server <- serverSocket(32768)
-
-  socket <- socketConnection(port = 32768)
-  cat("do something", file = socket, sep = "\n")
-  expect_message(flows_main_read_server(server), "Can't parse.+do something")
-  close(socket)
-
-  socket <- socketConnection(port = 32768)
-  cat(deparse(quote(TRUE)), file = socket, sep = "\n")
-  expect_message(flows_main_read_server(server), "Expression must be.+job_start.+job_stop.+TRUE")
-  close(socket)
-
-  socket <- socketConnection(port = 32768)
-  cat(deparse(quote(stop("I am trying to make you fail!"))), file = socket, sep = "\n")
-  expect_message(flows_main_read_server(server), "Expression must be.+job_start.+job_stop.+make you fail")
-  close(socket)
-
-  close(server)
-})
-
-test_that("flows_main_read_server doesn't execute other commands", {
-  server <- serverSocket(32768)
-
-  job_start <- mock()
-  stub(flows_main_read_server, "job_start", job_start)
-
-  socket <- socketConnection(port = 32768)
-  cat(deparse(quote(job_start(print("hello")))), file = socket, sep = "\n")
-  expect_silent(flows_main_read_server(server))
-  expect_character(mock_args(job_start)[[1]][[1]])
-  close(socket)
-
-  close(server)
-})
-
-# flows_refresh -----------------------------------------------------------
-
-test_that("flows_refresh updates the tessiflow data that doesn't involve run state", {
-  local_flows_data_table()
-  run_state_cols <- c("status", "retval", "start_time", "end_time")
-  other_cols <- setdiff(colnames(tessiflow$flows), run_state_cols)
-
-  tessiflow$flows[, (run_state_cols) := list(seq_len(.N), seq_len(.N), now() + seq_len(.N), now() + seq_len(.N))]
-
-  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")]
-  old_data <- copy(tessiflow$flows)
-  stub(flows_refresh, "flows_parse", new_data)
-  flows_refresh()
-
-  expect_equal(tessiflow$flows[c(1, 3, 4, 5)], old_data[c(1, 3, 4, 5)])
-  expect_equal(tessiflow$flows[c(2, 6), ..other_cols], new_data[c(1, 2), ..other_cols])
-})
-
-test_that("flows_refresh adds additional flow data", {
-  local_flows_data_table()
-
-  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")]
-  stub(flows_refresh, "flows_parse", new_data)
-  flows_refresh()
-
-  expect_equal(tessiflow$flows[7], new_data[3])
-})
-
-test_that("flows_refresh adds new columns", {
-  local_flows_data_table()
-
-  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")][, new_column := 1]
-  stub(flows_refresh, "flows_parse", new_data)
-  flows_refresh()
-
-  expect_equal(tessiflow$flows[, new_column], c(rep(NA, 6), 1))
-})
-
-test_that("flows_refresh works when columns missing", {
-  local_flows_data_table()
-
-  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")][, env := NULL]
-  old_data <- copy(tessiflow$flows)
-  stub(flows_refresh, "flows_parse", new_data)
-  flows_refresh()
-
-  expect_equal(tessiflow$flows$env, c(old_data$env, list(NULL)))
-})
-
 
 # flows_get_job -----------------------------------------------------------
 

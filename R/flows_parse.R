@@ -36,6 +36,50 @@ flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
   flows[]
 }
 
+#' flows_auto_refresh
+#' 
+#' Update flows data.table with new data from yml flows if they have changed since the last load
+#' @param flows_directory directory containing the yml files to load
+#' @return updated data.table
+#' @importFrom lubridate now
+flows_auto_refresh <- function(flows_directory = config::get("tessiflow.d")) {
+  
+  if(is.null(tessiflow$flows) || is.null(tessiflow$flows_refresh_time)) {
+    tessiflow$flows <- flows_parse(flows_directory)
+    tessiflow$flows_refresh_time <- now()
+  } else if(any(file.mtime(dir(config::get("tessiflow.d"),full.names = T)) > 
+                tessiflow$flows_refresh_time)) {
+    flows_refresh(flows_directory)  
+  }
+  
+}
+
+#' flows_refresh
+#'
+#' Update flows data.table with new data from yml flows
+#' @param ... extra arguments passed on to `flows_parse`
+#' @return updated data.table
+#' @importFrom dplyr anti_join
+flows_refresh <- function(...) {
+  flows <- flows_parse(...)
+  
+  new_flows <- anti_join(flows, tessiflow$flows, by = c("flow_name", "job_name"))
+  
+  update_columns <- intersect(
+    c("env", "on.schedule", "runs-on", "steps", "needs", "if", "scheduled_runs"),
+    colnames(flows)
+  )
+  
+  tessiflow$flows <- rbindlist(list(
+    tessiflow$flows[flows, (update_columns) := mget(paste0("i.", update_columns)),
+                    on = c("flow_name", "job_name")
+    ],
+    new_flows
+  ),
+  fill = TRUE
+  )
+}
+
 #' flow_to_data_table
 #'
 #' parses a single flow from a yml file to a data.table
