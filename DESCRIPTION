@@ -41,5 +41,6 @@ Imports:
     withr,
     htmlTable,
     reticulate,
-    plumber
+    plumber,
+    httr
 Language: en-US

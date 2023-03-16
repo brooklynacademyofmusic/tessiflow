@@ -35,8 +35,8 @@ tessiflow_run <- function() {
 
   local_envvar("tessiflow-daemon" = "YES")
   callr::r(function() {
-    performance_logger <- callr::r_bg(performance_main, package = TRUE, poll_connection = TRUE)
-    #api <- callr::r_bg(function() {pr("api.R") %>% pr_run(config::get("tessiflow.port"))}, poll_connection = TRUE, stdout = "", stderr = "")
+    performance <- callr::r_bg(performance_main, package = TRUE, poll_connection = TRUE, stdout = "", stderr = "")
+    api <- callr::r_bg(api_start, package = TRUE, poll_connection = TRUE, stdout = "", stderr = "")
     cat("Starting tessiflow scheduler ...\n")
     flows_main()
   }, callback = log_callback, package = TRUE, stderr = "2>&1")

@@ -30,6 +30,8 @@ body(run_fun) <-
       Sys.sleep(10) # has to be long enough to allow the process to persist between tests
     })
     mockery::stub(tessiflow_run, "performance_main", TRUE)
+    mockery::stub(tessiflow_run, "api_start", TRUE)
+    
     mockery::stub(tessiflow_run, "callr::r_bg", callr::r)
     mockery::stub(tessiflow_run, "config::get", !!config::get("tessiflow.log"))
     tessiflow_run()
@@ -63,15 +65,20 @@ test_that("tessiflow_run refuses to start if tessiflow is already running", {
   p1$kill_tree()
 })
 
-test_that("tessiflow_run logs to a log file", {
+test_that("tessiflow_run starts all sub-processes and logs to a log file", {
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
   local_log_dir()
 
   stub(tessiflow_run, "flows_main", function() {
     message("Running flows_main()")
+    get("api",envir=parent.frame())$wait()
+    get("performance",envir=parent.frame())$wait()
   })
   stub(tessiflow_run, "performance_main", function() {
     message("Running performance_main()")
+  })
+  stub(tessiflow_run, "api_start", function() {
+    message("Running api_start()")
   })
 
   suppressMessages(expect_message(tessiflow_run(), "Running flows_main", all = FALSE))
@@ -79,7 +86,9 @@ test_that("tessiflow_run logs to a log file", {
   logdata <- readLines(file.path(config::get("tessiflow.log"), "tessiflow-daemon.log"))
   expect_match(logdata, "Starting tessiflow", all = FALSE)
   expect_match(logdata, "Running flows_main", all = FALSE)
-  expect_equal(length(logdata), 2)
+  expect_match(logdata, "Running performance_main", all = FALSE)
+  expect_match(logdata, "Running api_start", all = FALSE)
+  expect_equal(length(logdata), 4)
 })
 
 
