@@ -45,10 +45,12 @@ flows_parse <- function(flows_directory = config::get("tessiflow.d")) {
 flows_auto_refresh <- function(flows_directory = config::get("tessiflow.d")) {
   
   if(is.null(tessiflow$flows) || is.null(tessiflow$flows_refresh_time)) {
+    message(paste("Loading flows from",flows_directory))
     tessiflow$flows <- flows_parse(flows_directory)
     tessiflow$flows_refresh_time <- now()
   } else if(any(file.mtime(dir(config::get("tessiflow.d"),full.names = T)) > 
                 tessiflow$flows_refresh_time)) {
+    message(paste("Refreshing flows from",flows_directory))
     flows_refresh(flows_directory)  
   }
   

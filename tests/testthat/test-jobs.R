@@ -150,12 +150,12 @@ test_that("job_maybe_start runs jobs on forced start", {
 
   tessiflow$flows[1, scheduled_runs := list(job_false$scheduled_runs)]
 
-  job_maybe_start(flow_name, job_name)
+  expect_message(job_maybe_start(flow_name, job_name),paste(flow_name,"/",job_name,".+Force starting job"))
   expect_length(mock_args(job_start), 1)
   
   tessiflow$flows[1, scheduled_runs := list(job_true$scheduled_runs)]
   
-  job_maybe_start(flow_name, job_name)
+  expect_message(job_maybe_start(flow_name, job_name),paste(flow_name,"/",job_name,".+Force starting job"))
   expect_length(mock_args(job_start), 2)
 })
 
@@ -387,7 +387,7 @@ test_that("job_poll calls job_finalize on forced stop", {
   stub(job_poll, "job_finalize", job_finalize)
   stub(job_poll, "job_read", TRUE)
 
-  job_poll(flow_name, job_name)
+  expect_message(job_poll(flow_name, job_name),paste(flow_name,"/",job_name,".+Force stopping job, pid:"))
   expect_length(mock_args(job_finalize), 1)
 })
 

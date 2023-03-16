@@ -41,8 +41,11 @@ job_maybe_start <- function(flow_name, job_name) {
   # check schedule
   check_schedule <- any(job$scheduled_runs[[1]] %>% unlist() %>% purrr::keep(~ . < now()) %||% NA >
     last_run$end_time) # T/F/NA
-
-  if (!is.na(check_force) && check_force ||
+  
+  if(!is.na(check_force) && check_force) {
+    job_log_write(flow_name, job_name, "Force starting job", console = TRUE)
+    job_start(flow_name, job_name) 
+  } else if (
       (is.na(check_runs_on) || check_runs_on) &&
       (is.na(check_if) || check_if) &&
       (is.na(check_needs) || check_needs) &&
@@ -221,7 +224,11 @@ job_poll <- function(flow_name, job_name) {
     e <- job$r_session[[1]]$run(rlang::last_error, package = T)
     job_on_error(flow_name, job_name, e)
   }
-  if (!job$r_session[[1]]$is_alive() || flows_log_get_last_run(flow_name, job_name)$status == "Forced stop") {
+  
+  if (!job$r_session[[1]]$is_alive()) {
+    job_finalize(flow_name, job_name)
+  } else if (flows_log_get_last_run(flow_name, job_name)$status == "Forced stop") {
+    job_log_write(flow_name, job_name, paste("Force stopping job, pid:", job$pid), console = TRUE)
     job_finalize(flow_name, job_name)
   }
 
