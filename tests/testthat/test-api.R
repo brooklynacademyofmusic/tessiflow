@@ -34,24 +34,24 @@ test_that("api_server is running", {
 
 test_that("tessiflow_job_start starts job", {
   res <- tessiflow_job_start("test","test")
-  expect_match(httr::content(res)$message,"flow_name.+must be a subset of.+Dummy",all=FALSE)
+  expect_match(res$message,"flow_name.+must be a subset of.+Dummy",all=FALSE)
   
   res <- tessiflow_job_start("Dummy workflow","Job 1")
-  expect_equal(httr::content(res)[[1]]$status,"Forced start")
+  expect_equal(res[[1]]$status,"Forced start")
 })
 
 test_that("tessiflow_job_stop stops job", {
   res <- tessiflow_job_stop("test","test")
-  expect_match(httr::content(res)$message,"flow_name.+must be a subset of.+Dummy",all=FALSE)
+  expect_match(res$message,"flow_name.+must be a subset of.+Dummy",all=FALSE)
   
   res <- tessiflow_job_stop("Dummy workflow 2","Job 3")
-  expect_equal(httr::content(res)[[1]]$status,"Forced stop")
+  expect_equal(res[[1]]$status,"Forced stop")
 })
 
 test_that("tessiflow_flows_get gets the last run of all configured flows", {
   res <- tessiflow_flows_get()
   
-  expect_length(httr::content(res),6)
-  expect_equal(rbindlist(httr::content(res))$status,c("Forced start",rep("Waiting",4),"Forced stop"))
+  expect_length(res,6)
+  expect_equal(rbindlist(res, fill = T)$status,c("Forced start",rep("Waiting",4),"Forced stop"))
 })
 

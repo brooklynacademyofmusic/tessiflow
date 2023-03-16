@@ -9,7 +9,7 @@ api_start(working_dir = getwd(), docs = FALSE, debug = FALSE)
 \arguments{
 \item{working_dir}{character, working directory to start the API server in}
 
-\item{docs}{boolean, passed on to \link[plumber:pr_run]{plumber::pr_run}}
+\item{docs}{boolean, passed on to \code{plumber::pr_run}}
 
 \item{debug}{boolean, passed on to \code{plumber::pr_run}}
 }

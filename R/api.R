@@ -9,9 +9,8 @@ api_job_start <- function(flow_name, job_name) {
   . <- start_time <- NULL
   assert_flow_job_name(flow_name, job_name)
   
-  job <- setDT(flows_log_get_last_run(flow_name, job_name))
-  
-  sqlite_upsert("jobs", job[,.(flow_name, job_name, start_time, status = "Forced start")])
+  sqlite_upsert("jobs", data.table(flow_name = flow_name, job_name = job_name, 
+                                   start_time = now(), end_time = now(), status = "Forced start"))
   
   flows_log_get_last_run(flow_name,job_name)
 }
@@ -21,9 +20,8 @@ api_job_stop <- function(flow_name, job_name) {
   . <- start_time <- NULL
   assert_flow_job_name(flow_name, job_name)
   
-  job <- setDT(flows_log_get_last_run(flow_name, job_name))
-  
-  sqlite_upsert("jobs", job[,.(flow_name, job_name, start_time, status = "Forced stop")])
+  sqlite_upsert("jobs", data.table(flow_name = flow_name, job_name = job_name, 
+                                   start_time = now(), end_time = now(), status = "Forced stop"))
   
   flows_log_get_last_run(flow_name,job_name)
 }
@@ -65,7 +63,7 @@ api_start <- function(working_dir = getwd(), docs = FALSE, debug = FALSE) {
 #' @param job_name character job name
 {}
 
-#' @importFrom httr POST modify_url
+#' @importFrom httr POST modify_url content
 #' @describeIn api start job on the tessiflow server
 #' @export
 tessiflow_job_start <- function(flow_name, job_name, hostname = "localhost", port = config::get("tessiflow.port")) {
@@ -74,11 +72,11 @@ tessiflow_job_start <- function(flow_name, job_name, hostname = "localhost", por
                   port = port,
                   path = "job_start",
                   query = list("flow_name" = flow_name,
-                               "job_name" = job_name)))
+                               "job_name" = job_name))) %>% content()
 }
 
 
-#' @importFrom httr POST modify_url
+#' @importFrom httr POST modify_url content
 #' @describeIn api stop job on the tessiflow server
 #' @export
 tessiflow_job_stop <- function(flow_name, job_name, hostname = "localhost", port = config::get("tessiflow.port")) {
@@ -87,16 +85,16 @@ tessiflow_job_stop <- function(flow_name, job_name, hostname = "localhost", port
                   port = port,
                   path = "job_stop",
                   query = list("flow_name" = flow_name,
-                               "job_name" = job_name)))
+                               "job_name" = job_name))) %>% content()
 }
 
 
-#' @importFrom httr GET modify_url
+#' @importFrom httr GET modify_url content
 #' @describeIn api get information on the latest run of each job on the tessiflow server
 #' @export
 tessiflow_flows_get <- function(hostname = "localhost", port = config::get("tessiflow.port")) {
   GET(modify_url("http://",
                   hostname = hostname,
                   port = port,
-                  path = "flows_get"))
+                  path = "flows_get")) %>% content()
 }

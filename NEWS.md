@@ -1,3 +1,8 @@
+# tessiflow 0.2.1
+
+* fixed issue that was preventing main loop from starting
+* client API now returns R lists instead of response objects
+
 # tessiflow 0.2.0
 
 * Major update!

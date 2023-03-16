@@ -2,15 +2,28 @@ withr::local_package("mockery")
 withr::local_package("checkmate")
 
 local_log_dir()
-local_flows_data_table()
 
 
 # flows_main --------------------------------------------------------------
 
-flows <- tessiflow$flows
-
 # Get rid of error control since we use errors to break out of the main loop
 stub(flows_main, "try_fetch", function(expr,...){eval(expr)})
+
+test_that("flows_main actually *does* something", {
+  stub(flows_main, "flows_auto_refresh", function(){tessiflow$flows <- flows_parse()})
+  m <- mock()
+  stub(flows_main, "job_maybe_start", m)
+  stub(flows_main, "job_poll", m)
+  stub(flows_main, "Sys.sleep", function(...) {
+    stop("first loop")
+  })
+  
+  expect_error(flows_main(), "first loop")
+  expect_equal(length(mock_args(m)), nrow(tessiflow$flows))
+})
+
+local_flows_data_table()
+flows <- tessiflow$flows
 
 test_that("flows_main does nothing when all tasks are finished", {
   flows[, status := "Finished"]

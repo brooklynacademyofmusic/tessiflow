@@ -9,12 +9,11 @@
 flows_main <- function() {
   data.table::setDTthreads(1) # Don't multithread this loop to avoid database/process locks
   status <- on.schedule <- NULL
-
+  flows_auto_refresh()
+  
   while (!all(tessiflow$flows$status == "Finished")) {
     try_fetch(
       {
-        flows_auto_refresh()
-
         if ("Waiting" %in% tessiflow$flows$status) {
           tessiflow$flows[status == "Waiting", apply(.SD, 1, function(.) {
             job_maybe_start(.$flow_name, .$job_name)
@@ -37,6 +36,8 @@ flows_main <- function() {
         }
 
         Sys.sleep(1)
+        
+        flows_auto_refresh()
       },
       error = error_calling_handler
     )
