@@ -1,11 +1,11 @@
-#' flows_log_open
-#'
-#' opens the jobs database connection
+#' database
+#' @title Tessiflow database utilities
+#' @name database
 #'
 #' @param flows_log_dir directory where the SQLite database is stored
-#'
+{}
 #' @return invisible
-#'
+#' @describeIn database opens the jobs database connection
 flows_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
   if (is.null(flows_log_dir) || !dir.exists(flows_log_dir)) {
     stop("Please set the tessiflow.log configuration option to a directory where log files will be stored")
@@ -25,7 +25,7 @@ flows_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
 }
 
 
-#' @describeIn flows_log_open closes the jobs database connection
+#' @describeIn database closes the jobs database connection
 flows_log_close <- function() {
   if (!is.null(tessiflow$db)) {
     DBI::dbDisconnect(tessiflow$db)
@@ -33,7 +33,7 @@ flows_log_close <- function() {
   tessiflow$db <- NULL
 }
 
-#' @describeIn flows_log_open Create the SQLite log table
+#' @describeIn database Create the SQLite log table
 flows_log_create <- function() {
   DBI::dbCreateTable(tessiflow$db, "jobs", fields = c(
     flow_name = "character",

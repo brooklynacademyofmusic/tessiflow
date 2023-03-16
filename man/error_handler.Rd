@@ -5,7 +5,7 @@
 \alias{error_print}
 \alias{error_email}
 \alias{error_calling_handler}
-\title{error_handler}
+\title{Error handlers}
 \usage{
 error_handler(error)
 
@@ -20,6 +20,9 @@ error_calling_handler(error)
 }
 \description{
 functions for handling errors
+}
+\details{
+error_handler
 }
 \section{Functions}{
 \itemize{

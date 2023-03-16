@@ -1,6 +1,6 @@
 #' check_flow_job_name
-#'
-#' check, assertion, and test for flow and job name: both are characters of length 1 and both exist in flows
+#' @title tests for flow and job names
+#' @description check, assertion, and test for flow and job name: both are characters of length 1 and both exist in flows. 
 #'
 #' @param flow_name `character` flow name
 #' @param job_name `character` job name
@@ -9,6 +9,7 @@
 #' @param add	`AssertCollection` collection to store assertion messages. See `AssertCollection.`
 #'
 #' @importFrom checkmate makeAssertCollection reportAssertions assert check_character check_names
+#' @describeIn check_flow_job_name returns `TRUE` if check is true, character error message if check is false
 check_flow_job_name <- function(flow_name, job_name) {
   if (is.null(tessiflow$flows)) {
     tessiflow$flows <- flows_parse()
@@ -35,8 +36,8 @@ check_flow_job_name <- function(flow_name, job_name) {
   reportAssertions(checks)
 }
  
-#' @describeIn check_flow_job_name errors if check is false
+#' @describeIn check_flow_job_name returns `TRUE` if check is true, throws error if check is false
 assert_flow_job_name <- checkmate::makeAssertionFunction(check_flow_job_name)
 
-#' @describeIn check_flow_job_name returns `FALSE` if check is false
+#' @describeIn check_flow_job_name returns `TRUE` if check is true, `FALSE` otherwise
 test_flow_job_name <- checkmate::makeTestFunction(check_flow_job_name)

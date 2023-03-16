@@ -1,4 +1,4 @@
-#' @describeIn flows_log_open opens the performance database connection
+#' @describeIn database opens the performance database connection
 performance_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
   if (is.null(flows_log_dir) || !dir.exists(flows_log_dir)) {
     stop("Please set the tessiflow.log configuration option to a directory where log files will be stored")
@@ -17,7 +17,7 @@ performance_log_open <- function(flows_log_dir = config::get("tessiflow.log")) {
   invisible()
 }
 
-#' @describeIn flows_log_open Create the SQLite performance log table
+#' @describeIn database Create the SQLite performance log table
 performance_log_create <- function() {
   if (DBI::dbExistsTable(tessiflow$db2, "performance")) {
     return(invisible())
@@ -39,7 +39,7 @@ performance_log_create <- function() {
   invisible()
 }
 
-#' @describeIn flows_log_open closes the performance database connection
+#' @describeIn database closes the performance database connection
 performance_log_close <- function() {
   if (!is.null(tessiflow$db2)) {
     DBI::dbDisconnect(tessiflow$db2)

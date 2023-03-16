@@ -1,19 +1,19 @@
-
-#' job_maybe_start
-#'
-#' check to see if it's time to start a job and call the job runner if it is.
+#' @name job_
+#' @rdname job_start
+#' @title job functions
+#' @description run, poll, step, read, and finalize tessiflow jobs
+#' @param flow_name string workflow name
+#' @param job_name string job name
+{}
+#' @return invisibly
+#' @importFrom utils tail
+#' @describeIn job_start check to see if it's time to start a job and call the job runner if it is. 
+#' 
 #' the job will be started if following conditions are all true:
 #' - `runs-on` must match the computer name as listed in `Sys.info()["nodename"]`
 #' - `if` must be true in the current context
 #' - `needs` must have finished running since the last time this ran (with return value = 0 unless `if` evaluates to true)
 #' - the most recent run in `scheduled_runs` is after the last actual run time for this job
-#'
-#' @param flow_name string workflow name
-#' @param job_name string job name
-#'
-#' @return invisibly
-#' @importFrom utils tail
-#'
 job_maybe_start <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
@@ -54,18 +54,12 @@ job_maybe_start <- function(flow_name, job_name) {
   }
 }
 
-#' job_start
-#'
-#' Run the job in a `callr` process
-#'
-#' @param flow_name string workflow name
-#' @param job_name string job name
-#'
+
 #' @importFrom callr r_session r_session_options
 #' @importFrom lubridate now
 #'
 #' @return invisibly
-#'
+#' @describeIn job_start run the job in a `callr` process
 job_start <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 

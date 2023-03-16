@@ -4,7 +4,7 @@
 \alias{check_flow_job_name}
 \alias{assert_flow_job_name}
 \alias{test_flow_job_name}
-\title{check_flow_job_name}
+\title{tests for flow and job names}
 \usage{
 check_flow_job_name(flow_name, job_name)
 
@@ -27,12 +27,17 @@ test_flow_job_name(flow_name, job_name)
 \item{add}{\code{AssertCollection} collection to store assertion messages. See \code{AssertCollection.}}
 }
 \description{
-check, assertion, and test for flow and job name: both are characters of length 1 and both exist in flows
+check, assertion, and test for flow and job name: both are characters of length 1 and both exist in flows.
+}
+\details{
+check_flow_job_name
 }
 \section{Functions}{
 \itemize{
-\item \code{assert_flow_job_name()}: errors if check is false
+\item \code{check_flow_job_name()}: returns \code{TRUE} if check is true, character error message if check is false
 
-\item \code{test_flow_job_name()}: returns \code{FALSE} if check is false
+\item \code{assert_flow_job_name()}: returns \code{TRUE} if check is true, throws error if check is false
+
+\item \code{test_flow_job_name()}: returns \code{TRUE} if check is true, \code{FALSE} otherwise
 
 }}

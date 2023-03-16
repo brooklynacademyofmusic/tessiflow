@@ -1,7 +1,8 @@
 
-#' tessiflow_report
-#'
-#'
+#' @name tessiflow_report
+#' @title tessiflow_report
+#' @description Functions to create and email a report on the latest job runs
+{}
 #' @return nothing
 #' @importFrom lubridate now ddays as_datetime
 #' @importFrom dplyr tbl filter mutate transmute collect

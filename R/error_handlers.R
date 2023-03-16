@@ -1,7 +1,6 @@
 #' error_handler
-#'
-#' functions for handling errors
-#'
+#' @title Error handlers
+#' @description functions for handling errors
 #' @describeIn error_handler selects error handler to use
 #' @param error error condition
 #' @importFrom rlang cnd_entrace
