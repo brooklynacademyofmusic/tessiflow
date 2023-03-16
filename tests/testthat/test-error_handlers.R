@@ -87,6 +87,9 @@ test_that("error_email returns formatted error and trace information", {
 
 # error_calling_handler ---------------------------------------------------
 
+stub(error_handler, "interactive", TRUE)
+stub(error_calling_handler,"error_handler",error_handler)
+
 test_that("error_calling_handler finds the first function that has flow_name and job_name in it",{
   job_on_error <- mock()
   stub(error_calling_handler,"job_on_error", job_on_error)
