@@ -1,3 +1,12 @@
+# tessiflow 0.2.0
+
+* Major update!
+- brand new plumber-based API that involves two-way communication with the server and serves its own documentation
+- cut off backtrace at calling environment
+- log all remaining stdout/stderr when job finalizes
+- use a more robust error handling procedure that can handle errors in itself
+- bug fix: reset stopped jobs
+
 # tessiflow 0.1.8
 
 * add even richer rlang error information to error output
