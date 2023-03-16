@@ -1,25 +1,11 @@
 # Server ------------------------------------------------------------------
-
-#' job_force_stop
-#'
-#' @param flow_name 
-#' @param job_name 
-#' @rdname api
-#' @export
-job_force_stop <- function(flow_name, job_name) {
-  . <- start_time <- NULL
-  assert_flow_job_name(flow_name, job_name)
-  
-  job <- setDT(flows_log_get_last_run(flow_name, job_name))
-  
-  sqlite_upsert("jobs", job[,.(flow_name, job_name, start_time, status = "Forced stop")])
-  
-  flows_log_get_last_run(flow_name,job_name)
-}
-
-#' @describeIn api job_force_start
-#' @export
-job_force_start <- function(flow_name, job_name) {
+#' @name api_server
+#' @title Tessiflow API server functions
+#' @param flow_name character workflow name
+#' @param job_name character job name
+{}
+#' @describeIn api_server internal api function for forced starting a job
+api_job_start <- function(flow_name, job_name) {
   . <- start_time <- NULL
   assert_flow_job_name(flow_name, job_name)
   
@@ -30,17 +16,33 @@ job_force_start <- function(flow_name, job_name) {
   flows_log_get_last_run(flow_name,job_name)
 }
 
-#' @describeIn api flows_get
-#' @export
-flows_get <- function() {
+#' @describeIn api_server internal api function for forced stopping a job
+api_job_stop <- function(flow_name, job_name) {
+  . <- start_time <- NULL
+  assert_flow_job_name(flow_name, job_name)
+  
+  job <- setDT(flows_log_get_last_run(flow_name, job_name))
+  
+  sqlite_upsert("jobs", job[,.(flow_name, job_name, start_time, status = "Forced stop")])
+  
+  flows_log_get_last_run(flow_name,job_name)
+}
+
+#' @describeIn api_server internal api function for getting last run of jobs
+api_flows_get <- function() {
   flows <- flows_parse()
   flows_log_get_last_run(flows$flow_name, flows$job_name)
 }
 
 #' api_start
 #' 
-#' Start the plumber API for tessiflow and override the working directory
+#' Start the plumber API for tessiflow and override the working directory and some `plumber` startup options
+#'
 #' @importFrom plumber plumb pr_hook pr_run
+#' @param working_dir character, working directory to start the API server in
+#' @param docs boolean, passed on to `plumber::pr_run`
+#' @param debug boolean, passed on to `plumber::pr_run`
+#'
 api_start <- function(working_dir = getwd(), docs = FALSE, debug = FALSE) {
   force(working_dir)
   
@@ -54,13 +56,19 @@ api_start <- function(working_dir = getwd(), docs = FALSE, debug = FALSE) {
 
 # Client ------------------------------------------------------------------
 
-#' tessiflow_job_start
-#'
-#' @param flow_name 
-#' @param job_name 
+#' @title Tessiflow API
+#' @name api
+#' @description The Tessiflow API makes it possible to communicate with a running tessiflow instance
+#' @param hostname hostname of tessiflow server, defaults to `localhost`
+#' @param port port of tessiflow server, defaults to `tessiflow.port` config value
+#' @param flow_name character workflow name
+#' @param job_name character job name
+{}
+
 #' @importFrom httr POST modify_url
+#' @describeIn api start job on the tessiflow server
 #' @export
-tessiflow_job_start <- function(flow_name, job_name, hostname = "127.0.0.1", port = config::get("tessiflow.port")) {
+tessiflow_job_start <- function(flow_name, job_name, hostname = "localhost", port = config::get("tessiflow.port")) {
   POST(modify_url("http://",
                   hostname = hostname,
                   port = port,
@@ -69,11 +77,9 @@ tessiflow_job_start <- function(flow_name, job_name, hostname = "127.0.0.1", por
                                "job_name" = job_name)))
 }
 
-#' tessiflow_job_stop
-#'
-#' @param flow_name 
-#' @param job_name 
-#' @importFrom httr POST
+
+#' @importFrom httr POST modify_url
+#' @describeIn api stop job on the tessiflow server
 #' @export
 tessiflow_job_stop <- function(flow_name, job_name, hostname = "localhost", port = config::get("tessiflow.port")) {
   POST(modify_url("http://",
@@ -84,11 +90,9 @@ tessiflow_job_stop <- function(flow_name, job_name, hostname = "localhost", port
                                "job_name" = job_name)))
 }
 
-#' tessiflow_flows_get
-#'
-#' @param flow_name 
-#' @param job_name 
-#' @importFrom httr GET
+
+#' @importFrom httr GET modify_url
+#' @describeIn api get information on the latest run of each job on the tessiflow server
 #' @export
 tessiflow_flows_get <- function(hostname = "localhost", port = config::get("tessiflow.port")) {
   GET(modify_url("http://",

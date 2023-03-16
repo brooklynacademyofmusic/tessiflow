@@ -143,7 +143,7 @@ test_that("job_maybe_start runs jobs when they are scheduled", {
 
 test_that("job_maybe_start runs jobs on forced start", {
   # Only update the database, as this come from the API only
-  job_force_start(flow_name, job_name)
+  api_job_start(flow_name, job_name)
   local_flows_data_table()
   job_start <- mock(cycle = TRUE)
   stub(job_maybe_start, "job_start", job_start)
@@ -162,6 +162,7 @@ test_that("job_maybe_start runs jobs on forced start", {
 # job_make_remote_fun ----------------------------------------------------
 
 test_that("job_make_remote_fun runs code", {
+  #debugonce(job_make_remote_fun)
   expect_error(job_make_remote_fun(run_expr = "stop(\"Hello world\")")(), "Hello world")
 })
 
@@ -380,7 +381,7 @@ test_that("job_poll calls job_step if it's ready to advance", {
 
 test_that("job_poll calls job_finalize on forced stop", {
   # Only update the database, as this comes from the API only
-  job_force_stop(flow_name, job_name)
+  api_job_stop(flow_name, job_name)
   tessiflow$flows[get("flow_name") == flow_name & get("job_name") == job_name, status:="Running"]
   
   job_finalize <- mock()
