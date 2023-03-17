@@ -315,10 +315,10 @@ test_that("job_read reads from stdout and writes to the log", {
   job_log_write <- mock()
   stub(job_read, "job_log_write", job_log_write)
   r_session$.call(print, list("hello world"))
-  while(length(output <- unlist(purrr::map(mock_args(job_log_write), 3)))<4) {
-    job_read(flow_name, job_name)
-    Sys.sleep(1)
+  while(r_session$get_state() == "busy") {
+    job_read(flow_name, job_name, all = T)
   }
+  output <- unlist(purrr::map(mock_args(job_log_write),3))
   expect_match(output, "OUTPUT.+hello world", all = FALSE)
   expect_match(output, "PROCESS.+result.+hello world", all = FALSE)
 })
@@ -327,10 +327,10 @@ test_that("job_read reads from stderr and writes to the log", {
   job_log_write <- mock()
   stub(job_read, "job_log_write", job_log_write)
   r_session$.call(message, list("hello world"))
-  while(length(output <- unlist(purrr::map(mock_args(job_log_write), 3)))<4) {
-    job_read(flow_name, job_name)
-    Sys.sleep(1)
+  while(r_session$get_state() == "busy") {
+    job_read(flow_name, job_name, all = T)
   }
+  output <- unlist(purrr::map(mock_args(job_log_write),3))
   expect_match(output, "ERROR.+hello world", all = FALSE)
   expect_match(output, "PROCESS.+result : $", all = FALSE)
 })
@@ -418,7 +418,7 @@ local_flows_data_table()
 suppressMessages(tessiflow:::job_start(flow_name, job_name))
 job <- flows_get_job(flow_name, job_name)
 r_session <- job$r_session[[1]]
-# stub r_session$close
+# stub r_session$close so that job_finalize doesn't really kill it
 r_session <- as.environment(as.list(r_session))
 r_session$.close <- r_session$close
 r_session$close <- mock(TRUE, cycle = TRUE)
@@ -490,14 +490,6 @@ test_that("job_finalize writes to the log file and console", {
   expect_equal(unlist(mock_args(job_log_write)[[1]])[4], c(console = "TRUE"))
 })
 
-test_that("job_finalize reads all remaining output from the process", {
-  job_read <- mock(TRUE)
-  stub(job_finalize, "job_read", job_read)
-  job_finalize(flow_name, job_name)
-  expect_length(mock_args(job_read), 1)
-  expect_true(mock_args(job_read)[[1]][["all"]])
-})
-
 # unstub close
 r_session$close <- r_session$.close
 test_that("job_finalize closes the session and all subprocesses", {
@@ -515,14 +507,73 @@ test_that("job_finalize warns if there's no session to close", {
   expect_warning(job_finalize(flow_name, job_name), "no running R session")
 })
 
-# unstub job_start
+# unstub job_start and unlink
 rm(job_start)
+rm(job_finalize)
 test_that("job_finalize cleans up the tempdir", {
   suppressMessages(job_start(flow_name, job_name))
+  tessiflow$flows$r_session[[1]]$kill()
+  while(tessiflow$flows$r_session[[1]]$is_alive()) 
+    Sys.sleep(1)
   expect_true(any(dir.exists(tessiflow$flows$tempdir)))
-  tessiflow$flows$r_session[[1]]$call(q)
-  job_finalize(flow_name, job_name)
+  expect_warning(job_finalize(flow_name, job_name),"no running R session")
   expect_false(any(dir.exists(tessiflow$flows$tempdir)))
+})
+
+test_that("job_finalize reads all remaining output from the process if it has died", {
+  local_flows_data_table()
+  flow_name <- "Dummy workflow 2"
+  job_name <- "Job 3"
+  suppressMessages(job_start(flow_name, job_name))
+  job <- flows_get_job(flow_name, job_name)
+  r_session <- job$r_session[[1]]
+  r_session$call(function() {
+    print(as.list(seq(1000)))
+    q()
+  })
+  
+  job_log_write <- mock()
+  stub(job_read,"job_log_write",job_log_write)
+  stub(job_finalize,"job_read",job_read)
+  
+  while(r_session$is_alive())
+    Sys.sleep(1)
+  
+  suppressMessages(expect_warning(job_finalize(flow_name, job_name),"no running R session"))
+  expect_length(mock_args(job_log_write),1)
+  output_length <- nchar(unlist(mock_args(job_log_write)))
+  output <- unlist(mock_args(job_log_write))[output_length == max(output_length)][[1]]
+  # output format is [[1]][[8]]\n[1] 8\n\n
+  expect_match(output,"\\[1\\] 1")
+  expect_match(output,"\\[1\\] 1000")
+})
+
+test_that("job_finalize reads all remaining output from the process if it is still running", {
+  local_flows_data_table()
+  flow_name <- "Dummy workflow 2"
+  job_name <- "Job 3"
+  suppressMessages(job_start(flow_name, job_name))
+  job <- flows_get_job(flow_name, job_name)
+  r_session <- job$r_session[[1]]
+  r_session$call(function() {
+    print(as.list(seq(1000)))
+  })
+  
+  while(r_session$get_state() != "busy")
+    Sys.sleep(1)
+  
+  job_log_write <- mock()
+  stub(job_read,"job_log_write",job_log_write)
+  stub(job_finalize,"job_read",job_read)
+  
+  suppressMessages(job_finalize(flow_name, job_name))
+  output_length <- max(nchar(unlist(mock_args(job_log_write))))
+  expect_length(mock_args(job_log_write),1)
+  output_length <- nchar(unlist(mock_args(job_log_write)))
+  output <- unlist(mock_args(job_log_write))[output_length == max(output_length)][[1]]
+  # output format is "result : 27", 
+  expect_match(output,"result : 1")
+  expect_match(output,"result : 1000")
 })
 
 # job_reset ------------------------------------------------------------

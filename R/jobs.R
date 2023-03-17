@@ -236,38 +236,38 @@ job_poll <- function(flow_name, job_name) {
 #' @return character vector of output from process. Names are one or more of `output`, `error` and `process` and match the names from `processx::poll_io`
 #' @importFrom rlang exprs
 job_read <- function(flow_name, job_name, all = FALSE) {
-  read_all_output_lines <- read_output_lines <- read_all_error_lines <- read_error_lines <- read <- NULL
-
+  read_output_lines <- read_error_lines <- read <- NULL
   assert_flow_job_name(flow_name, job_name)
-
   job <- flows_get_job(flow_name, job_name)
+  
+  n <- ifelse(all,10,1)
+  
+  .read <- function() {
+  
+    io_state <- job$r_session[[1]]$poll_io(1)
+    io_names <- names(which(io_state == "ready"))
+    io_funs <- exprs(process = read(),
+                     output = read_output_lines(),
+                     error = read_error_lines())
+    
+    purrr::discard(lapply(io_funs[io_names], eval, envir = job$r_session[[1]]), ~ length(.) == 0)
+    
+  }
+  
+  i <- 0
+  output <- NULL
+  while(i < n && length(line <- .read()) > 0 || i < 2) {
+    output <- c(output,line)
+    i <- i + 1
+    Sys.sleep(1)
+  }
 
-  io_state <- job$r_session[[1]]$poll_io(1)
-  io_names <- names(which(io_state == "ready"))
-  io_funs <- exprs(process = read())
-
-  io_funs <- append(
-    io_funs,
-    if (all) {
-      exprs(
-        output = read_all_output_lines(),
-        error = read_all_error_lines()
-      )
-    } else {
-      exprs(
-        output = read_output_lines(),
-        error = read_error_lines()
-      )
-    }
-  )
-
-  output <- purrr::discard(lapply(io_funs[io_names], eval, envir = job$r_session[[1]]), ~ length(.) == 0)
   if (length(output)) {
     output_str <- lapply(output, purrr::imap, ~ paste(.y, ":", .x))
     output_str <- purrr::imap(output_str, ~ paste("[", toupper(.y), "]", .x)) %>% purrr::flatten_chr()
     job_log_write(flow_name, job_name, output_str)
   }
-
+  
   output
 }
 
@@ -286,14 +286,15 @@ job_finalize <- function(flow_name, job_name) {
     job$retval <- 0
   }
 
-  if (is.null(r_session) || r_session[[1]]$get_state() == "finished") {
+  if (!is.null(r_session) && r_session[[1]]$get_state() == "busy"){
+    job_read(flow_name, job_name, all = TRUE)
+  } 
+  
+  if (is.null(r_session) || !r_session[[1]]$is_alive()) {
     warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
   } else {
     job$r_session[[1]]$close()
-  }
-
-  # Flush remaining output
-  job_read(flow_name, job_name, all = TRUE)
+  } 
 
   if (dir.exists(job$tempdir)) {
     unlink(job$tempdir, recursive = TRUE, force = TRUE)
