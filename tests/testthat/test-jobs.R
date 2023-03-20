@@ -516,7 +516,7 @@ test_that("job_finalize cleans up the tempdir", {
   while(tessiflow$flows$r_session[[1]]$is_alive()) 
     Sys.sleep(1)
   expect_true(any(dir.exists(tessiflow$flows$tempdir)))
-  expect_warning(job_finalize(flow_name, job_name),"no running R session")
+  suppressMessages(expect_warning(job_finalize(flow_name, job_name),"no running R session"))
   expect_false(any(dir.exists(tessiflow$flows$tempdir)))
 })
 
