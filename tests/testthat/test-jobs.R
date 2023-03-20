@@ -316,7 +316,7 @@ test_that("job_read reads from stdout and writes to the log", {
   stub(job_read, "job_log_write", job_log_write)
   r_session$.call(print, list("hello world"))
   while(r_session$get_state() == "busy") {
-    job_read(flow_name, job_name, all = T)
+    job_read(flow_name, job_name, timeout = 1000)
   }
   output <- unlist(purrr::map(mock_args(job_log_write),3))
   expect_match(output, "OUTPUT.+hello world", all = FALSE)
@@ -328,7 +328,7 @@ test_that("job_read reads from stderr and writes to the log", {
   stub(job_read, "job_log_write", job_log_write)
   r_session$.call(message, list("hello world"))
   while(r_session$get_state() == "busy") {
-    job_read(flow_name, job_name, all = T)
+    job_read(flow_name, job_name, timeout = 1000)
   }
   output <- unlist(purrr::map(mock_args(job_log_write),3))
   expect_match(output, "ERROR.+hello world", all = FALSE)
@@ -407,9 +407,9 @@ test_that("job_poll calls job_finalize if the job dies", {
   expect_length(mock_args(job_finalize), 1)
 })
 
-test_that("job_read all = TRUE on finished process returns all output", {
+test_that("job_read on finished process returns all output", {
   expect_false(r_session$is_alive())
-  expect_equal(job_read(flow_name, job_name, all = TRUE)$output,"[1] \"hello world\"")
+  expect_equal(job_read(flow_name, job_name)$output,"[1] \"hello world\"")
 })
 
 # job_on_error ------------------------------------------------------------
@@ -541,11 +541,9 @@ test_that("job_finalize reads all remaining output from the process if it has di
   
   suppressMessages(expect_warning(job_finalize(flow_name, job_name),"no running R session"))
   expect_length(mock_args(job_log_write),1)
-  output_length <- nchar(unlist(mock_args(job_log_write)))
-  output <- unlist(mock_args(job_log_write))[output_length == max(output_length)][[1]]
-  # output format is [[1]][[8]]\n[1] 8\n\n
-  expect_match(output,"\\[1\\] 1")
-  expect_match(output,"\\[1\\] 1000")
+  output <- unlist(mock_args(job_log_write))
+  expect_match(output,"\\[1\\] 1$", all = FALSE)
+  expect_match(output,"\\[1\\] 1000$", all = FALSE)
 })
 
 test_that("job_finalize reads all remaining output from the process if it is still running", {
@@ -567,7 +565,6 @@ test_that("job_finalize reads all remaining output from the process if it is sti
   stub(job_finalize,"job_read",job_read)
   
   suppressMessages(job_finalize(flow_name, job_name))
-  output_length <- max(nchar(unlist(mock_args(job_log_write))))
   expect_length(mock_args(job_log_write),1)
   output_length <- nchar(unlist(mock_args(job_log_write)))
   output <- unlist(mock_args(job_log_write))[output_length == max(output_length)][[1]]

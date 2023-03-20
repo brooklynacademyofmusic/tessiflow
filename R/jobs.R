@@ -232,34 +232,31 @@ job_poll <- function(flow_name, job_name) {
 }
 
 #' @describeIn job_start Read `stdout` and `stderr` from the process and write to log. When ready, call job_step
-#' @param all boolean whether to wait for the process to finish and return all output. (Most useful when process has already finished.)
+#' @param timeout milliseconds to wait for read before giving up, passed to `processx::process$poll_io`
 #' @return character vector of output from process. Names are one or more of `output`, `error` and `process` and match the names from `processx::poll_io`
-#' @importFrom rlang exprs
-job_read <- function(flow_name, job_name, all = FALSE) {
-  read_output_lines <- read_error_lines <- read <- NULL
+#' @importFrom rlang exprs expr
+job_read <- function(flow_name, job_name, timeout = 1) {
+  read_output_lines <- read_error_lines <- read <- read_all_output_lines <- read_all_error_lines <- NULL
   assert_flow_job_name(flow_name, job_name)
   job <- flows_get_job(flow_name, job_name)
   
-  n <- ifelse(all,10,1)
-  
-  .read <- function() {
-  
-    io_state <- job$r_session[[1]]$poll_io(1)
+  r_session <- job$r_session[[1]]
+  output = NULL
+  for(n in seq(100)) {
+    io_state <- r_session$poll_io(timeout)
     io_names <- names(which(io_state == "ready"))
+    
+    if(length(io_names) == 0)
+      break
+    
+    is_alive <- r_session$is_alive()
     io_funs <- exprs(process = read(),
-                     output = read_output_lines(),
-                     error = read_error_lines())
+                     output = !!ifelse(is_alive, expr(read_output_lines()), expr(read_all_output_lines())),
+                     error = !!ifelse(is_alive, expr(read_error_lines()), expr(read_all_error_lines())))
     
-    purrr::discard(lapply(io_funs[io_names], eval, envir = job$r_session[[1]]), ~ length(.) == 0)
-    
-  }
-  
-  i <- 0
-  output <- NULL
-  while(i < n && length(line <- .read()) > 0 || i < 2) {
-    output <- c(output,line)
-    i <- i + 1
-    Sys.sleep(1)
+    output <- c(output,purrr::discard(lapply(io_funs[io_names], eval, envir = r_session), ~ length(.) == 0))
+    if(!is_alive)
+      break
   }
 
   if (length(output)) {
@@ -285,10 +282,10 @@ job_finalize <- function(flow_name, job_name) {
   } else {
     job$retval <- 0
   }
-
-  if (!is.null(r_session) && r_session[[1]]$get_state() == "busy"){
-    job_read(flow_name, job_name, all = TRUE)
-  } 
+  
+  # Flush remaining output
+  if(!is.null(r_session)) 
+    job_read(flow_name, job_name, timeout = 1000)
   
   if (is.null(r_session) || !r_session[[1]]$is_alive()) {
     warning(paste("Job", flow_name, "/", job_name, "has no running R session."))

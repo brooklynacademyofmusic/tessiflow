@@ -22,7 +22,7 @@ job_on_error(flow_name, job_name, error)
 
 job_poll(flow_name, job_name)
 
-job_read(flow_name, job_name, all = FALSE)
+job_read(flow_name, job_name, timeout = 1)
 
 job_finalize(flow_name, job_name)
 
@@ -35,7 +35,7 @@ job_reset(flow_name, job_name)
 
 \item{error}{error condition object}
 
-\item{all}{boolean whether to wait for the process to finish and return all output. (Most useful when process has already finished.)}
+\item{timeout}{milliseconds to wait for read before giving up, passed to \code{processx::process$poll_io}}
 }
 \value{
 invisibly
