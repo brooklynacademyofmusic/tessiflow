@@ -26,6 +26,7 @@ send_email <- function(subject, body,
     subject = paste0(subject, " (", Sys.info()["nodename"], ")"),
     body = body,
     smtp = smtp,
+    encoding = "utf-8",
     html = TRUE,
     send = TRUE
   )

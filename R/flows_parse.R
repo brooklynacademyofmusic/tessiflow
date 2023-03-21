@@ -51,7 +51,8 @@ flows_auto_refresh <- function(flows_directory = config::get("tessiflow.d")) {
   } else if(any(file.mtime(dir(config::get("tessiflow.d"),full.names = T)) > 
                 tessiflow$flows_refresh_time)) {
     message(paste("Refreshing flows from",flows_directory))
-    flows_refresh(flows_directory)  
+    flows_refresh(flows_directory) 
+    tessiflow$flows_refresh_time <- now()
   }
   
 }
