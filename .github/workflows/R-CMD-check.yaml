@@ -38,12 +38,12 @@ jobs:
       
       - uses: conda-incubator/setup-miniconda@v2
       
-      # - name: Setup upterm session
-      #   uses: lhotari/action-upterm@v1
-      #   with: 
-      #     limit-access-to-actor: true
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+        with:
+          limit-access-to-actor: true
 
-      - uses: r-lib/actions/check-r-package@v1
+      - uses: r-lib/actions/check-r-package@v2
 
       - name: Show testthat output
         if: always()
