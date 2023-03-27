@@ -1,3 +1,9 @@
+# tessiflow 0.2.2
+  Updates:
+    - send_email now handles UTF-8 encoding
+    - flows_auto_refresh now won't keep reloading forEVER
+    - Improved job_read handling - now uses a timeout to make sure that it reads as much as possible, but only when we want it to.
+
 # tessiflow 0.2.1
 
 * fixed issue that was preventing main loop from starting
