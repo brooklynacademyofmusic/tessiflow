@@ -521,29 +521,32 @@ test_that("job_finalize cleans up the tempdir", {
 })
 
 test_that("job_finalize reads all remaining output from the process if it has died", {
-  local_flows_data_table()
-  flow_name <- "Dummy workflow 2"
-  job_name <- "Job 3"
-  suppressMessages(job_start(flow_name, job_name))
-  job <- flows_get_job(flow_name, job_name)
-  r_session <- job$r_session[[1]]
-  r_session$call(function() {
-    print(as.list(seq(1000)))
-    q()
-  })
-  
-  job_log_write <- mock()
-  stub(job_read,"job_log_write",job_log_write)
-  stub(job_finalize,"job_read",job_read)
-  
-  while(r_session$is_alive())
-    Sys.sleep(1)
-  
-  suppressMessages(expect_warning(job_finalize(flow_name, job_name),"no running R session"))
-  expect_length(mock_args(job_log_write),1)
-  output <- unlist(mock_args(job_log_write))
-  expect_match(output,"\\[1\\] 1$", all = FALSE)
-  expect_match(output,"\\[1\\] 1000$", all = FALSE)
+  # Only relevant in Windows because *nix doesn't let a process die while its stdout remains unread
+  if(Sys.info()["sysname"] == "Windows"){
+    local_flows_data_table()
+    flow_name <- "Dummy workflow 2"
+    job_name <- "Job 3"
+    suppressMessages(job_start(flow_name, job_name))
+    job <- flows_get_job(flow_name, job_name)
+    r_session <- job$r_session[[1]]
+    r_session$call(function() {
+      print(as.list(seq(1000)))
+      q()
+    })
+    
+    job_log_write <- mock()
+    stub(job_read,"job_log_write",job_log_write)
+    stub(job_finalize,"job_read",job_read)
+    
+    while(r_session$is_alive())
+      Sys.sleep(1)
+    
+    suppressMessages(expect_warning(job_finalize(flow_name, job_name),"no running R session"))
+    expect_length(mock_args(job_log_write),1)
+    output <- unlist(mock_args(job_log_write))
+    expect_match(output,"\\[1\\] 1$", all = FALSE)
+    expect_match(output,"\\[1\\] 1000$", all = FALSE)
+  }
 })
 
 test_that("job_finalize reads all remaining output from the process if it is still running", {
