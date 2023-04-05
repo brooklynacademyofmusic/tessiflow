@@ -200,8 +200,7 @@ test_that("flows_auto_refresh loads flows when they haven't been yet", {
 
 test_that("flows_auto_refresh only refreshes flows when a yml file has been updated", {
   local_flows_data_table()
-  tessiflow$flows_refresh_time <- now()
-  
+
   flows_refresh <- mock(flows_parse())
   stub(flows_auto_refresh,"flows_refresh",flows_refresh)
   
@@ -213,5 +212,7 @@ test_that("flows_auto_refresh only refreshes flows when a yml file has been upda
   expect_message(flows_auto_refresh(),"Refreshing flows from")
   expect_length(mock_args(flows_refresh),1)
   
+  expect_silent(flows_auto_refresh())
+  expect_length(mock_args(flows_refresh),1)
 })
 
