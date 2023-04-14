@@ -403,7 +403,7 @@ test_that("job_poll calls job_finalize if the job dies", {
   while (r_session$is_alive()) {
     Sys.sleep(1)
   }
-  job_poll(flow_name, job_name)
+  expect_warning(job_poll(flow_name, job_name), "no running R session")
   expect_length(mock_args(job_finalize), 1)
 })
 
