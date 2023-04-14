@@ -66,7 +66,7 @@ job_start <- function(flow_name, job_name) {
   # spin up a callr process
   job <- flows_get_job(flow_name, job_name)
 
-  if (is.null(job$r_session) || job$r_session[[1]]$get_state() == "finished") {
+  if (is.null(job$r_session) || !job$r_session[[1]]$is_alive()) {
     r_session <- r_session$new(options = r_session_options(
       stdout = "|",
       stderr = "|",
@@ -101,8 +101,12 @@ job_step <- function(flow_name, job_name) {
 
   job <- flows_get_job(flow_name, job_name)
 
-  if (job$step == length(job$steps)) {
+  if (is.null(job$r_session) || !job$r_session[[1]]$is_alive()) {
+    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
+    job_log_write(flow_name, job_name, paste("No running R session, skipping", step, ":", current_step$name), console = TRUE)
     return(job_finalize(flow_name, job_name))
+  } else if (job$step == length(job$steps)) {
+    return(job_finalize(flow_name, job_name))  
   }
 
   step <- job$step + 1
@@ -118,14 +122,9 @@ job_step <- function(flow_name, job_name) {
     flow_name, job_name,
     list(step = step)
   )
-
-  if (is.null(job$r_session) || job$r_session[[1]]$get_state() == "finished") {
-    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
-    job_log_write(flow_name, job_name, paste("No running R session, skipping", step, ":", current_step$name), console = TRUE)
-  } else {
-    job_log_write(flow_name, job_name, paste("Beginning step", step, ":", current_step$name), console = TRUE)
-  }
-
+  
+  job_log_write(flow_name, job_name, paste("Beginning step", step, ":", current_step$name), console = TRUE)
+  
   return(invisible())
 }
 
