@@ -46,8 +46,7 @@ error_email <- function(error) {
     "</style><p>",
     process_name, "reported the following error:<p><pre>",
     cli::ansi_html(rlang::cnd_message(error, prefix = TRUE)), "<br/>",
-    paste(cli::ansi_html(format(error$trace)), collapse = "<br/>"), "</p><p>",
-    paste(gsub("\\n","<br/>",error$trace$call), collapse = "<br/>"), "</p>"
+    paste(cli::ansi_html(format(error$trace)), collapse = "<br/>"), "</p><p>"
   ), collapse = " ")
 
   send_email(subject = subject, body = body)

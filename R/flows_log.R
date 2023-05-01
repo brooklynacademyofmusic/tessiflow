@@ -47,7 +47,8 @@ flows_log_create <- function() {
     end_time = "double",
     retval = "integer",
     step = "integer",
-    pid = "integer"
+    pid = "integer",
+    tempdir = "character"
   ))
 
   DBI::dbExecute(tessiflow$db, "CREATE UNIQUE INDEX jobs_index ON jobs(flow_name,job_name,start_time)")
