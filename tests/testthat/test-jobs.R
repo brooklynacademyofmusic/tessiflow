@@ -471,7 +471,7 @@ flows_update_job(flow_name, job_name, list(r_session = list(r_session), tempdir=
 flows_update_job <- mock(TRUE, cycle = TRUE)
 stub(job_finalize, "flows_update_job", flows_update_job)
 stub(job_finalize, "job_log_write", TRUE)
-stub(job_finalize, "unlink", TRUE)
+stub(job_finalize, "unlink", 0)
 
 test_that("job_finalize updates the flows data.table and database", {
   job_finalize(flow_name, job_name)
@@ -510,8 +510,22 @@ test_that("job_finalize warns if there's no session to close", {
 # unstub job_start and unlink
 rm(job_start)
 rm(job_finalize)
+
+test_that("job_finalize calls job_on_error when it fails to cleanup the tempdir", {
+  suppressMessages(job_start(flow_name, job_name))
+  job_on_error <- mock()
+  stub(job_finalize,"dir.exists",TRUE)
+  stub(job_finalize,"unlink",1)
+  stub(job_finalize,"job_on_error",job_on_error)
+  
+  expect_message(job_finalize(flow_name, job_name))
+  expect_equal(length(mock_args(job_on_error)),1)
+})
+
+  
 test_that("job_finalize cleans up the tempdir", {
   suppressMessages(job_start(flow_name, job_name))
+  
   tessiflow$flows$r_session[[1]]$kill()
   while(tessiflow$flows$r_session[[1]]$is_alive()) 
     Sys.sleep(1)
@@ -519,6 +533,7 @@ test_that("job_finalize cleans up the tempdir", {
   suppressMessages(expect_warning(job_finalize(flow_name, job_name),"no running R session"))
   expect_false(any(dir.exists(tessiflow$flows$tempdir)))
 })
+
 
 test_that("job_finalize reads all remaining output from the process if it has died", {
   # Only relevant in Windows because *nix doesn't let a process die while its stdout remains unread
