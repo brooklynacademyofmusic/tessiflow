@@ -290,7 +290,7 @@ job_finalize <- function(flow_name, job_name) {
   } 
 
   if (dir.exists(job$tempdir)) {
-    if(unlink(job$tempdir, recursive = TRUE, force = TRUE) == 1) 
+    if(unlink(job$tempdir, recursive = TRUE, force = TRUE) == 1 && rlang::caller_call()[[1]] != "job_on_error") 
       job_on_error(flow_name, job_name, rlang::error_cnd(message = paste("Unlink of", job$tempdir, "failed"),
                                                          trace = rlang::trace_back()))
   }
