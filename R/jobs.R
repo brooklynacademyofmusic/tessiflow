@@ -187,7 +187,11 @@ job_make_remote_fun <- function(env_vars = list(), if_expr = NULL, run_expr = NU
 job_on_error <- function(flow_name, job_name, error) {
   assert_class(error, "error")
   assert_flow_job_name(flow_name, job_name)
-
+  
+  stack <- rlang::trace_back(bottom = 2)$call %>% lapply(rlang::call_name)
+  if(any(stack == "job_on_error"))
+    return(invisible())
+  
   job_finalize(flow_name, job_name)
 
   flows_update_job(flow_name, job_name, list(retval = 1))
@@ -290,7 +294,7 @@ job_finalize <- function(flow_name, job_name) {
   } 
 
   if (dir.exists(job$tempdir)) {
-    if(unlink(job$tempdir, recursive = TRUE, force = TRUE) == 1 && rlang::caller_call()[[1]] != "job_on_error") 
+    if(unlink(job$tempdir, recursive = TRUE, force = TRUE) == 1) 
       job_on_error(flow_name, job_name, rlang::error_cnd(message = paste("Unlink of", job$tempdir, "failed"),
                                                          trace = rlang::trace_back()))
   }

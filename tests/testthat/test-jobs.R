@@ -464,6 +464,16 @@ test_that("job_on_error calls error_handler with flow and job info", {
   expect_equal(mock_args(error_handler)[[1]][[1]]$job_name, job_name)
 })
 
+test_that("job_on_error won't infinitely regress on internal errors", {
+  error_handler <- mock()
+  stub(job_on_error, "job_finalize", function(...){job_on_error(flow_name,job_name,
+                          rlang::error_cnd(message = "I'm an internal error"))})
+  stub(job_on_error, "error_handler", error_handler)
+  job_on_error(flow_name, job_name, rlang::error_cnd(message = "test error", trace = rlang::trace_back()))
+  expect_length(mock_args(error_handler), 1)
+  expect_equal(rlang::cnd_message(mock_args(error_handler)[[1]][[1]]),"test error")
+})
+
 # job_finalize ------------------------------------------------------------
 
 local_flows_data_table()
@@ -531,6 +541,7 @@ test_that("job_finalize cleans up the tempdir", {
     Sys.sleep(1)
   expect_true(any(dir.exists(tessiflow$flows$tempdir)))
   suppressMessages(expect_warning(job_finalize(flow_name, job_name),"no running R session"))
+
   expect_false(any(dir.exists(tessiflow$flows$tempdir)))
 })
 
