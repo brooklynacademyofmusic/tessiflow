@@ -79,7 +79,8 @@ test_that("flows_get_job returns a list of job parameters", {
     "flow_name", "job_name", "steps",
     "runs-on", "needs", "if", "env",
     "on.schedule", "scheduled_runs",
-    "retval", "start_time", "end_time", "status"
+    "retval", "start_time", "end_time", 
+    "status", "timeout-minutes"
   ))
 })
 
