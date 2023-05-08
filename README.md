@@ -112,6 +112,8 @@ tessiflow_disable()
         configuration data.
 
         -   `name`: Use `name` to set a name for the job
+        
+        -   `timeout-minutes`: The maximum number of minutes to let a job run before tessiflow automatically cancels it. Default: 360
 
         -   `needs`: Use `needs` to identify any jobs that must complete
             successfully before this job will run. It can be a string or

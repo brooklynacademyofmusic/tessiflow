@@ -310,11 +310,17 @@ test_that("job_step calls job_finalize when all steps are exhausted", {
 })
 
 # job_read ----------------------------------------------------------------
+rm(job_start)
+
+local_flows_data_table()
+suppressMessages(job_start(flow_name, job_name))
+job <- flows_get_job(flow_name, job_name)
+r_session <- job$r_session[[1]]
 
 test_that("job_read reads from stdout and writes to the log", {
   job_log_write <- mock()
   stub(job_read, "job_log_write", job_log_write)
-  r_session$.call(print, list("hello world"))
+  r_session$call(print, list("hello world"))
   while(r_session$get_state() == "busy") {
     job_read(flow_name, job_name, timeout = 1000)
   }
@@ -326,7 +332,7 @@ test_that("job_read reads from stdout and writes to the log", {
 test_that("job_read reads from stderr and writes to the log", {
   job_log_write <- mock()
   stub(job_read, "job_log_write", job_log_write)
-  r_session$.call(message, list("hello world"))
+  r_session$call(message, list("hello world"))
   while(r_session$get_state() == "busy") {
     job_read(flow_name, job_name, timeout = 1000)
   }
@@ -335,14 +341,33 @@ test_that("job_read reads from stderr and writes to the log", {
   expect_match(output, "PROCESS.+result : $", all = FALSE)
 })
 
+test_that("job_read on finished process returns all output", {
+  job_finalize <- mock()
+  stub(job_poll, "job_finalize", job_finalize)
+  stub(job_poll, "job_read", TRUE)
+  r_session$call(eval, list(quote({
+    print("hello world")
+    q()
+  })))
+  while (r_session$is_alive()) {
+    Sys.sleep(1)
+  }
+  expect_false(r_session$is_alive())
+  expect_equal(job_read(flow_name, job_name)$output,"[1] \"hello world\"")
+})
+
 # job_poll ----------------------------------------------------------------
 
+local_flows_data_table()
+suppressMessages(job_start(flow_name, job_name))
+job <- flows_get_job(flow_name, job_name)
+r_session <- job$r_session[[1]]
 stub(job_poll, "job_step", TRUE)
 
 test_that("job_poll calls job_on_error on error", {
   job_on_error <- mock()
   stub(job_poll, "job_on_error", job_on_error)
-  r_session$.call(job_make_remote_fun(run_expr="stop('hello world')"))
+  r_session$call(job_make_remote_fun(run_expr="stop('hello world')"))
   while(is.null(output <- unlist(purrr::map(mock_args(job_on_error), 3)))) {
     job_poll(flow_name, job_name)
     Sys.sleep(1)
@@ -354,7 +379,7 @@ test_that("job_poll calls job_on_error on error", {
 test_that("job_poll gets rich rlang error information", {
   job_on_error <- mock()
   stub(job_poll, "job_on_error", job_on_error)
-  r_session$.call(job_make_remote_fun(run_expr="checkmate::assert_character(1)"))
+  r_session$call(job_make_remote_fun(run_expr="checkmate::assert_character(1)"))
   while(is.null(output <- unlist(purrr::map(mock_args(job_on_error), 3)))) {
     job_poll(flow_name, job_name)
     Sys.sleep(1)
@@ -369,7 +394,7 @@ test_that("job_poll calls job_step if it's ready to advance", {
   job_step <- mock()
 
   stub(job_poll, "job_step", job_step)
-  r_session$.call(print, list("hello world"))
+  r_session$call(print, list("hello world"))
 
   while(length(output <- job_read(flow_name, job_name)) == 0) {
     Sys.sleep(1)
@@ -377,6 +402,31 @@ test_that("job_poll calls job_step if it's ready to advance", {
   
   job_poll(flow_name, job_name)
   expect_gte(length(mock_args(job_step)), 1)
+})
+
+test_that("job_poll calls job_on_error when timeout has passed", {
+  job_on_error <- mock()
+  stub(job_poll, "job_on_error", job_on_error)
+  stub(job_poll, "job_read", TRUE)
+  
+  stub(job_poll, "now", job$start_time + dminutes(60))
+  job_poll(flow_name, job_name)
+  expect_length(mock_args(job_on_error), 0)
+  
+  stub(job_poll, "now", job$start_time + dminutes(61))
+  job_poll(flow_name, job_name)
+  expect_length(mock_args(job_on_error), 1)
+  
+  flows_update_job(flow_name, job_name, list("timeout-minutes" = list(NULL)))
+  
+  stub(job_poll, "now", job$start_time + dminutes(360))
+  job_poll(flow_name, job_name)
+  expect_length(mock_args(job_on_error), 1)
+
+  stub(job_poll, "now", job$start_time + dminutes(361))
+  job_poll(flow_name, job_name)
+  expect_length(mock_args(job_on_error), 2)
+  
 })
 
 test_that("job_poll calls job_finalize on forced stop", {
@@ -392,30 +442,11 @@ test_that("job_poll calls job_finalize on forced stop", {
   expect_length(mock_args(job_finalize), 1)
 })
 
-test_that("job_poll calls job_finalize if the job dies", {
-  job_finalize <- mock()
-  stub(job_poll, "job_finalize", job_finalize)
-  stub(job_poll, "job_read", TRUE)
-  r_session$.call(eval, list(quote({
-    print("hello world")
-    q()
-  })))
-  while (r_session$is_alive()) {
-    Sys.sleep(1)
-  }
-  expect_warning(job_poll(flow_name, job_name), "no running R session")
-  expect_length(mock_args(job_finalize), 1)
-})
-
-test_that("job_read on finished process returns all output", {
-  expect_false(r_session$is_alive())
-  expect_equal(job_read(flow_name, job_name)$output,"[1] \"hello world\"")
-})
 
 # job_on_error ------------------------------------------------------------
 
 local_flows_data_table()
-suppressMessages(tessiflow:::job_start(flow_name, job_name))
+suppressMessages(job_start(flow_name, job_name))
 job <- flows_get_job(flow_name, job_name)
 r_session <- job$r_session[[1]]
 # stub r_session$close so that job_finalize doesn't really kill it
@@ -517,8 +548,7 @@ test_that("job_finalize warns if there's no session to close", {
   expect_warning(job_finalize(flow_name, job_name), "no running R session")
 })
 
-# unstub job_start and unlink
-rm(job_start)
+# unstub unlink
 rm(job_finalize)
 
 test_that("job_finalize calls job_on_error when it fails to cleanup the tempdir", {
@@ -528,7 +558,7 @@ test_that("job_finalize calls job_on_error when it fails to cleanup the tempdir"
   stub(job_finalize,"unlink",1)
   stub(job_finalize,"job_on_error",job_on_error)
   
-  expect_message(job_finalize(flow_name, job_name))
+  job_finalize(flow_name, job_name)
   expect_equal(length(mock_args(job_on_error)),1)
 })
 

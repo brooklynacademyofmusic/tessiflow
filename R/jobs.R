@@ -4,7 +4,8 @@
 #' @description run, poll, step, read, and finalize tessiflow jobs
 #' @param flow_name string workflow name
 #' @param job_name string job name
-#' 
+NULL
+
 #' @return invisibly
 #' @importFrom utils tail
 #' @describeIn job_start check to see if it's time to start a job and call the job runner if it is. 
@@ -205,19 +206,22 @@ job_on_error <- function(flow_name, job_name, error) {
 }
 
 #' @describeIn job_start poll the process `stdout` and `stderr` streams and call job_step when ready.
+#' @importFrom lubridate dminutes
 job_poll <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
   job <- flows_get_job(flow_name, job_name)
 
-  if (is.null(job$r_session) || !job$r_session[[1]]$is_alive()) {
-    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
-    job_finalize(flow_name, job_name)
-    return(invisible())
-  } else if (flows_log_get_last_run(flow_name, job_name)$status == "Forced stop") {
+  if (flows_log_get_last_run(flow_name, job_name)$status == "Forced stop") {
     job_log_write(flow_name, job_name, paste("Force stopping job, pid:", job$pid), console = TRUE)
     job_finalize(flow_name, job_name)
-  }
+  } 
+  
+  timeout <- unlist(job$`timeout-minutes`) %||% 360
+  if (now() - job$start_time > dminutes(timeout)) {
+    job_on_error(flow_name, job_name, paste("Job timed out after", now() - job$start_time, "seconds, pid:", job$pid))
+    return(invisible())
+  } 
 
   output <- job_read(flow_name, job_name)
 

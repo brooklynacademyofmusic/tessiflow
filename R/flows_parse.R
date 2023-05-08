@@ -69,7 +69,7 @@ flows_refresh <- function(...) {
   new_flows <- anti_join(flows, tessiflow$flows, by = c("flow_name", "job_name"))
   
   update_columns <- intersect(
-    c("env", "on.schedule", "runs-on", "steps", "needs", "if", "scheduled_runs"),
+    c("env", "on.schedule", "runs-on", "steps", "needs", "if", "scheduled_runs", "timeout-minutes"),
     colnames(flows)
   )
   
@@ -97,7 +97,7 @@ flow_to_data_table <- function(flow) {
   job_name <- NULL
 
   allowed_flow_keys <- c("name", "on.schedule.cron", "env\\.[\\w]+")
-  allowed_job_keys <- c("name", "needs\\d?", "if", "runs-on")
+  allowed_job_keys <- c("name", "needs\\d?", "if", "runs-on", "timeout-minutes")
   allowed_step_keys <- c("name", "env\\.[\\w]+", "if", "run", "shell")
 
   allowed_keys <- paste0("^", c(
@@ -162,20 +162,23 @@ flow_to_data_table <- function(flow) {
     ), collapse = " "))
   }
 
+  job_names <- if(length(flow$jobs) == 0) { NA_character_ } else { map_chr(flow$jobs, "name") }
+  
   flow_data_table <- data.table(
+    # return at least one row
     flow_name = flow_name,
+    job_name = job_names,
     env = list(flow$env),
-    on.schedule = list(unlist(flow$on$schedule, recursive = FALSE)),
-    job_name = rep(NA, max(length(flow$jobs), 1))
+    # simplify weirdly nested structure to simple list column
+    on.schedule = list(unlist(flow$on$schedule,recursive=F))
   )
-  # unnest wider
-  if (length(flow$jobs) > 0) {
-    flow_data_table[, job_name := purrr::map_chr(flow$jobs, "name")]
-    job_keys <- unique(purrr::flatten_chr(purrr::map(flow$jobs, names)))
-    flow_data_table[, (job_keys) := lapply(job_keys, purrr::map, .x = flow$jobs)]
-    flow_data_table[, `:=`(name = NULL)]
+  
+  job_keys <- c("needs", "if", "runs-on", "timeout-minutes", "steps")
+  
+  for(col in job_keys) {
+    flow_data_table[, (col) := lapply(flow$jobs, `[[`, col)]
   }
-
+  
   flow_data_table
 }
 

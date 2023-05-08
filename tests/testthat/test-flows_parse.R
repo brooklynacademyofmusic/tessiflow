@@ -26,6 +26,7 @@ test_that("flows_parse returns a data.table of workflows", {
   expect_data_table(flows_parse())
   expect_equal(nrow(flows_parse()), 6)
 })
+
 test_that("flows_parse errors when there aren't yml files in the directory or the directory doesn't exist", {
   expect_error(flows_parse("directorydoesntexist"), "yml files")
   expect_error(flows_parse(tempdir()), "yml files")
@@ -129,6 +130,12 @@ test_that("flows_parse errors if a run statement isn't parseable", {
   stub(flows_parse, "yaml::read_yaml", read_yaml)
   expect_error(flows_parse(), "gobbledy gook")
 })
+
+test_that("flows_parse reads timeout", {
+  flows <- readRDS(test_path("flows.Rds"))
+  expect_equal(flows_parse()$`timeout-minutes`, c(60,rep(list(NULL),5)))
+})
+
 
 # flows_refresh -----------------------------------------------------------
 

@@ -23,6 +23,7 @@ jobs:
         run: |
           echo "Here"
         shell: bash {0}
+    timeout-minutes: 60
     
   job2:
     name: Job 2
