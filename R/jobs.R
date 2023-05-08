@@ -101,19 +101,15 @@ job_step <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
   job <- flows_get_job(flow_name, job_name)
-
-  if (is.null(job$r_session) || !job$r_session[[1]]$is_alive()) {
-    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
-    job_log_write(flow_name, job_name, paste("No running R session, skipping", step, ":", current_step$name), console = TRUE)
-    return(job_finalize(flow_name, job_name))
-  } else if (job$step == length(job$steps)) {
+  
+  if (job$step == length(job$steps)) {
     return(job_finalize(flow_name, job_name))  
   }
 
   step <- job$step + 1
   current_step <- job$steps[[job$step + 1]]
 
-  job$r_session[[1]]$call(job_make_remote_fun(c(current_step$env, job$env),
+  job_safely_invoke(job,"call",job_make_remote_fun(c(current_step$env, job$env),
     as.character(current_step$`if`),
     as.character(current_step$run),
     shell = current_step$shell %||% "callr"
@@ -291,16 +287,14 @@ job_finalize <- function(flow_name, job_name) {
   if(!is.null(r_session)) 
     job_read(flow_name, job_name, timeout = 1000)
   
-  if (is.null(r_session) || !r_session[[1]]$is_alive()) {
-    warning(paste("Job", flow_name, "/", job_name, "has no running R session."))
-  } else {
-    job$r_session[[1]]$close()
-  } 
+  job_safely_invoke(job, "close")
 
   if (dir.exists(job$tempdir)) {
-    if(unlink(job$tempdir, recursive = TRUE, force = TRUE) == 1) 
+    if(unlink(job$tempdir, recursive = TRUE, force = TRUE) == 1) {
       job_on_error(flow_name, job_name, rlang::error_cnd(message = paste("Unlink of", job$tempdir, "failed"),
                                                          trace = rlang::trace_back()))
+      return(invisible())
+    }
   }
 
   flows_update_job(
@@ -338,3 +332,19 @@ job_reset <- function(flow_name, job_name) {
   job_log_write(flow_name, job_name, paste("Resetting job"), console = TRUE)
 }
 
+job_safely_invoke <- function(job, call, ...) {
+  r_session <- job$r_session[[1]]
+  stack <- rlang::trace_back(bottom = 2)$call %>% lapply(rlang::call_name)
+  
+  if (is.null(r_session) || !r_session$is_alive()) {
+    
+    warning(paste("Job", job$flow_name, "/", job$job_name, "has no running R session."))
+    if(!any(stack == "job_finalize"))
+      job_finalize(job$flow_name, job$job_name)    
+    return(invisible())
+  
+  } else {
+    r_session[[call]](...)
+  } 
+  
+}
