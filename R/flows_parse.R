@@ -176,7 +176,7 @@ flow_to_data_table <- function(flow) {
   job_keys <- c("needs", "if", "runs-on", "timeout-minutes", "steps")
   
   for(col in job_keys) {
-    flow_data_table[, (col) := lapply(flow$jobs, `[[`, col)]
+    flow_data_table[, (col) := list(lapply(flow$jobs, `[[`, col))]
   }
   
   flow_data_table

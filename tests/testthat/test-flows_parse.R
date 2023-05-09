@@ -50,6 +50,22 @@ test_that("flows_parse reads on.schedule", {
   ), each = 3))
 })
 
+
+test_that("flows_parse reads timeout", {
+  expect_equal(flows_parse()$`timeout-minutes`, c(60,rep(list(NULL),5)))
+})
+
+test_that("flows_parse reads steps", {
+  flows <- readRDS(test_path("flows.Rds"))
+  flows[[1]]$jobs <- flows[[1]]$jobs[1]
+  read_yaml <- mock(flows[[1]], flows[[2]], cycle = TRUE)
+  stub(flows_parse, "yaml::read_yaml", read_yaml)
+
+  expect_length(flows_parse()$steps[[1]], 2)
+  expect_named(flows_parse()$steps[[1]][[1]], c("name","if","env","run"))
+  expect_named(flows_parse()$steps[[1]][[2]], c("name","run","shell"))
+})
+
 test_that("flows_parse loads multiple files", {
   flows <- readRDS(test_path("flows.Rds"))
   read_yaml <- mock(flows[[1]], flows[[2]])
@@ -129,11 +145,6 @@ test_that("flows_parse errors if a run statement isn't parseable", {
   read_yaml <- mock(flows[[1]], flows[[2]])
   stub(flows_parse, "yaml::read_yaml", read_yaml)
   expect_error(flows_parse(), "gobbledy gook")
-})
-
-test_that("flows_parse reads timeout", {
-  flows <- readRDS(test_path("flows.Rds"))
-  expect_equal(flows_parse()$`timeout-minutes`, c(60,rep(list(NULL),5)))
 })
 
 
