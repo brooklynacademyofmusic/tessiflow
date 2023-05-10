@@ -427,6 +427,9 @@ test_that("job_poll calls job_on_error when timeout has passed", {
   job_poll(flow_name, job_name)
   expect_length(mock_args(job_on_error), 2)
   
+  expect_class(mock_args(job_on_error)[[1]][[3]], "error")
+  expect_class(mock_args(job_on_error)[[2]][[3]], "error")
+  
 })
 
 test_that("job_poll calls job_finalize on forced stop", {
@@ -560,6 +563,8 @@ test_that("job_finalize calls job_on_error when it fails to cleanup the tempdir"
   
   job_finalize(flow_name, job_name)
   expect_equal(length(mock_args(job_on_error)),1)
+  expect_class(mock_args(job_on_error)[[1]][[3]], "error")
+  
 })
 
   

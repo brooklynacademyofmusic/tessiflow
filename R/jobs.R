@@ -180,6 +180,7 @@ job_make_remote_fun <- function(env_vars = list(), if_expr = NULL, run_expr = NU
 #' @param error error condition object
 #' @importFrom checkmate assert_class assert_character
 #' @importFrom cli ansi_strip
+#' @importFrom rlang cnd_entrace
 #' @describeIn job_start Updates flows table and database, writes to log, and finalizes running session on error
 job_on_error <- function(flow_name, job_name, error) {
   assert_class(error, "error")
@@ -197,7 +198,7 @@ job_on_error <- function(flow_name, job_name, error) {
 
   error$flow_name <- flow_name
   error$job_name <- job_name
-  error_handler(error)
+  error_handler(cnd_entrace(error))
   invisible()
 }
 
@@ -215,7 +216,7 @@ job_poll <- function(flow_name, job_name) {
   
   timeout <- unlist(job$`timeout-minutes`) %||% 360
   if (now() - job$start_time > dminutes(timeout)) {
-    job_on_error(flow_name, job_name, paste("Job timed out after", now() - job$start_time, "seconds, pid:", job$pid))
+    job_on_error(flow_name, job_name, rlang::error_cnd(message = paste("Job timed out after", now() - job$start_time, "seconds, pid:", job$pid)))
     return(invisible())
   } 
 
@@ -291,8 +292,7 @@ job_finalize <- function(flow_name, job_name) {
 
   if (dir.exists(job$tempdir)) {
     if(unlink(job$tempdir, recursive = TRUE, force = TRUE) == 1) {
-      job_on_error(flow_name, job_name, rlang::error_cnd(message = paste("Unlink of", job$tempdir, "failed"),
-                                                         trace = rlang::trace_back()))
+      job_on_error(flow_name, job_name, rlang::error_cnd(message = paste("Unlink of", job$tempdir, "failed")))
       return(invisible())
     }
   }
