@@ -413,7 +413,7 @@ test_that("job_poll calls job_on_error when timeout has passed", {
   job_poll(flow_name, job_name)
   expect_length(mock_args(job_on_error), 0)
   
-  stub(job_poll, "now", job$start_time + dminutes(61))
+  stub(job_poll, "now", job$start_time + dminutes(61.12345))
   job_poll(flow_name, job_name)
   expect_length(mock_args(job_on_error), 1)
   
@@ -423,12 +423,14 @@ test_that("job_poll calls job_on_error when timeout has passed", {
   job_poll(flow_name, job_name)
   expect_length(mock_args(job_on_error), 1)
 
-  stub(job_poll, "now", job$start_time + dminutes(361))
+  stub(job_poll, "now", job$start_time + dminutes(361.12345))
   job_poll(flow_name, job_name)
   expect_length(mock_args(job_on_error), 2)
   
   expect_class(mock_args(job_on_error)[[1]][[3]], "error")
+  expect_match(mock_args(job_on_error)[[1]][[3]]$message, "1H 1M 7S")
   expect_class(mock_args(job_on_error)[[2]][[3]], "error")
+  expect_match(mock_args(job_on_error)[[2]][[3]]$message, "6H 1M 7S")
   
 })
 

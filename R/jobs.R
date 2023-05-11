@@ -203,7 +203,7 @@ job_on_error <- function(flow_name, job_name, error) {
 }
 
 #' @describeIn job_start poll the process `stdout` and `stderr` streams and call job_step when ready.
-#' @importFrom lubridate dminutes
+#' @importFrom lubridate dminutes as.period
 job_poll <- function(flow_name, job_name) {
   assert_flow_job_name(flow_name, job_name)
 
@@ -211,12 +211,13 @@ job_poll <- function(flow_name, job_name) {
 
   if (flows_log_get_last_run(flow_name, job_name)$status == "Forced stop") {
     job_log_write(flow_name, job_name, paste("Force stopping job, pid:", job$pid), console = TRUE)
-    job_finalize(flow_name, job_name)
+    return(job_finalize(flow_name, job_name))
   } 
   
   timeout <- unlist(job$`timeout-minutes`) %||% 360
-  if (now() - job$start_time > dminutes(timeout)) {
-    job_on_error(flow_name, job_name, rlang::error_cnd(message = paste("Job timed out after", now() - job$start_time, "seconds, pid:", job$pid)))
+  elapsed <- now() - job$start_time
+  if (elapsed > dminutes(timeout)) {
+    job_on_error(flow_name, job_name, rlang::error_cnd(message = paste0("Job timed out after ", as.period(elapsed) %>% floor, ", pid:", job$pid)))
     return(invisible())
   } 
 
@@ -242,6 +243,7 @@ job_read <- function(flow_name, job_name, timeout = 1) {
   job <- flows_get_job(flow_name, job_name)
   
   r_session <- job$r_session[[1]]
+  
   output = NULL
   for(n in seq(100)) {
     io_state <- r_session$poll_io(timeout)
