@@ -440,11 +440,13 @@ test_that("job_poll calls job_finalize on forced stop", {
   tessiflow$flows[get("flow_name") == flow_name & get("job_name") == job_name, status:="Running"]
   
   job_finalize <- mock()
+  job_read <- mock()
   stub(job_poll, "job_finalize", job_finalize)
-  stub(job_poll, "job_read", TRUE)
+  stub(job_poll, "job_read", job_read)
 
   expect_message(job_poll(flow_name, job_name),paste(flow_name,"/",job_name,".+Force stopping job, pid:"))
   expect_length(mock_args(job_finalize), 1)
+  expect_length(mock_args(job_read), 0)
 })
 
 
