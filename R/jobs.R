@@ -246,13 +246,13 @@ job_read <- function(flow_name, job_name, timeout = 1) {
   
   output = NULL
   for(n in seq(100)) {
-    io_state <- r_session$poll_io(timeout)
+    io_state <- if(is.function(r_session$poll_io)) r_session$poll_io(timeout)
     io_names <- names(which(io_state == "ready"))
     
     if(length(io_names) == 0)
       break
     
-    is_alive <- r_session$is_alive()
+    is_alive <- is.function(r_session$is_alive) && r_session$is_alive()
     io_funs <- exprs(process = read(),
                      output = !!ifelse(is_alive, expr(read_output_lines()), expr(read_all_output_lines())),
                      error = !!ifelse(is_alive, expr(read_error_lines()), expr(read_all_error_lines())))
