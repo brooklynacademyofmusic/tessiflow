@@ -228,9 +228,9 @@ job_poll <- function(flow_name, job_name) {
     job_on_error(flow_name, job_name, e)
   }
 
-  if (job$r_session[[1]]$get_state() == "idle") {
+  if (job$r_session[[1]]$get_state() != "busy") {
     job_step(flow_name, job_name)
-  } else 
+  }  
 }
 
 #' @describeIn job_start Read `stdout` and `stderr` from the process and write to log. When ready, call job_step
