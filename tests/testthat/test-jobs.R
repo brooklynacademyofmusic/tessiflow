@@ -434,6 +434,20 @@ test_that("job_poll calls job_on_error when timeout has passed", {
   
 })
 
+rm(job_poll)
+test_that("job_poll calls job_finalize when a job has finished on its own", {
+  # This is a bit of an integration test, checking that finalize is eventually called...
+  
+  r_session$run(q)
+  tessiflow$flows[get("flow_name") == flow_name & get("job_name") == job_name, status:="Running"]
+  
+  job_finalize <- mock()
+  stub(job_poll, "job_finalize", job_finalize)
+
+  suppressWarnings(suppressMessages(expect_message(job_poll(flow_name, job_name), "Finalizing job")))
+  
+})
+
 test_that("job_poll calls job_finalize on forced stop", {
   # Only update the database, as this comes from the API only
   api_job_stop(flow_name, job_name)
@@ -448,6 +462,7 @@ test_that("job_poll calls job_finalize on forced stop", {
   expect_length(mock_args(job_finalize), 1)
   expect_length(mock_args(job_read), 0)
 })
+
 
 
 # job_on_error ------------------------------------------------------------
