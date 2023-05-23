@@ -217,7 +217,8 @@ job_poll <- function(flow_name, job_name) {
   timeout <- unlist(job$`timeout-minutes`) %||% 360
   elapsed <- now() - job$start_time
   if (elapsed > dminutes(timeout)) {
-    job_on_error(flow_name, job_name, rlang::error_cnd(message = paste0("Job timed out after ", as.period(elapsed) %>% floor, ", pid:", job$pid)))
+    job_on_error(flow_name, job_name, rlang::error_cnd(message = paste0("Job timed out after ", 
+                                                                        as.period(elapsed) %>% floor, ", pid:", job$pid)))
     return(invisible())
   } 
 
@@ -294,7 +295,7 @@ job_finalize <- function(flow_name, job_name) {
 
   if (dir.exists(job$tempdir)) {
     if(unlink(job$tempdir, recursive = TRUE, force = TRUE) == 1) {
-      job_on_error(flow_name, job_name, rlang::error_cnd(message = paste("Unlink of", job$tempdir, "failed")))
+      warning(paste("Unlink of", job$tempdir, "failed"))
       return(invisible())
     }
   }
