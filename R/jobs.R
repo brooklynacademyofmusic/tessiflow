@@ -225,11 +225,11 @@ job_poll <- function(flow_name, job_name) {
   output <- job_read(flow_name, job_name)
 
   if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {
-    e <- job$r_session[[1]]$run(rlang::last_error, package = T)
+    e <- job_safely_invoke(job, "run", rlang::last_error, package = T)
     job_on_error(flow_name, job_name, e)
   }
 
-  if (job$r_session[[1]]$get_state() != "busy") {
+  if (job_safely_invoke(job, "get_state") %||% "finished" != "busy") {
     job_step(flow_name, job_name)
   }  
 }
@@ -335,6 +335,13 @@ job_reset <- function(flow_name, job_name) {
   job_log_write(flow_name, job_name, paste("Resetting job"), console = TRUE)
 }
 
+#' job_safely_invoke
+#'
+#' @param job list as returned by [flows_get_job]
+#' @param call character name of function to call
+#' @param ... additional arguments passed on to `call`
+#'
+#' @return result of function or NULL
 job_safely_invoke <- function(job, call, ...) {
   r_session <- job$r_session[[1]]
   stack <- rlang::trace_back(bottom = 2)$call %>% lapply(rlang::call_name)
