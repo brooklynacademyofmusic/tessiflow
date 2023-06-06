@@ -225,7 +225,8 @@ job_poll <- function(flow_name, job_name) {
   output <- job_read(flow_name, job_name)
 
   if ("process" %in% names(output) && !is.null(output[["process"]]$error)) {
-    e <- job_safely_invoke(job, "run", rlang::last_error, package = T)
+    e <- job_safely_invoke(job, "run", rlang::last_error, package = T) %||% 
+       output[["process"]]$error 
     job_on_error(flow_name, job_name, e)
   }
 

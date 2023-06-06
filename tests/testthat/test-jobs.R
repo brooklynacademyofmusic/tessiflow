@@ -374,6 +374,22 @@ test_that("job_poll calls job_on_error on error", {
   }
   expect_length(mock_args(job_on_error), 1)
   expect_class(mock_args(job_on_error)[[1]][[3]], "error")
+  expect_match(rlang::cnd_message(mock_args(job_on_error)[[1]][[3]]), "hello world")
+})
+
+test_that("job_poll calls job_on_error on error even if it can't get last_error info",{
+  job_on_error <- mock()
+  stub(job_poll, "job_on_error", job_on_error)
+  stub(job_poll, "rlang::last_error", NULL)
+  r_session$call(stop,list('hello world'))
+  
+  while(is.null(output <- unlist(purrr::map(mock_args(job_on_error), 3)))) {
+    job_poll(flow_name, job_name)
+    Sys.sleep(1)
+  }
+  expect_length(mock_args(job_on_error), 1)
+  expect_class(mock_args(job_on_error)[[1]][[3]], "error")
+  expect_match(rlang::cnd_message(mock_args(job_on_error)[[1]][[3]]), "hello world")
 })
 
 test_that("job_poll gets rich rlang error information", {
@@ -431,21 +447,17 @@ test_that("job_poll calls job_on_error when timeout has passed", {
   expect_match(mock_args(job_on_error)[[1]][[3]]$message, "1H 1M 7S")
   expect_class(mock_args(job_on_error)[[2]][[3]], "error")
   expect_match(mock_args(job_on_error)[[2]][[3]]$message, "6H 1M 7S")
+  tessiflow$flows[get("flow_name") == flow_name & get("job_name") == job_name, status:="Running"]
   
 })
 
 rm(job_poll)
 test_that("job_poll calls job_finalize when a job has finished on its own", {
   # This is a bit of an integration test, checking that finalize is eventually called...
-  
   r_session$run(q)
-  tessiflow$flows[get("flow_name") == flow_name & get("job_name") == job_name, status:="Running"]
-  
-  job_finalize <- mock()
-  stub(job_poll, "job_finalize", job_finalize)
-
-  suppressWarnings(suppressMessages(expect_message(job_poll(flow_name, job_name), "Finalizing job")))
-  
+  suppressWarnings(suppressMessages(
+    expect_message(job_poll(flow_name, job_name), "Finalizing job")
+  ))
 })
 
 test_that("job_poll calls job_finalize on forced stop", {
