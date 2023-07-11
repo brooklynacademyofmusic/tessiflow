@@ -195,6 +195,15 @@ test_that("job_make_remote_fun works with other shells", {
   }
 })
 
+test_that("job_make_remote_fun passes on error info for callr and other shells", {
+  expect_error(job_make_remote_fun(run_expr = 'stop("I\'m an error")')(),
+               "I'm an error",
+               class = "rlang_error")
+  expect_error(job_make_remote_fun(run_expr = "exit 1", shell = "bash -c")(),
+               "exit 1.+had status 1",
+               class = "rlang_error")
+})
+
 
 # job_start ---------------------------------------------------------------
 
