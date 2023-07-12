@@ -74,7 +74,7 @@ performance_poll <- function(pid) {
 
   performance <- lapply(performance, function(o) {
     if (inherits(o, "python.builtin.object")) {
-      names <- names(o)
+      names <- setdiff(names(o), c("count","index"))
       lapply(names, function(name) {
         o[name]
       }) %>% setNames(names)
