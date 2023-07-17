@@ -136,22 +136,20 @@ test_that("all performance_poll variables are in database", {
 performance <- readRDS(test_path("performance.Rds"))
 jobs <- readRDS(test_path("jobs.Rds"))
 jobs[1, "status"] <- "Running"
-jobs[1, "pid"] <- performance$pid
+jobs[1, "pid"] <- performance["pid"]
 stub(performance_log_update, "performance_poll", performance)
 flows_log_open()
 
 test_that("performance_log_update updates the performance db table", {
-  performance_log_update(performance$pid)
+  performance_log_update(performance["pid"])
 
   test_cols <- c("pid", "ppid", "io_counters.read_bytes", "cpu_times.user", "memory_full_info.rss")
 
   expect_mapequal(
     tbl(tessiflow$db2, "performance") %>%
-      collect() %>%
-      as.data.table() %>%
-      select(all_of(test_cols)) %>%
-      as.list(),
-    performance[test_cols]
+      select(all_of(test_cols)) %>% 
+      collect %>% as.list,
+    performance[test_cols] %>% as.list
   )
 })
 
@@ -161,7 +159,7 @@ test_that("performance_log_update includes job info", {
   )
   sqlite_upsert("jobs", jobs, tessiflow$db2)
 
-  performance_log_update(performance$pid)
+  performance_log_update(performance["pid"])
 
   expect_equal(tbl(tessiflow$db2, "performance") %>%
     collect() %>%

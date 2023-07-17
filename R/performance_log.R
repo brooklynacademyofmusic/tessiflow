@@ -103,7 +103,7 @@ performance_log_update <- function(pids = sapply(
                                    )) {
   . <- pid <- status <- start_time <- flow_name <- job_name <- step <- NULL
 
-  performance_data <- rbindlist(lapply(pids, performance_poll)) %>%
+  performance_data <- rbindlist(lapply(pids, \(pid) as.list(performance_poll(pid)))) %>%
     .[, `:=`(timestamp = now())]
 
   flows_data <- tbl(tessiflow$db2, "jobs") %>%
