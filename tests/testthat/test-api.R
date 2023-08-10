@@ -55,3 +55,25 @@ test_that("tessiflow_flows_get gets the last run of all configured flows", {
   expect_equal(rbindlist(res, fill = T)$status,c("Forced start",rep("Waiting",4),"Forced stop"))
 })
 
+test_that("tessiflow_job_start, tessiflow_job_stop do not satisfy the needs of job_maybe_start", {
+  # This is a bit of an integration test, checking that force start/stop plays nicely with job_maybe_start
+  local_flows_data_table()
+  local_log_dir()
+  
+  job_start <- mock()
+  stub(job_maybe_start,"job_start",job_start)
+  
+  flows_update_job("Dummy workflow", "Job 2", list(needs = "Job 1", scheduled_runs = list(NULL)))
+  job_maybe_start("Dummy workflow", "Job 2")
+  expect_length(mock_args(job_start),0)
+  
+  api_job_start("Dummy workflow", "Job 1")
+  job_maybe_start("Dummy workflow", "Job 2")
+  expect_length(mock_args(job_start),0)
+  
+  api_job_stop("Dummy workflow", "Job 1")
+  job_maybe_start("Dummy workflow", "Job 2")
+  expect_length(mock_args(job_start),0)
+})
+
+

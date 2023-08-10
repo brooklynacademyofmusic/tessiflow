@@ -27,17 +27,17 @@ job_maybe_start <- function(flow_name, job_name) {
   
   # check forced run
   check_force <- last_run$status == "Forced start"
-  # check runs-on
-  check_runs_on <- job$`runs-on` %||% NA == Sys.info()["nodename"] # T/F/NA
-  # check if
-  check_if <- eval(rlang::parse_expr(as.character(job$`if` %||% NA))) # T/F/NA
-  # check needs
+  # check runs-on (T/F/NA)
+  check_runs_on <- job$`runs-on` %||% NA == Sys.info()["nodename"] 
+  # check if (T/F/NA)
+  check_if <- eval(rlang::parse_expr(as.character(job$`if` %||% NA))) 
+  # check needs (T/F only)
   dependencies <- flows_log_get_last_run(job$flow_name, job$needs %||% "")
 
-  check_needs <- !any(is.na(dependencies$end_time)) &&
+  check_needs <- length(job$needs) == 0  ||
+    all(job$needs %in% dependencies$job_name) &&
     all(dependencies$end_time > last_run$end_time) &&
-    (all(dependencies$retval == 0) || !is.na(check_if) && check_if) &&
-    nrow(dependencies) == length(job$needs)
+    (all(dependencies$retval == 0) || !is.na(check_if) && check_if) 
 
   # check schedule
   check_schedule <- any(job$scheduled_runs[[1]] %>% unlist() %>% purrr::keep(~ . < now()) %||% NA >
@@ -49,7 +49,7 @@ job_maybe_start <- function(flow_name, job_name) {
   } else if (
       (is.na(check_runs_on) || check_runs_on) &&
       (is.na(check_if) || check_if) &&
-      (is.na(check_needs) || check_needs) &&
+      (!is.na(check_needs) && check_needs) &&
       (is.na(check_schedule) || check_schedule)) {
     job_start(flow_name, job_name)
   }
@@ -214,6 +214,7 @@ job_poll <- function(flow_name, job_name) {
 
   if (flows_log_get_last_run(flow_name, job_name)$status == "Forced stop") {
     job_log_write(flow_name, job_name, paste("Force stopping job, pid:", job$pid), console = TRUE)
+    flows_update_job(flow_name, job_name, list(retval = -1))
     return(job_finalize(flow_name, job_name))
   } 
   
