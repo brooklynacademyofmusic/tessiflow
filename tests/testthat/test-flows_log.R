@@ -52,7 +52,7 @@ test_that("flows_log_get_last_run reports the last run by flow and job", {
 test_that("flows_log_cleanup corrects the status of jobs in the log that are no longer running.", {
   start_time <- as.double(now())
   test_jobs <- data.frame(
-    flow_name = "Test",
+    flow_name = "Dummy workflow",
     job_name = c("Running job", "Killed job"),
     status = "Running",
     start_time = start_time,
@@ -62,7 +62,7 @@ test_that("flows_log_cleanup corrects the status of jobs in the log that are no 
   )
 
   sqlite_upsert("jobs", test_jobs)
-  query <- tbl(tessiflow$db, "jobs") %>% filter(flow_name == "Test")
+  query <- tbl(tessiflow$db, "jobs") %>% filter(flow_name == "Dummy workflow")
 
   stub(flows_log_cleanup, "ps::ps_find_tree", c(123, 456))
   stub(flows_log_cleanup, "ps::ps_pid", c(123, 456))
@@ -79,4 +79,29 @@ test_that("flows_log_cleanup corrects the status of jobs in the log that are no 
 
   expect_equal(collect(filter(query, status == "Running"))$job_name, "Running job")
   expect_equal(collect(filter(query, status == "Cancelled"))$job_name, "Killed job")
+})
+
+test_that("flows_log_cleanup leaves the database in a state so that cancelled jobs will get re-run.", {
+  # Simple case, no dependencies
+  local_flows_data_table()
+  tessiflow$flows[1,job_name := "Killed job"]
+  
+  job_start <- mock()
+  stub(job_maybe_start,"job_start",job_start)
+  stub(job_maybe_start,"now",now() + ddays(1))
+
+  job_maybe_start("Dummy workflow","Killed job")
+  
+  expect_length(mock_args(job_start),1)
+
+  # Now do it again with dependencies
+  local_flows_data_table()
+  tessiflow$flows[2,job_name := "Killed job"]
+  
+  flows_update_job("Dummy workflow","Job 1", list(start_time = now(), end_time = now(), retval = 0))
+  
+  job_maybe_start("Dummy workflow","Killed job")
+  
+  expect_length(mock_args(job_start),2)
+  
 })

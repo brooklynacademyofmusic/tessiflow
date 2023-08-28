@@ -28,10 +28,10 @@ jobs:
     
   job2:
     name: Job 2
-    needs: job1
+    needs: Job 1
     
   
   job3:
     if: TRUE
     name: Job 3
-    needs: [job1, job2]
+    needs: [Job 1, Job 2]
