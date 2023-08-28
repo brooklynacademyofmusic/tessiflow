@@ -94,6 +94,7 @@ flows_log_get_create_time <- function() {
 #' Cleans up jobs in the log that are marked as `Running` but no longer are.
 #'
 #' @return invisibly
+#' @importFrom lubridate now
 flows_log_cleanup <- function() {
   status <- pid <- flow_name <- job_name <- start_time <- NULL
 
@@ -107,7 +108,10 @@ flows_log_cleanup <- function() {
     filter(status == "Running" & !pid %in% pids) %>%
     mutate(status = "Cancelled") %>%
     select(flow_name, job_name, start_time, status) %>%
-    collect()
+    collect() %>% setDT()
+  
+  data[,`:=`(retval = -1,
+             end_time = now())]
 
   if (nrow(data) > 0) {
     sqlite_upsert("jobs", data, tessiflow$db)
