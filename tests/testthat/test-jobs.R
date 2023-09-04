@@ -3,6 +3,9 @@ withr::local_package("lubridate")
 withr::local_package("checkmate")
 
 local_log_dir()
+withr::defer(flows_log_close())
+# create the database now so that scheduled_runs are in the future
+flows_log_open()
 local_flows_data_table()
 
 flow_name <- tessiflow$flows[1, flow_name]
@@ -10,7 +13,7 @@ job_name <- tessiflow$flows[1, job_name]
 
 job_true <- list()
 job_true$scheduled_runs <- list(
-  cron = c(now() + 1),
+  cron = c(now()),
   cron = c(now() + ddays(1))
 )
 job_true$`if` <- "1 == 1"
