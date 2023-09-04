@@ -83,34 +83,31 @@ test_that("flows_log_cleanup corrects the status of jobs in the log that are no 
 
 test_that("flows_log_cleanup leaves the database in a state so that cancelled jobs will get re-run.", {
   # Simple case, no dependencies
-  debugonce(job_maybe_start)
   local_flows_data_table()
   tessiflow$flows[1,job_name := "Killed job"]
-  # tessiflow$flows[1,scheduled_runs := list(list(
-  #   cron = c(now()),
-  #   cron = c(now() + ddays(1)))
-  # )]
+  tessiflow$flows[1,scheduled_runs := list(list(
+    cron = c(now()),
+    cron = c(now() + ddays(1)))
+  )]
   
   job_start <- mock()
   stub(job_maybe_start,"job_start",job_start)
   stub(job_maybe_start,"now",now() + ddays(1))
-debugonce(job_maybe_start)
   job_maybe_start("Dummy workflow","Killed job")
   
   expect_length(mock_args(job_start),1)
-# 
-#   # Now do it again with dependencies
-#   local_flows_data_table()
-#   tessiflow$flows[2,job_name := "Killed job"]
-#   tessiflow$flows[2,scheduled_runs := list(list(
-#     cron = c(now()),
-#     cron = c(now() + ddays(1)))
-#   )]
-#   
-#   flows_update_job("Dummy workflow","Job 1", list(start_time = now(), end_time = now(), retval = 0))
-#   debugonce(job_maybe_start)
-#   job_maybe_start("Dummy workflow","Killed job")
-#   
-#   expect_length(mock_args(job_start),2)
+
+  # Now do it again with dependencies
+  local_flows_data_table()
+  tessiflow$flows[2,job_name := "Killed job"]
+  tessiflow$flows[2,scheduled_runs := list(list(
+    cron = c(now()),
+    cron = c(now() + ddays(1)))
+  )]
+
+  flows_update_job("Dummy workflow","Job 1", list(start_time = now(), end_time = now(), retval = 0))
+  job_maybe_start("Dummy workflow","Killed job")
+
+  expect_length(mock_args(job_start),2)
   
 })
