@@ -50,7 +50,7 @@ job_maybe_start <- function(flow_name, job_name) {
       (is.na(check_runs_on) || check_runs_on) &&
       (is.na(check_if) || check_if) &&
       (!is.na(check_needs) && check_needs) &&
-      (is.na(check_schedule) || check_schedule)) {
+      (!is.na(check_schedule) && check_schedule)) {
     job_start(flow_name, job_name)
   }
 }

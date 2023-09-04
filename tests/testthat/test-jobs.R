@@ -10,7 +10,7 @@ job_name <- tessiflow$flows[1, job_name]
 
 job_true <- list()
 job_true$scheduled_runs <- list(
-  cron = c(now()),
+  cron = c(now() + 1),
   cron = c(now() + ddays(1))
 )
 job_true$`if` <- "1 == 1"
@@ -32,6 +32,7 @@ test_that("job_maybe_start runs jobs when runs-on matches the current machine", 
   local_flows_data_table()
   job_start <- mock()
   stub(job_maybe_start, "job_start", job_start)
+  tessiflow$flows[1, scheduled_runs := list(job_true$scheduled_runs)]
 
   tessiflow$flows[1, `runs-on` := job_false$`runs-on`]
   job_maybe_start(flow_name, job_name)
@@ -46,6 +47,7 @@ test_that("job_maybe_start runs jobs when if is true", {
   local_flows_data_table()
   job_start <- mock()
   stub(job_maybe_start, "job_start", job_start)
+  tessiflow$flows[1, scheduled_runs := list(job_true$scheduled_runs)]
 
   tessiflow$flows[1, `if` := job_false$`if`]
 
@@ -70,6 +72,7 @@ test_that("job_maybe_start runs jobs when needs are met and retval is 0", {
   local_flows_data_table()
   job_start <- mock(cycle = TRUE)
   stub(job_maybe_start, "job_start", job_start)
+  tessiflow$flows[1, scheduled_runs := list(job_true$scheduled_runs)]
 
   tessiflow$flows[1, needs := list(job_false$needs)]
   
@@ -102,6 +105,7 @@ test_that("job_maybe_start runs jobs when needs are met and retval <> 0, but onl
   local_flows_data_table()
   job_start <- mock(cycle = TRUE)
   stub(job_maybe_start, "job_start", job_start)
+  tessiflow$flows[1, scheduled_runs := list(job_true$scheduled_runs)]
 
   tessiflow$flows[1, needs := list(job_true$needs)]
   flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
