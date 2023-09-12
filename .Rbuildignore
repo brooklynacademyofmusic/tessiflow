@@ -4,3 +4,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^requirements\.txt$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
