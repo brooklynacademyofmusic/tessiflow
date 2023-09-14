@@ -87,7 +87,7 @@ flows_refresh <- function(...) {
   if(nrow(delete_flows))
     delete_flows[, apply(.SD, 1, function(.) {
         job_finalize(flow_name = .$flow_name, job_name = .$job_name)
-        flows_update_job(flow_name = .$flow_name, job_name = .$job_name, list(retval = 1))
+        flows_update_job(.flow_name = .$flow_name, .job_name = .$job_name, list(retval = 1))
       })]
   
   tessiflow$flows <- tessiflow$flows[flows[, c("flow_name", "job_name")], on = c("flow_name", "job_name")]
