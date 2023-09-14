@@ -18,7 +18,7 @@ jobs:
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.REPO_TOKEN || secrets.GITHUB_TOKEN  }}
     permissions:
       contents: write
     steps:
@@ -34,11 +34,6 @@ jobs:
         with:
           extra-packages: any::pkgdown, local::.
           needs: website
-
-      - name: Update Mermaid figures
-        run: >
-          find . -name README.md -exec
-          perl -0777 -i -pe 's/``` mermaid(.*?)```/```{=html}\n<pre class="mermaid">\1<\/pre>\n```/sg' {} \+
 
       - name: Build site
         run: pkgdown::build_site_github_pages()
