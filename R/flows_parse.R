@@ -67,6 +67,7 @@ flows_refresh <- function(...) {
   flows <- flows_parse(...)
   
   new_flows <- anti_join(flows, tessiflow$flows, by = c("flow_name", "job_name"))
+  delete_flows <- anti_join(tessiflow$flows, flows, by = c("flow_name", "job_name"))
   
   update_columns <- intersect(
     c("env", "on.schedule", "runs-on", "steps", "needs", "if", "scheduled_runs", "timeout-minutes"),
@@ -81,6 +82,16 @@ flows_refresh <- function(...) {
   ),
   fill = TRUE
   )
+  
+  # Kill invalid jobs
+  if(nrow(delete_flows))
+    delete_flows[, apply(.SD, 1, function(.) {
+        job_finalize(flow_name = .$flow_name, job_name = .$job_name)
+        flows_update_job(flow_name = .$flow_name, job_name = .$job_name, list(retval = 1))
+      })]
+  
+  tessiflow$flows <- tessiflow$flows[flows[, c("flow_name", "job_name")], on = c("flow_name", "job_name")]
+  
 }
 
 #' flow_to_data_table

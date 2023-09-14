@@ -153,48 +153,67 @@ test_that("flows_parse errors if a run statement isn't parseable", {
 test_that("flows_refresh updates the tessiflow data that doesn't involve run state", {
   local_flows_data_table()
   run_state_cols <- c("status", "retval", "start_time", "end_time")
-  other_cols <- setdiff(colnames(tessiflow$flows), run_state_cols)
+  other_cols <- setdiff(colnames(tessiflow$flows), c(run_state_cols, "flow_name", "job_name"))
   
   tessiflow$flows[, (run_state_cols) := list(seq_len(.N), seq_len(.N), now() + seq_len(.N), now() + seq_len(.N))]
-  
-  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")]
+
+  new_data <- tessiflow$flows[c(1, 4, 6), (other_cols) := .SD[c(3,2,1)], .SDcols = other_cols]
   old_data <- copy(tessiflow$flows)
   stub(flows_refresh, "flows_parse", new_data)
+  
   flows_refresh()
   
-  expect_equal(tessiflow$flows[c(1, 3, 4, 5)], old_data[c(1, 3, 4, 5)])
-  expect_equal(tessiflow$flows[c(2, 6), ..other_cols], new_data[c(1, 2), ..other_cols])
+  expect_equal(tessiflow$flows[, ..run_state_cols], old_data[, ..run_state_cols])
+  expect_equal(tessiflow$flows[c(1, 4, 6), ..other_cols], new_data[c(1, 4, 6), ..other_cols])
 })
 
 test_that("flows_refresh adds additional flow data", {
   local_flows_data_table()
   
-  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")]
+  new_data <- rbind(tessiflow$flows,tessiflow$flows[6])[7, job_name := "New job"]
   stub(flows_refresh, "flows_parse", new_data)
   flows_refresh()
   
-  expect_equal(tessiflow$flows[7], new_data[3])
+  expect_equal(tessiflow$flows[7], new_data[7])
 })
 
 test_that("flows_refresh adds new columns", {
   local_flows_data_table()
   
-  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")][, new_column := 1]
+  new_data <- tessiflow$flows[6, new_column := 1]
   stub(flows_refresh, "flows_parse", new_data)
   flows_refresh()
   
-  expect_equal(tessiflow$flows[, new_column], c(rep(NA, 6), 1))
+  expect_equal(tessiflow$flows[, new_column], c(rep(NA, 5), 1))
 })
 
-test_that("flows_refresh works when columns missing", {
+test_that("flows_refresh works doesn't overwrite data when columns missing", {
   local_flows_data_table()
   
-  new_data <- tessiflow$flows[c(1, 4, 6)][, job_name := c("Job 2", "Job 3", "New job")][, env := NULL]
+  new_data <- copy(tessiflow$flows)[, env := NULL]
   old_data <- copy(tessiflow$flows)
   stub(flows_refresh, "flows_parse", new_data)
   flows_refresh()
   
-  expect_equal(tessiflow$flows$env, c(old_data$env, list(NULL)))
+  expect_equal(tessiflow$flows$env, old_data$env)
+})
+
+test_that("flows_refresh deletes no-longer existing rows and stops running processes", {
+  local_flows_data_table()
+  job_finalize <- mock()
+  
+  old_data <- copy(tessiflow$flows)
+  new_data <- tessiflow$flows[c(1, 4, 6)]
+  stub(flows_refresh, "flows_parse", new_data)
+  stub(flows_refresh, "job_finalize", job_finalize)
+  stub(flows_refresh, "flows_update_job", NULL)
+  
+  flows_refresh()
+  
+  expect_equal(tessiflow$flows, new_data)
+  expect_equal(length(mock_args(job_finalize)),nrow(old_data)-nrow(new_data))
+  expect_equal(purrr::map_chr(mock_args(job_finalize),"flow_name"), old_data[!new_data, flow_name, on = c("flow_name","job_name")])
+  expect_equal(purrr::map_chr(mock_args(job_finalize),"job_name"), old_data[!new_data, job_name, on = c("flow_name","job_name")])
 })
 
 # flows_auto_refresh ------------------------------------------------------
