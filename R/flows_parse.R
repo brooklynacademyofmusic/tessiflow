@@ -102,7 +102,7 @@ flows_refresh <- function(...) {
 #'
 #' @return flow as a data.table
 #' @importFrom checkmate test_names
-#' @importFrom purrr map_chr
+#' @importFrom purrr map2_chr
 
 flow_to_data_table <- function(flow) {
   job_name <- NULL
@@ -173,7 +173,8 @@ flow_to_data_table <- function(flow) {
     ), collapse = " "))
   }
 
-  job_names <- if(length(flow$jobs) == 0) { NA_character_ } else { map_chr(flow$jobs, "name") }
+  # Use either name specified explicitly (flow$jobs$name) or the name of the yaml structure (names(flow$jobs))
+  job_names <- if(length(flow$jobs) == 0) { NA_character_ } else { map2_chr(flow$jobs, names(flow$jobs), ~.x$name %||% .y) }
   
   flow_data_table <- data.table(
     # return at least one row

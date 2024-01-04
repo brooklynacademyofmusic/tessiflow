@@ -10,6 +10,7 @@ local_flows_data_table()
 
 flow_name <- tessiflow$flows[1, flow_name]
 job_name <- tessiflow$flows[1, job_name]
+job_names <- tessiflow$flows[flow_name == flow_name[[1]],job_name]
 
 job_true <- list()
 job_true$scheduled_runs <- list(
@@ -18,7 +19,7 @@ job_true$scheduled_runs <- list(
 )
 job_true$`if` <- "1 == 1"
 job_true$`runs-on` <- Sys.info()["nodename"]
-job_true$needs <- c("Job 2", "Job 3")
+job_true$needs <- job_names[-1]
 
 job_false <- list()
 job_false$scheduled_runs <- list(
@@ -27,7 +28,7 @@ job_false$scheduled_runs <- list(
 )
 job_false$`if` <- "1 == 0"
 job_false$`runs-on` <- "anothermachine"
-job_false$needs <- c("Job 3", "notajob")
+job_false$needs <- c(job_names[3], "notajob")
 
 # job_maybe_start ---------------------------------------------------------
 
@@ -87,19 +88,19 @@ test_that("job_maybe_start runs jobs when needs are met and retval is 0", {
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
 
-  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = NA))
-  flows_update_job(flow_name, "Job 3", list(start_time = jobs$start_time[[1]],end_time = NA))
+  flows_update_job(flow_name, job_names[2], list(start_time = jobs$start_time[[1]],end_time = NA))
+  flows_update_job(flow_name, job_names[3], list(start_time = jobs$start_time[[1]],end_time = NA))
 
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
   
-  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = now()))
+  flows_update_job(flow_name, job_names[2], list(start_time = jobs$start_time[[1]],end_time = now()))
   
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
   
-  flows_update_job(flow_name, "Job 3", list(start_time = jobs$start_time[[1]],end_time = now()))
-  
+  flows_update_job(flow_name, job_names[3], list(start_time = jobs$start_time[[1]],end_time = now()))
+
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 1)
 })
@@ -111,22 +112,22 @@ test_that("job_maybe_start runs jobs when needs are met and retval <> 0, but onl
   tessiflow$flows[1, scheduled_runs := list(job_true$scheduled_runs)]
 
   tessiflow$flows[1, needs := list(job_true$needs)]
-  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
+  flows_update_job(flow_name, job_names[2], list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
   
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
 
   tessiflow$flows[1, `if` := job_true$`if`]
 
-  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = NA))
-  flows_update_job(flow_name, "Job 3", list(start_time = jobs$start_time[[1]],end_time = NA))
+  flows_update_job(flow_name, job_names[2], list(start_time = jobs$start_time[[1]],end_time = NA))
+  flows_update_job(flow_name, job_names[3], list(start_time = jobs$start_time[[1]],end_time = NA))
   
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 0)
 
   tessiflow$flows[1, needs := list(job_true$needs)]
-  flows_update_job(flow_name, "Job 2", list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
-  flows_update_job(flow_name, "Job 3", list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
+  flows_update_job(flow_name, job_names[2], list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
+  flows_update_job(flow_name, job_names[3], list(start_time = jobs$start_time[[1]],end_time = now(), retval = 1))
     
   job_maybe_start(flow_name, job_name)
   expect_length(mock_args(job_start), 1)

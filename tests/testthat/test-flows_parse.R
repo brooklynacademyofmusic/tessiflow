@@ -32,9 +32,14 @@ test_that("flows_parse errors when there aren't yml files in the directory or th
   expect_error(flows_parse(tempdir()), "yml files")
 })
 
-test_that("flows_parse reads name", {
+test_that("flows_parse reads flow name", {
   expect_equal(flows_parse()$flow_name, rep(c("Dummy workflow", "Dummy workflow 2"), each = 3))
 })
+
+test_that("flows_parse reads job name if specified, or defaults to yaml structure name", {
+  expect_equal(flows_parse()$job_name, c("Job 1", "Job 2", "job3", "Job 1", "Job 2", "Job 3"))
+})
+
 
 test_that("flows_parse reads env", {
   expect_equal(flows_parse()$env, rep(list(list(env_variable = "value")), 6))

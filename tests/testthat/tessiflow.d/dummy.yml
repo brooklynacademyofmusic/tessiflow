@@ -32,5 +32,4 @@ jobs:
   
   job3:
     if: TRUE
-    name: Job 3
     needs: [Job 1, Job 2]
