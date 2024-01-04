@@ -69,15 +69,15 @@ test_that("tessiflow_run starts all sub-processes and logs to a log file", {
   expect_equal(length(ps::ps_find_tree("tessiflow-daemon")), 0)
   local_log_dir()
 
-  stub(tessiflow_run, "flows_main", function() {
+  stub(tessiflow_run, "flows_main", function(...) {
     message("Running flows_main()")
     get("api",envir=parent.frame())$wait()
     get("performance",envir=parent.frame())$wait()
   })
-  stub(tessiflow_run, "performance_main", function() {
+  stub(tessiflow_run, "performance_main", function(...) {
     message("Running performance_main()")
   })
-  stub(tessiflow_run, "api_start", function() {
+  stub(tessiflow_run, "api_start", function(...) {
     message("Running api_start()")
   })
 
