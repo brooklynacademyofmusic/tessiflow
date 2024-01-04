@@ -67,7 +67,9 @@ test_that("tessiflow_job_start, tessiflow_job_stop do not satisfy the needs of j
   job_maybe_start("Dummy workflow", "Job 2")
   expect_length(mock_args(job_start),0)
   
-  api_job_start("Dummy workflow", "Job 1")
+  expect_message(
+    api_job_start("Dummy workflow", "Job 1"),
+    "Loading flows")
   job_maybe_start("Dummy workflow", "Job 2")
   expect_length(mock_args(job_start),0)
   
@@ -76,4 +78,21 @@ test_that("tessiflow_job_start, tessiflow_job_stop do not satisfy the needs of j
   expect_length(mock_args(job_start),0)
 })
 
+test_that("tessiflow_job_start, tessiflow_job_stop, and tessiflow_flows_get work with changed workflow definitions",{
+  res <- tessiflow_job_start("Dummy workflow 3","Job 1")
+  expect_match(res$message,"flow_name.+must be a subset of.+Dummy",all=FALSE)
+  res <- tessiflow_job_stop("Dummy workflow 3","Job 1")
+  expect_match(res$message,"flow_name.+must be a subset of.+Dummy",all=FALSE)
+  res <- tessiflow_flows_get()
+  expect_length(res,6)
+  
+  withr::local_file(rprojroot::find_testthat_root_file("tessiflow.d/dummy3.yml"))
+  system2("sed",c("'s/Dummy workflow 2/Dummy workflow 3/'",rprojroot::find_testthat_root_file("tessiflow.d/dummy2.yml")),
+          rprojroot::find_testthat_root_file("tessiflow.d/dummy3.yml"))
+
+  expect_equal(tessiflow_job_start("Dummy workflow 3","Job 1")[[1]]$flow_name,"Dummy workflow 3")
+  expect_equal(tessiflow_job_stop("Dummy workflow 3","Job 1")[[1]]$flow_name,"Dummy workflow 3")
+  expect_length(tessiflow_flows_get(),7) # only those that have been started are listed
+  
+})
 

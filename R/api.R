@@ -7,6 +7,7 @@
 #' @describeIn api_server internal api function for forced starting a job
 api_job_start <- function(flow_name, job_name) {
   . <- start_time <- NULL
+  flows_auto_refresh()
   assert_flow_job_name(flow_name, job_name)
   
   sqlite_upsert("jobs", data.table(flow_name = flow_name, job_name = job_name, 
@@ -18,6 +19,7 @@ api_job_start <- function(flow_name, job_name) {
 #' @describeIn api_server internal api function for forced stopping a job
 api_job_stop <- function(flow_name, job_name) {
   . <- start_time <- NULL
+  flows_auto_refresh()
   assert_flow_job_name(flow_name, job_name)
   
   sqlite_upsert("jobs", data.table(flow_name = flow_name, job_name = job_name, 
