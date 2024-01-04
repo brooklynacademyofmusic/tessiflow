@@ -141,7 +141,7 @@ job_make_remote_fun <- function(env_vars = list(), if_expr = NULL, run_expr = NU
   assert_character(if_expr, max.len = 1, null.ok = TRUE)
   assert_character(run_expr, max.len = 1, null.ok = TRUE)
   assert_character(shell, max.len = 1, null.ok = TRUE)
-  assert_list(env_vars, names = "named", types = "character", null.ok = TRUE)
+  assert_list(env_vars, names = "named", types = "atomic", null.ok = TRUE)
 
   if (length(run_expr) == 0) {
     return()
