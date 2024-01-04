@@ -34,6 +34,7 @@ test_that("schedule_schtasks creates a usable task", {
   } else {
     eval(expr)
   }
+  Sys.sleep(1)
   expect_equal(readLines(temp), "hello world!")
 })
 
