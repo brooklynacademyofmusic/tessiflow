@@ -41,7 +41,7 @@ test_that("job_log_write prints to console when console = TRUE", {
 
 test_that("log_rotate rotates a log file when it's over size=size", {
   filename <- tempfile()
-  zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", today(), ".zip")
+  zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", format(now(),"%Y-%m-%d %H-%M-%S"), ".zip")
 
   write(c("these", "are", "lines"), filename, append = TRUE, sep = "\n")
 
@@ -52,4 +52,27 @@ test_that("log_rotate rotates a log file when it's over size=size", {
   log_rotate(filename, size = file.info(filename)$size - 1)
   expect_false(file.exists(filename))
   expect_true(file.exists(zip_filename))
+})
+
+test_that("log_rotate doesn't clobber existing zip file or working log file", {
+  filename <- tempfile()
+  zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", format(now(),"%Y-%m-%d %H-%M-%S"), ".zip")
+  
+  write(c("these", "are", "lines"), filename, append = TRUE, sep = "\n")
+  
+  log_rotate(filename, size = 0)
+  
+  write(c("and", "some", "more"), filename, append = TRUE, sep = "\n")
+  
+  log_rotate(filename, size = 0)
+  
+  extract_dir <- tempfile()
+  dir.create(extract_dir)
+  utils::unzip(zip_filename,exdir = extract_dir)  
+  files <- c(dir(extract_dir,full.names = T),filename)
+  
+  expect_equal(as.character(sapply(files[file.exists(files)],
+                                   readLines)),
+               c("these","are","lines","and","some","more"))
+  
 })

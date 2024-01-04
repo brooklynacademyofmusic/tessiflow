@@ -34,10 +34,10 @@ job_log_write <- function(flow_name, job_name = NA, lines, console = FALSE) {
 #'
 #' @return nothing, invisibly
 log_rotate <- function(filename, size = 1024^2) {
-  if (file.exists(filename) && file.info(filename)$size > size) {
-    zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", today(), ".zip")
-    zip(zip_filename, filename, flags = "-j -q") # -j : "junk" the directory structure
-    if (file.exists(zip_filename)) file.remove(filename)
+  zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", format(now(),"%Y-%m-%d %H-%M-%S"), ".zip")
+  if (file.exists(filename) && file.info(filename)$size > size && !file.exists(zip_filename)) {
+    status = zip(zip_filename, filename, flags = "-j -q") # -j : "junk" the directory structure
+    if (file.exists(zip_filename) & status == 0) file.remove(filename)
   }
 
   invisible()
