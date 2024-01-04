@@ -108,7 +108,7 @@ flow_to_data_table <- function(flow) {
   job_name <- NULL
 
   allowed_flow_keys <- c("name", "on.schedule.cron", "env\\.[\\w]+")
-  allowed_job_keys <- c("name", "needs\\d?", "if", "runs-on", "timeout-minutes")
+  allowed_job_keys <- c("name", "needs\\d?", "if", "runs-on", "timeout-minutes", "env\\.[\\w]+")
   allowed_step_keys <- c("name", "env\\.[\\w]+", "if", "run", "shell")
 
   allowed_keys <- paste0("^", c(
@@ -180,7 +180,7 @@ flow_to_data_table <- function(flow) {
     # return at least one row
     flow_name = flow_name,
     job_name = job_names,
-    env = list(flow$env),
+    env = map(flow$jobs,~(c(flow$env,.$env))),
     # simplify weirdly nested structure to simple list column
     on.schedule = list(unlist(flow$on$schedule,recursive=F))
   )

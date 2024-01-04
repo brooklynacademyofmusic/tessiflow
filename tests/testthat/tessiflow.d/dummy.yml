@@ -32,4 +32,6 @@ jobs:
   
   job3:
     if: TRUE
+    env: 
+      env_variable_job: TRUE
     needs: [Job 1, Job 2]

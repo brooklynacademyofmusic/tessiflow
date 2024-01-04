@@ -41,8 +41,10 @@ test_that("flows_parse reads job name if specified, or defaults to yaml structur
 })
 
 
-test_that("flows_parse reads env", {
-  expect_equal(flows_parse()$env, rep(list(list(env_variable = "value")), 6))
+test_that("flows_parse reads env from flow and job and combines them", {
+  expected_envs <- rep(list(list(env_variable = "value")), 6)
+  expected_envs[[3]] <- c(expected_envs[[3]], env_variable_job = TRUE)
+  expect_equal(flows_parse()$env, expected_envs)
 })
 
 test_that("flows_parse reads on.schedule", {
