@@ -35,6 +35,19 @@ tessiflow_flows_get(
 
 \item{port}{port of tessiflow server, defaults to \code{tessiflow.port} config value}
 }
+\value{
+\itemize{
+\item \code{tessiflow_job_start()}: list of started job data, as returned by \link{flows_log_get_last_run}
+}
+
+\itemize{
+\item \code{tessiflow_job_stop()}: list of stopped job data, as returned by \link{flows_log_get_last_run}
+}
+
+\itemize{
+\item \code{tessiflow_flows_get()}: data.table of all latest job data, as returned by \link{flows_log_get_last_run}
+}
+}
 \description{
 The Tessiflow API makes it possible to communicate with a running tessiflow instance
 }
