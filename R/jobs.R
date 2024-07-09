@@ -68,6 +68,9 @@ job_start <- function(flow_name, job_name) {
   job <- flows_get_job(flow_name, job_name)
 
   if (is.null(job$r_session) || !job$r_session[[1]]$is_alive()) {
+    if(job$debug == T)
+      withr::local_options(callr.traceback = T)
+    
     r_session <- r_session$new(options = r_session_options(
       stdout = "|",
       stderr = "|",
@@ -287,6 +290,13 @@ job_finalize <- function(flow_name, job_name) {
   r_session <- job$r_session
 
   if (!is.na(job$retval) && job$retval != 0) {
+    if(job$debug == T) {
+      filename <- file.path(config::get("tessiflow.debug"), 
+                            paste0(flow_name,"_",job_name,"_",job$pid,".debug"))
+      r_session$run(preserve_debug_frames(filename))
+      job_log_write(flow_name, job_name, 
+                    paste("Saved debug frames for pid:", r_session$get_pid()), console = TRUE)
+    }
     warning(paste(flow_name, "/", job_name, "Errored, returned value:", job$retval))
   } else {
     job$retval <- 0
