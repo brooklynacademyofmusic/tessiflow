@@ -29,17 +29,19 @@ test_that("rehydrate_debug_frames restores debug frames", {
   r_session$run(function(filename) {r$run(tessiflow:::rehydrate_debug_frames,list(filename = filename),package="tessiflow")},list(filename))
   r_session$call(function() {r$debug()})
 
-  r_session$poll_io(1000)
-  output <- r_session$read_output()
-  expect_match(output,"Debugging in process")
-
-  r_session$poll_io(1000)
-  output <- r_session$read_output()
-  expect_match(output, 'inspect a frame')
-    
-  r_session$poll_io(1000)
-  output <- r_session$read_output()
-  expect_match(output, 'file\\(con, "r"\\)')
+  output <- ""
+  
+  while(T) {
+    r_session$poll_io(1000)
+    new <- r_session$read_output_lines()
+    output <- c(output,new)
+    if(any(new == "NULL"))
+      break
+  }
+  
+  expect_match(output,"Debugging in process",all=F)
+  expect_match(output, 'inspect a frame',all=F)
+  expect_match(output, 'file\\(con, "r"\\)',all=F)
 
 })
 

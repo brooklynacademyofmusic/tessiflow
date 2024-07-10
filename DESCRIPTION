@@ -1,5 +1,5 @@
 Package: tessiflow
-Title: Workflow runner for Tessiract
+Title: Workflow runner 
 Version: 0.2.2
 Authors@R: 
     person(given = "Sky",
