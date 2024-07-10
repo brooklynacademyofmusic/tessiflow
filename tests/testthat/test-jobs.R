@@ -151,7 +151,7 @@ test_that("job_maybe_start runs jobs when they are scheduled", {
 
 test_that("job_maybe_start runs jobs on forced start", {
   # Only update the database, as this come from the API only
-  api_job_start(flow_name, job_name)
+  suppressMessages(api_job_start(flow_name, job_name))
   local_flows_data_table()
   job_start <- mock(cycle = TRUE)
   stub(job_maybe_start, "job_start", job_start)
@@ -298,6 +298,21 @@ test_that("job_step calls the next step", {
   expect_match(deparse(mock_args(r_session$call)[[3]][[1]]), "echo.+Here", all = FALSE)
 })
 
+test_that("job_step tells callr to record debug frames if debug == T", {
+  r_session$call <- r_session$.call
+  withr::defer(r_session$call <- mock(TRUE, cycle = TRUE))
+  
+  tessiflow$flows[1,debug := T]
+  withr::defer(tessiflow$flows[1,debug := F])
+  
+  job_step(flow_name, job_name)
+  r_session$poll_io(1000)
+  r_session$read()
+  
+  capture.output(traceback <- r_session$traceback())
+  expect_gt(length(traceback),1)
+})
+
 flows_update_job(flow_name, job_name, list(step = 0))
 test_that("job_step writes to the log file and console", {
   job_log_write <- mock(TRUE)
@@ -320,7 +335,7 @@ test_that("job_step passed on the flow and step environment variables", {
 test_that("job_step calls job_finalize when all steps are exhausted", {
   job_finalize <- mock(TRUE)
   stub(job_step, "job_finalize", job_finalize)
-  flows_update_job(flow_name, job_name, list(step = 2))
+  flows_update_job(flow_name, job_name, list(step = 3))
 
   job_step(flow_name, job_name)
   expect_length(mock_args(job_finalize), 1)
@@ -581,6 +596,31 @@ test_that("job_finalize writes to the log file and console", {
   expect_match(mock_args(job_log_write)[[1]][[3]], "Finalizing job")
   expect_equal(unlist(mock_args(job_log_write)[[1]])[4], c(console = "TRUE"))
 })
+
+test_that("job_finalize complains if tessiflow.debug is not set but job$debug is TRUE and job$retval has error", {
+  tessiflow$flows[1,`:=`(debug = T, retval = 1)]
+  withr::defer(tessiflow$flows[1,`:=`(debug = F, retval = 0)])
+  
+  job_log_write <- mock(TRUE, cycle = TRUE)
+  stub(job_finalize, "job_log_write", job_log_write)
+  expect_warning(job_finalize(flow_name, job_name), "Job 1 Errored")
+  expect_length(mock_args(job_log_write), 2)
+  expect_match(mock_args(job_log_write)[[1]][[3]], "tessiflow\\.debug is not set")
+  expect_equal(mock_args(job_log_write)[[1]][["console"]], TRUE)
+})
+
+test_that("job_finalize calls preserve_debug_frames if job$debug is TRUE", {
+  tessiflow$flows[1,`:=`(debug = T, retval = 1, pid = 12345)]
+  withr::defer(tessiflow$flows[1,`:=`(debug = F, retval = 0)])
+
+  stub(job_finalize,"preserve_debug_frames",function(...) {filename <<- list(...)})
+  stub(job_finalize, "config::get", "tessiflow.debug")
+
+  expect_warning(job_finalize(flow_name, job_name), "Job 1 Errored")
+  expect_equal(r_session$run(function(){filename}), list("tessiflow.debug/Dummy workflow_Job 1_12345.debug"))
+  
+})
+
 
 # unstub close
 r_session$close <- r_session$.close
