@@ -3,6 +3,7 @@
 #' @name database
 #'
 #' @param flows_log_dir directory where the SQLite database is stored
+#' @importFrom dbplyr db_collect
 {}
 #' @return invisible
 #' @describeIn database opens the jobs database connection

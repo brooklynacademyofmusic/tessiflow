@@ -98,6 +98,8 @@ tessiflow_job_stop <- function(flow_name, job_name, hostname = "localhost", port
 #' @returns * `tessiflow_flows_get()`: data.table of all latest job data, as returned by [flows_log_get_last_run]
 #' @export
 tessiflow_flows_get <- function(hostname = "localhost", port = config::get("tessiflow.port")) {
+  . <- NULL
+  
   date_cols <- c("start_time","end_time")
   
   GET(modify_url("http://",
