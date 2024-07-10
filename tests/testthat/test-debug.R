@@ -12,7 +12,7 @@ test_that("preserve_debug_frames saves debug frames", {
   expect_failure(expect_file_exists(filename))
   
   withr::local_options(callr.traceback = T)
-  expect_error(r_session$run(knitr::knit,list("notafile"), package = T), "cannot open the connection")
+  expect_error(r_session$run(readLines,list("notafile"), package = T), "cannot open the connection")
   r_session$run(preserve_debug_frames,list(filename = filename))  
   
   expect_file_exists(filename)
