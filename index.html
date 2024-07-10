@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Workflow runner for Tessiract • tessiflow</title>
+<title>Workflow runner • tessiflow</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Workflow runner for Tessiract">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Workflow runner">
 <meta name="description" content="tessiflow handles running R scripts at given times or based on a dependency tree, and manages server load.">
 <meta property="og:description" content="tessiflow handles running R scripts at given times or based on a dependency tree, and manages server load.">
 </head>
@@ -79,12 +79,13 @@
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co"># tessiflow settings</span></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  tessiflow.d<span class="sc">:</span> path to directory of yml files</span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  tessiflow.log<span class="sc">:</span> path to directory <span class="cf">for</span> log files</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  tessiflow.port<span class="sc">:</span> port to use <span class="cf">for</span> communicating with the main tessiflow instance</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  tessiflow.email<span class="sc">:</span> email address where errors will be sent </span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>                   (first email address will also be the sender)</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  tessiflow.smtp<span class="sc">:</span> </span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>    <span class="sc">-</span> host.name<span class="sc">:</span> smtp host name</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    <span class="sc">-</span> port<span class="sc">:</span> optional port</span></code></pre></div>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  tessiflow.debug<span class="sc">:</span> path to directory <span class="cf">for</span> debug files</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  tessiflow.port<span class="sc">:</span> port to use <span class="cf">for</span> communicating with the main tessiflow instance</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  tessiflow.email<span class="sc">:</span> email address where errors will be sent </span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>                   (first email address will also be the sender)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  tessiflow.smtp<span class="sc">:</span> </span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    <span class="sc">-</span> host.name<span class="sc">:</span> smtp host name</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>    <span class="sc">-</span> port<span class="sc">:</span> optional port</span></code></pre></div>
 <p>In the tessiflow.d directory, create yml files (see format info below)</p>
 </div>
 <div class="section level2">
@@ -134,6 +135,7 @@
 <ul>
 <li><p><code>name</code>: Use <code>name</code> to set a name for the job</p></li>
 <li><p><code>timeout-minutes</code>: The maximum number of minutes to let a job run before tessiflow automatically cancels it. Default: 360</p></li>
+<li><p><code>debug</code>: true/false, whether to enable interactive debugging on error</p></li>
 <li>
 <p><code>needs</code>: Use <code>needs</code> to identify any jobs that must complete successfully before this job will run. It can be a string or array of strings.</p>
 <p><strong>Example:</strong> Requiring successful dependent jobs</p>
