@@ -70,7 +70,7 @@ flows_refresh <- function(...) {
   delete_flows <- anti_join(tessiflow$flows, flows, by = c("flow_name", "job_name"))
   
   update_columns <- intersect(
-    c("env", "on.schedule", "runs-on", "steps", "needs", "if", "scheduled_runs", "timeout-minutes"),
+    c("env", "on.schedule", "runs-on", "steps", "needs", "if", "scheduled_runs", "timeout-minutes", "debug"),
     colnames(flows)
   )
   
@@ -108,7 +108,7 @@ flow_to_data_table <- function(flow) {
   job_name <- NULL
 
   allowed_flow_keys <- c("name", "on.schedule.cron", "env\\.[\\w]+")
-  allowed_job_keys <- c("name", "needs\\d?", "if", "runs-on", "timeout-minutes", "env\\.[\\w]+")
+  allowed_job_keys <- c("name", "needs\\d?", "if", "runs-on", "timeout-minutes", "debug", "env\\.[\\w]+")
   allowed_step_keys <- c("name", "env\\.[\\w]+", "if", "run", "shell")
 
   allowed_keys <- paste0("^", c(
@@ -185,7 +185,7 @@ flow_to_data_table <- function(flow) {
     on.schedule = list(unlist(flow$on$schedule,recursive=F))
   )
   
-  job_keys <- c("needs", "if", "runs-on", "timeout-minutes", "steps")
+  job_keys <- c("needs", "if", "runs-on", "timeout-minutes", "debug", "steps")
   
   for(col in job_keys) {
     flow_data_table[, (col) := list(lapply(flow$jobs, `[[`, col))]

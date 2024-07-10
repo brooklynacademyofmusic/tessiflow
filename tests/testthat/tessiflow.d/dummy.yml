@@ -23,11 +23,15 @@ jobs:
         run: |
           echo "Here"
         shell: bash {0}
+      - name: Step 3
+        run: |
+          stop("Whoops!")
     timeout-minutes: 60
     
   job2:
     name: Job 2
     needs: Job 1
+    debug: TRUE
     
   
   job3:
