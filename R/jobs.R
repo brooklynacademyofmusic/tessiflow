@@ -291,7 +291,7 @@ job_finalize <- function(flow_name, job_name) {
   r_session <- job$r_session
 
   if (!is.na(job$retval) && job$retval != 0) {
-    if(job$debug == T) {
+    if(job$debug %||% F == T) {
       if(is.null(config::get("tessiflow.debug"))){
         job_log_write(flow_name, job_name, 
                       "tessiflow.debug is not set, don't know where to save debug frames", console = TRUE)
