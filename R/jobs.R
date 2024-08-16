@@ -68,6 +68,7 @@ job_start <- function(flow_name, job_name) {
   job <- flows_get_job(flow_name, job_name)
 
   if (is.null(job$r_session) || !job$r_session[[1]]$is_alive()) {
+
     r_session <- r_session$new(options = r_session_options(
       stdout = "|",
       stderr = "|",
@@ -108,7 +109,10 @@ job_step <- function(flow_name, job_name) {
 
   step <- job$step + 1
   current_step <- job$steps[[job$step + 1]]
-
+  
+  if(job$debug %||% F == T)
+    withr::local_options(callr.traceback = T)
+  
   job_safely_invoke(job,"call",job_make_remote_fun(c(current_step$env, job$env),
     as.character(current_step$`if`),
     as.character(current_step$run),
@@ -287,6 +291,17 @@ job_finalize <- function(flow_name, job_name) {
   r_session <- job$r_session
 
   if (!is.na(job$retval) && job$retval != 0) {
+    if(job$debug %||% F == T) {
+      if(is.null(config::get("tessiflow.debug"))){
+        job_log_write(flow_name, job_name, 
+                      "tessiflow.debug is not set, don't know where to save debug frames", console = TRUE)
+      } else if(!is.null(r_session)) {
+        filename <- file.path(config::get("tessiflow.debug"), paste0(flow_name,"_",job_name,"_",job$pid,".debug"))
+        r_session[[1]]$run(preserve_debug_frames,list(filename),package=T)
+        job_log_write(flow_name, job_name, 
+                      paste("Saved debug frames for pid:", r_session$get_pid()), console = TRUE)
+      }
+    }
     warning(paste(flow_name, "/", job_name, "Errored, returned value:", job$retval))
   } else {
     job$retval <- 0

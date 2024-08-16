@@ -1,5 +1,5 @@
 Package: tessiflow
-Title: Workflow runner for Tessiract
+Title: Workflow runner 
 Version: 0.2.2
 Authors@R: 
     person(given = "Sky",
@@ -11,7 +11,7 @@ Description: tessiflow handles running R scripts at given times or based on a de
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Config/Needs/website: 
     skysyzygy/dataAtBAM.pkgdown
 Depends:
@@ -36,7 +36,6 @@ Imports:
     DBI,
     RSQLite,
     dplyr,
-    dbplyr,
     callr,
     mailR,
     cli,
@@ -45,5 +44,6 @@ Imports:
     htmlTable,
     reticulate,
     plumber,
-    httr
+    httr,
+    dbplyr
 Language: en-US

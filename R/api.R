@@ -67,6 +67,7 @@ api_start <- function(working_dir = getwd(), docs = FALSE, debug = FALSE) {
 
 #' @importFrom httr POST modify_url content
 #' @describeIn api start job on the tessiflow server
+#' @returns * `tessiflow_job_start()`: list of started job data, as returned by [flows_log_get_last_run]
 #' @export
 tessiflow_job_start <- function(flow_name, job_name, hostname = "localhost", port = config::get("tessiflow.port")) {
   POST(modify_url("http://",
@@ -80,6 +81,7 @@ tessiflow_job_start <- function(flow_name, job_name, hostname = "localhost", por
 
 #' @importFrom httr POST modify_url content
 #' @describeIn api stop job on the tessiflow server
+#' @returns * `tessiflow_job_stop()`: list of stopped job data, as returned by [flows_log_get_last_run]
 #' @export
 tessiflow_job_stop <- function(flow_name, job_name, hostname = "localhost", port = config::get("tessiflow.port")) {
   POST(modify_url("http://",
@@ -93,10 +95,16 @@ tessiflow_job_stop <- function(flow_name, job_name, hostname = "localhost", port
 
 #' @importFrom httr GET modify_url content
 #' @describeIn api get information on the latest run of each job on the tessiflow server
+#' @returns * `tessiflow_flows_get()`: data.table of all latest job data, as returned by [flows_log_get_last_run]
 #' @export
 tessiflow_flows_get <- function(hostname = "localhost", port = config::get("tessiflow.port")) {
+  . <- NULL
+  
+  date_cols <- c("start_time","end_time")
+  
   GET(modify_url("http://",
                   hostname = hostname,
                   port = port,
-                  path = "flows_get")) %>% content()
+                  path = "flows_get")) %>% content() %>%
+    rbindlist(fill=T) %>% .[,(date_cols) := lapply(.SD, as.POSIXct), .SDcols = date_cols]
 }

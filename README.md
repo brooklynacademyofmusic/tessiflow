@@ -46,6 +46,7 @@ machine configuration:
     # tessiflow settings
       tessiflow.d: path to directory of yml files
       tessiflow.log: path to directory for log files
+      tessiflow.debug: path to directory for debug files
       tessiflow.port: port to use for communicating with the main tessiflow instance
       tessiflow.email: email address where errors will be sent 
                        (first email address will also be the sender)
@@ -114,6 +115,8 @@ tessiflow_disable()
         -   `name`: Use `name` to set a name for the job
         
         -   `timeout-minutes`: The maximum number of minutes to let a job run before tessiflow automatically cancels it. Default: 360
+        
+        -   `debug`: true/false, whether to enable interactive debugging on error
 
         -   `needs`: Use `needs` to identify any jobs that must complete
             successfully before this job will run. It can be a string or

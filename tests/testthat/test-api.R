@@ -50,9 +50,10 @@ test_that("tessiflow_job_stop stops job", {
 
 test_that("tessiflow_flows_get gets the last run of all configured flows", {
   res <- tessiflow_flows_get()
-  
-  expect_length(res,6)
-  expect_equal(rbindlist(res, fill = T)$status,c("Forced start",rep("Waiting",4),"Forced stop"))
+  expect_data_table(res)
+  expect_equal(dim(res),c(6,6))
+  expect_class(res$start_time,"POSIXct")
+  expect_equal(res$status,c("Forced start",rep("Waiting",4),"Forced stop"))
 })
 
 test_that("tessiflow_job_start, tessiflow_job_stop do not satisfy the needs of job_maybe_start", {
@@ -92,7 +93,7 @@ test_that("tessiflow_job_start, tessiflow_job_stop, and tessiflow_flows_get work
 
   expect_equal(tessiflow_job_start("Dummy workflow 3","Job 1")[[1]]$flow_name,"Dummy workflow 3")
   expect_equal(tessiflow_job_stop("Dummy workflow 3","Job 1")[[1]]$flow_name,"Dummy workflow 3")
-  expect_length(tessiflow_flows_get(),7) # only those that have been started are listed
+  expect_equal(nrow(tessiflow_flows_get()),7) # only those that have been started are listed
   
 })
 
