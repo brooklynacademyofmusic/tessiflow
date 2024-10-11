@@ -313,7 +313,7 @@ job_finalize <- function(flow_name, job_name) {
   
   job_safely_invoke(job, "close")
 
-  if (dir.exists(job$tempdir)) {
+  if (dir.exists(job$tempdir %||% "")) {
     if(unlink(job$tempdir, recursive = TRUE, force = TRUE) == 1) {
       warning(paste("Unlink of", job$tempdir, "failed"))
       return(invisible())
