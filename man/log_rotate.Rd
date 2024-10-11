@@ -4,7 +4,7 @@
 \alias{log_rotate}
 \title{log_rotate}
 \usage{
-log_rotate(filename, size = 1024^2)
+log_rotate(filename, size = config::get("tessiflow.logsize") \%||\% 1024^2)
 }
 \arguments{
 \item{filename}{string file name of log file to (potentially) rotate}
