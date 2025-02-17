@@ -9,6 +9,7 @@ send_email(
   body = paste("Sent by", Sys.info()["nodename"]),
   emails = config::get("tessiflow.email"),
   smtp = config::get("tessiflow.smtp"),
+  engine = "curl",
   ...
 )
 }
@@ -21,6 +22,15 @@ send_email(
 
 \item{smtp}{named list, should contain \code{hostname} and (optionally) \code{port}, which defaults to 25.
 Additional elements will get merged with \code{...} and passed to curl, see \link[curl:curl_options]{curl::curl_options} for more details.}
+
+\item{engine}{One of: \itemize{
+\item{\code{"internal"} for the internal smtp transport (default).}
+\item{\code{"curl"} for the use of curl for transport. Enable if you need STARTTLS/SSL
+and/or SMTP authentication. See \code{curl::\link[curl]{send_mail}}.}
+\item{\code{"debug"} sendmail returns a RFC2822 formatted email message without sending it.}
+}}
+
+\item{...}{additional parameters passed on to \link[sendmailR:sendmail]{sendmailR::sendmail}}
 }
 \description{
 Wrapper for \code{\link[sendmailR:sendmail]{sendmailR::sendmail}} that does input checking and pulls in configuration data from the \code{config.yml} file

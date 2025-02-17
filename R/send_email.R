@@ -7,6 +7,7 @@
 #' @param emails list of email addresses, default is from `tessiflow.email` configuration variable; `from` address will be the first email
 #' @param smtp named list, should contain `hostname` and (optionally) `port`, which defaults to 25.
 #'  Additional elements will get merged with `...` and passed to curl, see [curl::curl_options] for more details.
+#' @param ... additional parameters passed on to [sendmailR::sendmail]
 #' @importFrom sendmailR sendmail mime_part_html
 #' @importFrom checkmate assert assert_character check_character check_list test_character test_list
 #' @importFrom purrr keep_at
