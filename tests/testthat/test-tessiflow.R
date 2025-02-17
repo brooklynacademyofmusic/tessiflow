@@ -176,7 +176,9 @@ test_that("tessiflow_enable schedules a runnable script", {
     user_profile = FALSE
   )
 
-  p_output <- c(consume_output_lines(p),consume_output_lines(p))
+  p_output <- NULL
+  for(i in 1:10) 
+    p_output <- c(p_output,consume_output_lines(p))
   expect_match(p_output, "Starting tessiflow scheduler", all = F)
 
   expect_gte(length(ps::ps_find_tree("tessiflow-daemon")), 1)
