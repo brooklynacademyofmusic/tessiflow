@@ -33,7 +33,7 @@ job_log_write <- function(flow_name, job_name = NA, lines, console = FALSE) {
 #' @param size integer size in bytes, default is 1 megabyte
 #'
 #' @return nothing, invisibly
-log_rotate <- function(filename, size = 1024^2) {
+log_rotate <- function(filename, size = config::get("tessiflow.logsize") %||% 1024^2) {
   zip_filename <- paste0(gsub(".log", "", filename, fixed = TRUE), "-", format(now(),"%Y-%m-%d %H-%M-%S"), ".zip")
   if (file.exists(filename) && file.info(filename)$size > size && !file.exists(zip_filename)) {
     status = zip(zip_filename, filename, flags = "-j -q") # -j : "junk" the directory structure

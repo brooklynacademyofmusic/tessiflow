@@ -2,6 +2,7 @@ default:
 # tessiflow settings
   tessiflow.d: !expr rprojroot::find_testthat_root_file("tessiflow.d")
   tessiflow.log: !expr file.path(tempdir(),"logs")
+  tessiflow.logsize: 1048576
   tessiflow.port: 12345
   tessiflow.email: test@test.com
   tessiflow.smtp:
