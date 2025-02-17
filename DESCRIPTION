@@ -37,7 +37,6 @@ Imports:
     RSQLite,
     dplyr,
     callr,
-    mailR,
     cli,
     ps,
     withr,
@@ -45,5 +44,6 @@ Imports:
     reticulate,
     plumber,
     httr,
-    dbplyr
+    dbplyr,
+    sendmailR
 Language: en-US

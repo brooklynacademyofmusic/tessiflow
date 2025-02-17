@@ -6,9 +6,10 @@
 \usage{
 send_email(
   subject,
-  body,
+  body = paste("Sent by", Sys.info()["nodename"]),
   emails = config::get("tessiflow.email"),
-  smtp = config::get("tessiflow.smtp")
+  smtp = config::get("tessiflow.smtp"),
+  ...
 )
 }
 \arguments{
@@ -18,8 +19,9 @@ send_email(
 
 \item{emails}{list of email addresses, default is from \code{tessiflow.email} configuration variable; \code{from} address will be the first email}
 
-\item{smtp}{list of \code{SMTP} configuration data for \code{\link[mailR:send.mail]{mailR::send.mail}}}
+\item{smtp}{named list, should contain \code{hostname} and (optionally) \code{port}, which defaults to 25.
+Additional elements will get merged with \code{...} and passed to curl, see \link[curl:curl_options]{curl::curl_options} for more details.}
 }
 \description{
-Wrapper for \code{\link[mailR:send.mail]{mailR::send.mail}} that does input checking and pulls in configuration data from the \code{config.yml} file
+Wrapper for \code{\link[sendmailR:sendmail]{sendmailR::sendmail}} that does input checking and pulls in configuration data from the \code{config.yml} file
 }
