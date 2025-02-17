@@ -39,10 +39,11 @@ body(run_fun) <-
 
 
 consume_output_lines <- function(process) {
+  start_time <- Sys.time()
   # consume the rest of the output lines
-  #while (length(output <- process$read_output_lines()) == 0 && process$is_alive()) {
+  while (length(output <- process$read_output_lines()) == 0 & process$is_alive() & Sys.time()-start_time < 30) {
     process$poll_io(10000)
-  #}
+  }
   while (length(current_output <- process$read_output_lines()) > 0) {
     output <- append(output, current_output)
     Sys.sleep(1)
@@ -177,7 +178,7 @@ test_that("tessiflow_enable schedules a runnable script", {
   )
 
   p_output <- NULL
-  for(i in 1:10) 
+  for(i in 1:5) 
     p_output <- c(p_output,consume_output_lines(p))
   expect_match(p_output, "Starting tessiflow scheduler", all = F)
 
