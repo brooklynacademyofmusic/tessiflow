@@ -10,9 +10,11 @@
 #' @importFrom sendmailR sendmail mime_part_html
 #' @importFrom checkmate assert assert_character check_character check_list test_character test_list
 #' @importFrom purrr keep_at
+#' @inheritParams sendmailR::sendmail
 send_email <- function(subject, body = paste("Sent by", Sys.info()["nodename"]),
                        emails = config::get("tessiflow.email"),
                        smtp = config::get("tessiflow.smtp"),
+                       engine = "curl",
                        ...
 ) {
   assert_character(subject, len = 1)
@@ -20,8 +22,7 @@ send_email <- function(subject, body = paste("Sent by", Sys.info()["nodename"]),
     check_character(body, len = 1),
     check_list(body, "mime_part")
   )
-  assert_character(attachments, null.ok = T)
-  
+
   if (!test_character(emails, min.len = 1)) {
     stop("Set tessiflow.email to the sender (first email) and list of recipients for messages")
   }
