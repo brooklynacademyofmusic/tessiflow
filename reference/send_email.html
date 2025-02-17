@@ -51,6 +51,7 @@
 <span>  body <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Sent by"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.info.html" class="external-link">Sys.info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="st">"nodename"</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>  emails <span class="op">=</span> <span class="fu">config</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/config/reference/get.html" class="external-link">get</a></span><span class="op">(</span><span class="st">"tessiflow.email"</span><span class="op">)</span>,</span>
 <span>  smtp <span class="op">=</span> <span class="fu">config</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/config/reference/get.html" class="external-link">get</a></span><span class="op">(</span><span class="st">"tessiflow.smtp"</span><span class="op">)</span>,</span>
+<span>  engine <span class="op">=</span> <span class="st">"curl"</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -74,6 +75,18 @@
 <dt id="arg-smtp">smtp<a class="anchor" aria-label="anchor" href="#arg-smtp"></a></dt>
 <dd><p>named list, should contain <code>hostname</code> and (optionally) <code>port</code>, which defaults to 25.
 Additional elements will get merged with <code>...</code> and passed to curl, see <a href="https://jeroen.r-universe.dev/curl/reference/curl_options.html" class="external-link">curl::curl_options</a> for more details.</p></dd>
+
+
+<dt id="arg-engine">engine<a class="anchor" aria-label="anchor" href="#arg-engine"></a></dt>
+<dd><p>One of:</p><ul><li><p><code>"internal"</code> for the internal smtp transport (default).</p></li>
+<li><p><code>"curl"</code> for the use of curl for transport. Enable if you need STARTTLS/SSL
+and/or SMTP authentication. See <code>curl::<a href="https://jeroen.r-universe.dev/curl/reference/send_mail.html" class="external-link">send_mail</a></code>.</p></li>
+<li><p><code>"debug"</code> sendmail returns a RFC2822 formatted email message without sending it.</p></li>
+</ul></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>additional parameters passed on to <a href="https://rdrr.io/pkg/sendmailR/man/sendmail.html" class="external-link">sendmailR::sendmail</a></p></dd>
 
 </dl></div>
 
