@@ -44,5 +44,6 @@ Imports:
     plumber,
     httr,
     dbplyr,
-    sendmailR
+    sendmailR,
+    curl
 Language: en-US
