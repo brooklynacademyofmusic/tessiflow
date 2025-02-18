@@ -58,5 +58,11 @@ jobs:
           path: check
         
       - name: Test coverage
-        run: covr::codecov( token = ${{ secrets.CODECOV_TOKEN }} )
+        run: |
+          covr::codecov(
+              quiet = FALSE,
+              clean = FALSE,
+              token = "${{ secrets.CODECOV_TOKEN }}",
+              install_path = file.path(Sys.getenv("RUNNER_TEMP"), "package")
+            )
         shell: Rscript {0}
