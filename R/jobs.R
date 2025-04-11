@@ -297,7 +297,7 @@ job_finalize <- function(flow_name, job_name) {
                       "tessiflow.debug is not set, don't know where to save debug frames", console = TRUE)
       } else if(!is.null(r_session)) {
         filename <- file.path(config::get("tessiflow.debug"), paste0(flow_name,"_",job_name,"_",job$pid,".debug"))
-        r_session[[1]]$run(preserve_debug_frames,list(filename),package=T)
+        job_safely_invoke(job,"run",preserve_debug_frames,list(filename),package=T)
         job_log_write(flow_name, job_name, 
                       paste("Saved debug frames for pid:", r_session$get_pid()), console = TRUE)
       }
