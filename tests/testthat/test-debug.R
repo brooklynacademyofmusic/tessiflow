@@ -50,19 +50,19 @@ test_that("tessiflow_debug complains if tessiflow.debug is not set", {
 })
 
 test_that("tessiflow_debug loads the corresponding debug file if pid given", {
-  stub(tessiflow_debug,"config::get",tempdir)
+  stub(tessiflow_debug,"config::get",tempdir())
   stub(tessiflow_debug,"rehydrate_debug_frames",function(filename){stop(filename)})
   expect_error(tessiflow_debug("flowname","jobname",12345),"flowname_jobname_12345.debug")
 })
 
 test_that("tessiflow_debug loads the latest debug file if pid == NULL", {
-  stub(tessiflow_debug,"config::get",tempdir)
+  stub(tessiflow_debug,"config::get",tempdir())
   stub(tessiflow_debug,"rehydrate_debug_frames",function(filename){stop(filename)})
   file.create(filename2)
   expect_error(tessiflow_debug("flowname","jobname"),"flowname_jobname_54321.debug")
 })
 
 test_that("tessiflow_debug complains if a debug file can't be found", {
-  stub(tessiflow_debug,"config::get",tempdir)
+  stub(tessiflow_debug,"config::get",tempdir())
   expect_error(tessiflow_debug("flowname","notajob",12345),"debug frames.+not found")
 })
