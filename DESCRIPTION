@@ -6,11 +6,12 @@ Authors@R:
            family = "Syzygy",
            role = c("aut", "cre"),
            email = "sky@skysyzygy.xyz")
-Description: tessiflow handles running R scripts at given times or based on a dependency tree.
+Description: tessiflow orchestrates running R scripts at given times or based on a dependency tree.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
+URL: https://brooklynacademyofmusic.github.io/tessiflow
 Config/Needs/website: 
     brooklynacademyofmusic/dataAtBAM.pkgdown
 Depends:
