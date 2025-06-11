@@ -28,7 +28,7 @@ Install the latest version of this package by entering the following in
 R:
 
     install.packages("remotes")
-    remotes::install github("skysyzygy/tessiflow")
+    remotes::install github("brooklynacademyofmusic/tessiflow")
     
 Install miniconda using the helpers in the reticulate package:
 
