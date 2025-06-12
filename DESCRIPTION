@@ -11,7 +11,8 @@ License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
-URL: https://brooklynacademyofmusic.github.io/tessiflow
+URL: https://brooklynacademyofmusic.github.io/tessiflow, https://github.com/skysyzygy/tessiflow
+BugReports: https://github.com/skysyzygy/tessiflow/issues
 Config/Needs/website: 
     brooklynacademyofmusic/dataAtBAM.pkgdown
 Depends:
