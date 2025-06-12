@@ -4,7 +4,7 @@
 
 [![R-CMD-check](https://github.com/brooklynacademyofmusic/tessiflow/workflows/R-CMD-check/badge.svg)](https://github.com/brooklynacademyofmusic/tessiflow/actions)
 [![Codecov test
-coverage](https://codecov.io/gh/brooklynacademyofmusic/tessiflow/graph/badge.svg?token=FWUYS4TULP)](https://codecov.io/gh/brooklynacademyofmusic/tessiflow?branch=main)
+coverage](https://codecov.io/gh/brooklynacademyofmusic/tessiflow/branch/main/graph/badge.svg?token=FWUYS4TULP)](https://codecov.io/gh/brooklynacademyofmusic/tessiflow?branch=main)
 <!-- badges: end -->
 
 `tessiflow` is a workflow runner that handles scheduling R scripts and other
